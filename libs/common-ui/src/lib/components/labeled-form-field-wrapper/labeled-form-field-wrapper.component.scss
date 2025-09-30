@@ -1,0 +1,10 @@
+.form-field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.label-text {
+  font-size: 20px;
+  color: var(--dark-color);
+}
