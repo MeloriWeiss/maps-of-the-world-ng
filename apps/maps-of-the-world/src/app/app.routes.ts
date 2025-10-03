@@ -11,11 +11,11 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'personal',
+        redirectTo: 'profile/me',
         pathMatch: 'full',
       },
       {
-        path: 'personal',
+        path: 'profile/:id',
         component: ErrorComponent,
       },
       {
@@ -23,7 +23,8 @@ export const routes: Routes = [
         component: ErrorComponent,
       }
     ],
-    canActivate: [canActivateAuth]
+    canActivate: [canActivateAuth],
+    title: 'Maps of the world'
   },
 
   {
@@ -38,7 +39,8 @@ export const routes: Routes = [
         path: 'signup',
         component: SignupPageComponent
       }
-    ]
+    ],
+    title: 'Maps of the world: вход'
   },
 
   {

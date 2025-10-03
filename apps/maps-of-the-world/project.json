@@ -25,7 +25,7 @@
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/maps-of-the-world/public"
+            "input": "public"
           }
         ],
         "styles": [

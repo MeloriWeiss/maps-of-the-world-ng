@@ -1,10 +1,15 @@
-@use "fonts";
+@use "styles/fonts";
+@use "styles/svg";
 
 :root {
   --dark-color: #000000;
   --light-color: #FFFFFF;
+  --light-transparent-color: #FFFFFF4C;
   --gray-color: #4E4E4E;
   --light-gray-color: #AAAAAA;
+  --primary-color: #948D81;
+  --dark-primary-color: #524E47;
+  --light-primary-color: #E9E6E3;
 }
 
 *,
@@ -22,4 +27,17 @@ body {
   font-family: "Play", sans-serif;
   font-weight: 400;
   font-style: normal;
+}
+
+.container-sm {
+  max-width: 1080px;
+}
+
+.container-md {
+  max-width: 1150px;
+}
+
+.link {
+  font-size: 0;
+  text-decoration: none;
 }

@@ -18,10 +18,10 @@
     "paths": {
       "@wm/auth": ["libs/auth/src/index.ts"],
       "@wm/common-ui": ["libs/common-ui/src/index.ts"],
-      "@wm/forum": ["libs/forum/src/index.ts"],
-      "@wm/personal": ["libs/personal/src/index.ts"],
       "@wm/data-access/*": ["libs/data-access/src/lib/*"],
-      "@wm/layout/*": ["libs/layout/src/lib/*"]
+      "@wm/forum": ["libs/forum/src/index.ts"],
+      "@wm/layout/*": ["libs/layout/src/lib/*"],
+      "@wm/profile": ["libs/profile/src/index.ts"]
     },
     "baseUrl": ".",
     "rootDir": "."

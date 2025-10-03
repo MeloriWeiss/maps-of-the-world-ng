@@ -1,0 +1,43 @@
+:host {
+  background-color: var(--dark-primary-color);
+  padding: 9px 45px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left-side {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 76px;
+}
+
+.header-right-side {
+  color: var(--light-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 70px;
+
+  .header-nav-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 60px;
+    list-style: none;
+  }
+
+  .header-nav-link {
+    font-family: 'Play', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 23px;
+    color: var(--light-color);
+    text-decoration: none;
+  }
+
+  .avatar-link {
+    color: var(--light-color);
+  }
+}
