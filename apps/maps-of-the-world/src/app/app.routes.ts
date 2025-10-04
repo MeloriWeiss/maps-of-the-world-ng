@@ -3,6 +3,7 @@ import {canActivateAuth, LoginPageComponent, SignupPageComponent} from '@wm/auth
 import {AuthLayoutComponent} from '@wm/layout/auth';
 import {BaseLayoutComponent} from '@wm/layout/base';
 import {ErrorComponent} from '@wm/common-ui';
+import { ForumPageComponent } from '@wm/forum';
 
 export const routes: Routes = [
   {
@@ -20,7 +21,7 @@ export const routes: Routes = [
       },
       {
         path: 'forum',
-        component: ErrorComponent,
+        component: ForumPageComponent,
       }
     ],
     canActivate: [canActivateAuth],
