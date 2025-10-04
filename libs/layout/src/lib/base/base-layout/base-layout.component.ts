@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {RouterOutlet} from '@angular/router';
-import { HeaderComponent } from '@wm/layout/base/header/header.component';
+import { HeaderComponent } from '../header/header.component';
 
 @Component({
   selector: 'wm-base-layout',
