@@ -5,6 +5,8 @@ import {BaseLayoutComponent} from '@wm/layout/base';
 import {ErrorComponent} from '@wm/common-ui';
 import { ForumPageComponent } from '@wm/forum';
 
+// Укажет нам путь мой путеводитель routes. Дорогой routes, в каком направлении нам путь держать?
+
 export const routes: Routes = [
   {
     path: '',
