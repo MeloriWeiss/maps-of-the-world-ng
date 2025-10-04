@@ -9,7 +9,14 @@
   --light-gray-color: #AAAAAA;
   --primary-color: #948D81;
   --dark-primary-color: #524E47;
+  --dark-primary-transparent-color: #524E47B2;
   --light-primary-color: #E9E6E3;
+
+  --semi-dark-font-color: #2D2924;
+  --light-transparent-font-color: #FFFFFFCC;
+
+  --container-max-width-sm: 1080px;
+  --container-max-width-md: 1150px;
 }
 
 *,
@@ -29,15 +36,19 @@ body {
   font-style: normal;
 }
 
-.container-sm {
-  max-width: 1080px;
+li {
+  list-style: none;
 }
 
-.container-md {
-  max-width: 1150px;
-}
-
-.link {
-  font-size: 0;
+a {
   text-decoration: none;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: var(--container-max-width-md);
+}
+
+.linked-block {
+  font-size: 0;
 }
