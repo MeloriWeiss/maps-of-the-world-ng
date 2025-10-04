@@ -1,0 +1,49 @@
+:host {
+  color: var(--dark-primary-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Play', sans-serif;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 25px;
+
+  &.light {
+    color: var(--light-color);
+
+    .svg {
+      color: var(--light-color);
+    }
+  }
+}
+
+.arrow-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  margin: -5px;
+}
+
+.svg {
+  position: relative;
+  top: 4px;
+}
+
+.next-page-icon {
+  transform: rotateY(180deg);
+}
+
+.pagination-numbers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+.current-page-number {
+  &.active {
+
+  }
+}

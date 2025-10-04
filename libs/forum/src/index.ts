@@ -1,1 +1,1 @@
-export * from './lib/forum/forum.component';
+export * from './lib/feature-forum-page';

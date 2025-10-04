@@ -1,27 +1,41 @@
-<div class="header-left-side">
-  <a [routerLink]="['']" class="link">
-    <img src="/assets/imgs/logo.png" alt="Логотип">
-  </a>
-  <wm-search-input [formControl]="searchControl">
-    <svg icon="search" class="svg20"></svg>
-  </wm-search-input>
-</div>
+<header class="header">
+  <div class="header-left-side">
+    <a [routerLink]="['']" class="linked-block">
+      <img src="/assets/imgs/logo.png" alt="Логотип">
+    </a>
+    <wm-search-input [formControl]="searchControl">
+      <svg icon="search" class="svg20"></svg>
+    </wm-search-input>
+  </div>
 
-<div class="header-right-side">
-  <nav>
-    <ul class="header-nav-list">
-      <li>
-        <a [routerLink]="['']" class="header-nav-link">Мастерская</a>
-      </li>
-      <li>
-        <a [routerLink]="['']" class="header-nav-link">Форум</a>
-      </li>
-      <li>
-        <a [routerLink]="['']" class="header-nav-link">О нас</a>
-      </li>
-    </ul>
-  </nav>
-  <a [routerLink]="['profile', 'me']" class="link avatar-link">
-    <svg icon="avatar" class="svg40"></svg>
-  </a>
-</div>
+  <div class="header-right-side">
+    <nav>
+      <ul class="header-nav-list">
+        <li>
+          <a
+            [routerLink]="['workshop']"
+            routerLinkActive="active"
+            class="header-nav-link"
+          >Мастерская</a>
+        </li>
+        <li>
+          <a
+            [routerLink]="['forum']"
+            routerLinkActive="active"
+            class="header-nav-link"
+          >Форум</a>
+        </li>
+        <li>
+          <a
+            [routerLink]="['about']"
+            routerLinkActive="active"
+            class="header-nav-link"
+          >О нас</a>
+        </li>
+      </ul>
+    </nav>
+    <a [routerLink]="['profile', 'me']" class="linked-block avatar-link">
+      <svg icon="avatar" class="svg40"></svg>
+    </a>
+  </div>
+</header>

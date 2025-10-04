@@ -1,6 +1,7 @@
-:host {
+.header {
   background-color: var(--dark-primary-color);
-  padding: 9px 45px;
+  padding-left: 45px;
+  padding-right: 45px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,12 +30,17 @@
   }
 
   .header-nav-link {
+    display: block;
+    padding: 17px 16px 18px;
     font-family: 'Play', sans-serif;
     font-weight: 400;
     font-size: 20px;
     line-height: 23px;
     color: var(--light-color);
-    text-decoration: none;
+
+    &.active {
+      background-color: var(--light-transparent-color);
+    }
   }
 
   .avatar-link {

@@ -1,0 +1,73 @@
+<div class="container forum-container">
+  <div class="forum-header">
+    <span>Активные темы 1-21 из 138</span>
+    <wm-pagination
+      [currentPage]="1"
+      [maxPage]="10"
+      class="pagination-top light"
+    ></wm-pagination>
+    <wm-search-input [formControl]="searchControl">
+      <svg icon="search" class="svg20"></svg>
+    </wm-search-input>
+  </div>
+
+  <div class="forum-content">
+    <div class="forum-blocks">
+      <div class="discussions-cards">
+        @for (discussion of discussions$ | async; track discussion) {
+          <wm-discussion-card [discussion]="discussion"></wm-discussion-card>
+        }
+      </div>
+
+      <div class="discussions-actions">
+        <button class="new-discussion-btn">Новое обсуждение</button>
+        <div class="discussions-forums-list-container">
+          <div class="discussions-forums-list-header">
+            <span>Форумы</span>
+            <span>Темы</span>
+          </div>
+          <nav>
+            <ul class="discussions-forums-list">
+              <li>
+                <a
+                  [routerLink]="['maps']"
+                  routerLinkActive="active"
+                  class="discussions-forums-btn"
+                >
+                  <span>Карты</span>
+                  <span>122</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  [routerLink]="['tools']"
+                  routerLinkActive="active"
+                  class="discussions-forums-btn"
+                >
+                  <span>Инструменты</span>
+                  <span>4</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  [routerLink]="['texture-packs']"
+                  routerLinkActive="active"
+                  class="discussions-forums-btn"
+                >
+                  <span>Текстур-паки</span>
+                  <span>12</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <wm-pagination
+      [currentPage]="1"
+      [maxPage]="10"
+      class="pagination-bottom"
+    ></wm-pagination>
+  </div>
+</div>
