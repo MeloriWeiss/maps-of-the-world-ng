@@ -1,9 +1,14 @@
-import {Routes} from '@angular/router';
-import {canActivateAuth, LoginPageComponent, SignupPageComponent} from '@wm/auth';
-import {AuthLayoutComponent} from '@wm/layout/auth';
-import {BaseLayoutComponent} from '@wm/layout/base';
-import {ErrorComponent} from '@wm/common-ui';
+import { Routes } from '@angular/router';
+import {
+  canActivateAuth,
+  LoginPageComponent,
+  SignupPageComponent,
+} from '@wm/auth';
+import { AuthLayoutComponent } from '@wm/layout/auth';
+import { BaseLayoutComponent } from '@wm/layout/base';
+import { ErrorComponent } from '@wm/common-ui';
 import { ForumPageComponent } from '@wm/forum';
+import { ProfilePageComponent } from '@wm/profile';
 
 export const routes: Routes = [
   {
@@ -11,8 +16,8 @@ export const routes: Routes = [
     component: BaseLayoutComponent,
     children: [
       {
-        path: '',
-        redirectTo: 'profile/me',
+        path: 'profile/me',
+        component: ProfilePageComponent,
         pathMatch: 'full',
       },
       {
@@ -22,10 +27,10 @@ export const routes: Routes = [
       {
         path: 'forum',
         component: ForumPageComponent,
-      }
+      },
     ],
     canActivate: [canActivateAuth],
-    title: 'Maps of the world'
+    title: 'Maps of the world',
   },
 
   {
@@ -34,18 +39,19 @@ export const routes: Routes = [
     children: [
       {
         path: 'login',
-        component: LoginPageComponent
+        component: LoginPageComponent,
+        title: 'Maps of the world: Вход',
       },
       {
         path: 'signup',
-        component: SignupPageComponent
-      }
+        component: SignupPageComponent,
+        title: 'Maps of the world: Регистрация',
+      },
     ],
-    title: 'Maps of the world: вход'
   },
 
   {
     path: '**',
-    component: ErrorComponent
-  }
+    component: ErrorComponent,
+  },
 ];

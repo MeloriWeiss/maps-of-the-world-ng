@@ -1,1 +1,31 @@
-<p>signup-page works!</p>
+<form
+  class="register-form"
+>
+  <h1 class="registration-header">
+    Регистрация
+  </h1>
+
+  <div class="registration-body">
+    <wm-labeled-form-field-wrapper label="Имя">
+      <wm-form-input placeholder='Введите имя'></wm-form-input>
+    </wm-labeled-form-field-wrapper>
+
+    <wm-labeled-form-field-wrapper label="Адрес электронной почты">
+      <wm-form-input placeholder="Введите адрес электронной почты"></wm-form-input>
+    </wm-labeled-form-field-wrapper>
+
+    <wm-labeled-form-field-wrapper label="Пароль">
+      <wm-form-input placeholder="Введите пароль" type="password"></wm-form-input>
+    </wm-labeled-form-field-wrapper>
+
+    <wm-labeled-checkbox
+      label="Я согласен с политикой конфиденциальности"
+    ></wm-labeled-checkbox>
+
+    <wm-auth-submit-button text="Зарегистрироваться"></wm-auth-submit-button>
+  </div>
+
+  <p class='register-link'>
+    Уже есть аккаунт?&nbsp;<a [routerLink]="['/login']">Войти</a>
+  </p>
+</form>

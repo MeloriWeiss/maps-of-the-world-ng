@@ -1,0 +1,88 @@
+:host {
+  display: block;
+  margin: 55px 100px;
+}
+
+.profile-header-container {
+  background: var(--primary-color);
+  height: 152px;
+  border-radius: 20px;
+  position: relative;
+  margin-bottom: 55px;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: absolute;
+  bottom: 0;
+  background: var(--light-primary-color);
+  border-radius: 20px;
+  height: 115px;
+  width: 100%;
+  padding: 24px 60px 33px;
+}
+
+.profile-header__left-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: 'Platypi', sans-serif;
+  font-size: 14px;
+  color: var(--dark-gray-font-color);
+}
+
+.profile-header__right-side {
+  display: flex;
+  gap: 50px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.profile-header-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.profile-header__username {
+  color: var(--dark-color);
+  font-size: 26px;
+  font-family: 'Platypi', sans-serif;
+  margin-bottom: 14px;
+}
+
+.profile-header__likes-and-shares {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.profile-header__icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  color: var(--dark-primary-color);
+  font-size: 25px;
+  font-family: 'Platypi', sans-serif;
+  cursor: pointer;
+}
+
+.profile-subtitle {
+  font-size: 26px;
+  font-family: 'Play', sans-serif;
+  font-weight: 500;
+  margin-bottom: 42px;
+}
+
+.mb80 {
+  margin-bottom: 80px;
+}
+
+.created-maps {
+  display: flex;
+  gap: 30px;
+}
