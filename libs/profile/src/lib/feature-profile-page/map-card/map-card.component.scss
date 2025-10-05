@@ -1,0 +1,56 @@
+:host {
+  display: block;
+  width: 340px;
+  height: 340px;
+  background: var(--dark-primary-color);
+  color: var(--light-color);
+  border-radius: 20px;
+  position: relative;
+}
+
+.map-card__image {
+  width: 340px;
+  height: 280px;
+  border-radius: 20px;
+  border: 2px solid var(--light-transparent-font-color);
+}
+
+.label__non-likeable {
+  display: flex;
+  position: absolute;
+  left: 101px;
+  bottom: 13px;
+  font-size: 26px;
+  font-family: 'Platypi', sans-serif;
+}
+
+.label__likeable {
+  font-family: 'Platypi', sans-serif;
+  font-size: 20px;
+  margin-left: 15px;
+}
+
+.map-card__label {
+  display: flex;
+  align-items: center;
+  margin: 3px 11px 10px 16px;
+}
+
+.likes-and-shares {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-left: 35px;
+  margin-top: 5px;
+}
+
+.icon {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  gap: 4px;
+  color: var(--light-color);
+  font-size: 15px;
+  font-family: 'Platypi', sans-serif;
+  cursor: pointer;
+}

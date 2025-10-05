@@ -1,1 +1,1 @@
-export * from './lib/profile/profile.component';
+export { ProfilePageComponent } from './lib/feature-profile-page/profile-page.component';
