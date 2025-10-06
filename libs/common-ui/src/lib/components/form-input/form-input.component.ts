@@ -52,6 +52,7 @@ export class FormInputComponent implements ControlValueAccessor {
   }
 
   onChange(value: string | null) {
+    console.log(this.type);
   }
 
   onTouched() {

@@ -1,0 +1,30 @@
+.login-form {
+  width: clamp(370px, 28vw, 560px);
+}
+
+.login-header {
+  font-family: 'Platypi', sans-serif;
+  font-weight: 500;
+  font-size: 32px;
+  margin-bottom: 36px;
+}
+
+.login-body {
+  display: grid;
+  grid-gap: 30px;
+  font-family: 'Play', sans-serif;
+  font-size: 20px;
+}
+
+.login-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  font-size: 11px;
+  color: var(--dark-color);
+
+  a {
+    color: var(--blue-link-color);
+  }
+}

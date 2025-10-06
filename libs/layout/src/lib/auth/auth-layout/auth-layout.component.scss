@@ -1,0 +1,21 @@
+:host {
+  display: grid;
+  grid-template-columns: 1fr minmax(200px, 45vw);
+  min-height: 100%;
+  width: 100%;
+}
+
+.auth-background {
+  background-repeat: no-repeat;
+  height: 100dvh;
+  width: auto;
+  justify-self: right;
+  pointer-events: none;
+}
+
+.auth-content {
+  display: grid;
+  grid-template-rows: 0 1fr;
+  align-items: center;
+  justify-content: center;
+}
