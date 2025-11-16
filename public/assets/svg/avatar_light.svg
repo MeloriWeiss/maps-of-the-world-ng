@@ -1,9 +1,0 @@
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" id="avatar_light">
-  <circle cx="60" cy="60" r="60" fill="white" />
-  <circle cx="60" cy="60" r="49.4" stroke="#747474" stroke-width="5.2" />
-  <circle cx="60.0005" cy="47" r="23.4" stroke="#747474" stroke-width="5.2" />
-  <path d="M18.3999 88.6C18.3999 88.6 23.2646 77.7928 28.7999 73C33.9492 68.5415 44.3999 65.2 44.3999 65.2"
-        stroke="#747474" stroke-width="5.2" />
-  <path d="M101.6 88.6C101.6 88.6 96.7354 77.7928 91.2001 73C86.0508 68.5415 75.6001 65.2 75.6001 65.2" stroke="#747474"
-        stroke-width="5.2" />
-</svg>

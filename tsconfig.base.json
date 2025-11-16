@@ -22,7 +22,7 @@
       "@wm/forum": ["libs/forum/src/index.ts"],
       "@wm/layout/*": ["libs/layout/src/lib/*"],
       "@wm/profile": ["libs/profile/src/index.ts"],
-      "src": ["libs/profile/src/src/index.ts"]
+      "@wm/mods": ["libs/mods/src/index.ts"],
     },
     "baseUrl": ".",
     "rootDir": "."

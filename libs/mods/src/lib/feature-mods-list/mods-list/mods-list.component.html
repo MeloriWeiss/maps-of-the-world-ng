@@ -1,0 +1,16 @@
+<wm-desk-list>
+  <wm-search-input
+    [formControl]="searchControl"
+    searchControl
+  >
+    <svg icon="search" class="svg20"></svg>
+  </wm-search-input>
+
+  <wm-mods-list-sidebar sidebar></wm-mods-list-sidebar>
+
+  <ng-container cards>
+    @for (mode of mods$ | async; track mode.id) {
+      <wm-mode-card [mode]="mode"></wm-mode-card>
+    }
+  </ng-container>
+</wm-desk-list>

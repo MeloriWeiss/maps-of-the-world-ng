@@ -1,0 +1,33 @@
+@if (mode(); as mode) {
+  <div class="card-preview">
+    <div class="main-info">
+      <button class="button-arrow" (click)="toggleOpened()" [class.active]="isOpened()">
+        <svg icon="arrow-tailless" class="svg16"></svg>
+      </button>
+
+      <div class="header">
+        <div class="mode-name">{{ mode.name }}</div>
+        <div class="mode-username">{{ mode.author }}</div>
+      </div>
+    </div>
+
+    <div class="statistics">
+      <div class="count-statistics">
+        <svg icon="heart-filled" class="svg18"></svg>
+        {{ mode.likesCount }}
+      </div>
+
+      <div class="count-statistics">
+        {{ mode.commentsCount }}
+        <svg icon="messages-thin" class="svg30"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-extra" wmCollapsible [isOpened]="isOpened()">
+    <p class="mode-description">
+      Текстуры домов, дорог, окружения и атрибутов деревни дварфов
+    </p>
+    <wm-images-slider [options]="customOptions" [slides]="mode.images" class="small-slider"></wm-images-slider>
+  </div>
+}

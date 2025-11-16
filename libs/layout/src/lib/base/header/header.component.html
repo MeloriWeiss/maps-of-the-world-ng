@@ -1,6 +1,6 @@
 <header class="header">
   <div class="header-left-side">
-    <a [routerLink]="['']" class="linked-block">
+    <a [routerLink]="['/']" class="linked-block">
       <img src="/assets/imgs/logo.png" alt="Логотип">
     </a>
     <wm-search-input [formControl]="searchControl">
@@ -24,6 +24,13 @@
             routerLinkActive="active"
             class="header-nav-link"
           >Форум</a>
+        </li>
+        <li>
+          <a
+            [routerLink]="['mods']"
+            routerLinkActive="active"
+            class="header-nav-link"
+          >Моды</a>
         </li>
         <li>
           <a

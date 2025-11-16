@@ -1,0 +1,17 @@
+<div class="sidebar-actions">
+  <button class="new-action-btn">Новый текстур-пак</button>
+  <div class="sidebar-content">
+    <div class="title">
+      Форум
+    </div>
+    <nav>
+      <ul class="sidebar-content-list">
+        @for (filter of modsFilters$ | async; track filter.name) {
+          <li>
+            <wm-mods-filters-item [filter]="filter"></wm-mods-filters-item>
+          </li>
+        }
+      </ul>
+    </nav>
+  </div>
+</div>

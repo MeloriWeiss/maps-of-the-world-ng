@@ -54,3 +54,24 @@ a {
 .linked-block {
   font-size: 0;
 }
+
+.button {
+  width: 100%;
+  height: 40px;
+  border-radius: 15px;
+  border: none;
+  cursor: pointer;
+  background: var(--gray-color);
+  color: var(--light-color);
+  font-family: 'Platypi', sans-serif;
+  font-size: 15px;
+}
+
+.no-select {
+  user-select: none;
+}
+
+.owl-carousel .owl-item {
+  display: grid;
+  place-content: center;
+}
