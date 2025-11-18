@@ -1,42 +1,81 @@
-<div class="container profile-page-container">
-  <div class="profile-header-container">
-    <div class="profile-header">
-      <div class="profile-header__left-side">
-        <p>Создано: 3</p>
-        <p>Опубликовано: 1</p>
-        <p>Текстур-паки: 2</p>
+<div class="container profile">
+  <div class="profile-header">
+    <div class="profile-stats">
+
+      <div class="stat-card">
+        <h3 class="stat-card__title">Карты</h3>
+        <p class="stat-card__item">Создано: <span>3</span></p>
+        <p class="stat-card__item">Опубликовано: <span>1</span></p>
       </div>
 
-      <div class="profile-header__right-side">
-        <div class="profile-header-user-info">
-          <p class="profile-header__username">Username</p>
+      <div class="stat-card">
+        <h3 class="stat-card__title">Текстур-паки</h3>
+        <p class="stat-card__item">Создано: <span>2</span></p>
+        <p class="stat-card__item">Опубликовано: <span>1</span></p>
+      </div>
 
-          <div class="profile-header__likes-and-shares">
-            <a class="profile-header__icon">
-              <svg icon="heart" class="svg30"></svg>
-              209
-            </a>
+    </div>
 
-            <a class="profile-header__icon">
-              <svg icon="share" class="svg30"></svg>
-              103
-            </a>
-          </div>
+    <div class="profile__user">
+      <div class="profile__user-info">
+        <p class="profile__username">Username</p>
+
+        <div class="metrics">
+          <a class="metrics__item">
+            <svg icon="heart" class="svg30"></svg>
+            209
+          </a>
+
+          <a class="metrics__item">
+            <svg icon="share" class="svg30"></svg>
+            103
+          </a>
         </div>
-
-        <svg icon="avatar-light" class="svg120"></svg>
       </div>
+
+      <svg icon="avatar-light" class="svg120"></svg>
     </div>
   </div>
-
-  <h2 class="profile-subtitle">Опубликованные карты:</h2>
-  <wm-map-card class="mb80" [isLikeable]=true></wm-map-card>
-
-  <h2 class="profile-subtitle">Созданные карты:</h2>
-  <div class="created-maps">
-    <wm-map-card class="mb80" [isLikeable]=false></wm-map-card>
-    <wm-map-card class="mb80" [isLikeable]=false></wm-map-card>
-    <wm-map-card class="mb80" [isLikeable]=false></wm-map-card>
-  </div>
-
 </div>
+
+<div class="container content">
+  <nav>
+    <ul class="discussions-forums-list">
+      <li>
+        <button
+          [routerLink]="['maps']"
+          routerLinkActive="active"
+          class="discussions-forums-btn"
+        >
+          <span>Карты</span>
+        </button>
+      </li>
+      <li>
+        <button
+          [routerLink]="['texture-packs']"
+          routerLinkActive="active"
+          class="discussions-forums-btn"
+        >
+          <span>Текстур-паки</span>
+        </button>
+      </li>
+      <li>
+        <button
+          [routerLink]="['tools']"
+          routerLinkActive="active"
+          class="discussions-forums-btn"
+        >
+          <span>Понравилось</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<!--<ng-container>-->
+<!--  @for (mode of mods$ | async; track mode.id) {-->
+<!--    <wm-mode-card [mode]="mode"></wm-mode-card>-->
+<!--  }-->
+<!--</ng-container>-->
+
+<h2 class="profile__subtitle">Опубликованные карты:</h2>

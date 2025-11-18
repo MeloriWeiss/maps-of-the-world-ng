@@ -3,7 +3,7 @@
   margin: 55px 100px;
 }
 
-.profile-header-container {
+.profile {
   background: var(--primary-color);
   height: 152px;
   border-radius: 20px;
@@ -24,43 +24,64 @@
   padding: 24px 60px 33px;
 }
 
-.profile-header__left-side {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-family: 'Platypi', sans-serif;
-  font-size: 14px;
+.profile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 38px;
   color: var(--dark-gray-font-color);
 }
 
-.profile-header__right-side {
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-card__title {
+  font-size: 14px;
+  font-family: 'Play', sans-serif;
+  margin-bottom: 5px;
+  color: var(--dark-primary-color);
+}
+
+.stat-card__item {
+  font-family: 'Play', sans-serif;
+  margin-bottom: 2px;
+  font-size: 14px;
+  color: var(--dark-gray-font-color);
+
+  & span {
+    font-family: 'Platypi', sans-serif;
+  }
+}
+
+.profile__user {
   display: flex;
   gap: 50px;
   align-items: center;
   margin-bottom: 18px;
 }
 
-.profile-header-user-info {
+.profile__user-info {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-
-.profile-header__username {
+.profile__username {
   color: var(--dark-color);
   font-size: 26px;
   font-family: 'Platypi', sans-serif;
   margin-bottom: 14px;
 }
 
-.profile-header__likes-and-shares {
+.metrics {
   display: flex;
   justify-content: center;
   gap: 5px;
 }
 
-.profile-header__icon {
+.metrics__item {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -76,18 +97,46 @@
   }
 }
 
-.profile-subtitle {
+.profile__subtitle {
   font-size: 26px;
   font-family: 'Play', sans-serif;
   font-weight: 500;
   margin-bottom: 42px;
 }
 
-.mb80 {
-  margin-bottom: 80px;
-}
-
 .created-maps {
   display: flex;
   gap: 30px;
+}
+
+.discussions-forums-list {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 12px;
+  background-color: rgba(var(--dark-primary-color), 0.8);
+
+}
+
+.discussions-forums-btn {
+  padding: 7px 16px;
+  font-size: 18px;
+  line-height: 21px;
+  color: var(--light-color);
+  display: grid;
+  grid-template-columns: 153px 1fr;
+  align-items: center;
+  border-radius: 5px;
+  transition: all .3s;
+  border: none;
+  background: none;
+  text-align: start;
+  font-family: 'Play', sans-serif;
+  cursor: pointer;
+  width: 100%;
+
+  &.active,
+  &:hover {
+    background-color: var(--light-color);
+    color: var(--dark-primary-color);
+  }
 }

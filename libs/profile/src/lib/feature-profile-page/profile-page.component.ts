@@ -3,13 +3,21 @@ import {
   ChangeDetectionStrategy,
   Component,
 } from '@angular/core';
-import { SvgComponent } from '@wm/common-ui';
+import { ModeCardComponent, SvgComponent } from '@wm/common-ui';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MapCardComponent } from './map-card/map-card.component';
+import { AsyncPipe } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'wm-profile-page',
-  imports: [ReactiveFormsModule, SvgComponent, MapCardComponent],
+  imports: [
+    ReactiveFormsModule,
+    SvgComponent,
+    ModeCardComponent,
+    AsyncPipe,
+    RouterLinkActive,
+    RouterLink,
+  ],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -26,11 +26,11 @@ export const routes: Routes = [
       },
       {
         path: 'forum',
-        loadChildren: () => import('@wm/forum').then(m => m.forumRoutes),
+        loadChildren: () => import('@wm/forum').then((m) => m.forumRoutes),
       },
       {
         path: 'mods',
-        loadChildren: () => import('@wm/mods').then(m => m.modsRoutes),
+        loadChildren: () => import('@wm/mods').then((m) => m.modsRoutes),
       },
     ],
     canActivate: [canActivateAuth],
