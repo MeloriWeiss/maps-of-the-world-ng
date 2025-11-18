@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  padding: 9px 13px 8px;
+  background-color: var(--light-color);
+  border-radius: 15px;
+  box-shadow: 0 4px 4px #0000003F;
+}
+
+.card-preview {
+  padding-right: 31px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Platypi', sans-serif;
+  font-weight: 400;
+  align-items: center;
+}
+
+.main-info {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.button-arrow {
+  padding: 10px;
+  margin: -10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform .3s ease;
+  font-size: 0;
+
+  &.active {
+    transform: rotateZ(90deg);
+  }
+}
+
+.header {
+  justify-self: start;
+}
+
+.mode-name {
+  font-family: 'Play', sans-serif;
+  font-size: 20px;
+  line-height: 23px;
+  color: var(--semi-dark-font-color);
+}
+
+.mode-username {
+  font-size: 18px;
+  line-height: 25px;
+  color: var(--dark-primary-color);
+}
+
+.statistics {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.count-statistics {
+  font-size: 18px;
+  line-height: 25px;
+  color: var(--dark-primary-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+}
+
+.mode-description {
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--dark-primary-color);
+  padding: 8px 38px 20px;
+}

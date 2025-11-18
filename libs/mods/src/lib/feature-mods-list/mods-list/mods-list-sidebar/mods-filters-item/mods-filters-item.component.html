@@ -1,0 +1,34 @@
+@if (filter(); as filter) {
+  <button
+    (click)="toggleActive()"
+    class="sidebar-content-list-btn"
+    [class.active]="isActive()"
+    [class.opened]="isOpened()"
+  >
+    @if (filter.extras.length) {
+      <button class="open-filter-button" (click)="toggleOpened($event)">
+        <svg icon="arrow-tailless" class="svg16"></svg>
+      </button>
+    }
+    <span>{{ filter.name }}</span>
+    <span>{{ isOpened() ? '...' : filter.count }}</span>
+    @if (filter.extras.length) {
+      <div
+        wmCollapsible
+        [isOpened]="isOpened()"
+        class="extra-filters"
+      >
+        <div class="filters-body-gap"></div>
+        @for (item of filter.extras; track item.value) {
+          <label class="filter-checkbox">
+            <div class="checkbox">
+              <input type="checkbox" class="checkbox-input">
+              <span class="filter-checkbox-name">{{ item.name }}</span>
+            </div>
+            <span>{{ item.count }}</span>
+          </label>
+        }
+      </div>
+    }
+  </button>
+}

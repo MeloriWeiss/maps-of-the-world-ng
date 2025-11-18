@@ -1,0 +1,15 @@
+@if (discussion(); as discussion) {
+  <div class="header">
+    <div class="discussion-theme">{{ discussion.theme }}</div>
+    <div class="discussion-username">{{ discussion.author }}</div>
+  </div>
+
+  <div class="time-ago">
+    {{ discussion.createdAt }}
+  </div>
+
+  <div class="messages-count">
+    {{ discussion.commentsCount }}
+    <svg icon="messages" class="svg35"></svg>
+  </div>
+}

@@ -1,0 +1,65 @@
+:host {
+  display: block;
+  background-color: var(--dark-primary-color);
+  padding: 30px 277px 36px 115px;
+  color: var(--light-color);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.company-info {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  column-gap: 16px;
+  row-gap: 19px;
+  align-items: center;
+
+  .company-name {
+    font-family: 'Platypi', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .policy-info {
+    grid-column: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .policy-link {
+    text-decoration: underline;
+    color: var(--light-color);
+    font-size: 14px;
+    line-height: 16px;
+  }
+}
+
+.contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+
+  .email-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .email {
+    font-size: 18px;
+    line-height: 21px;
+    margin-bottom: 2px;
+  }
+
+  .social-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+}

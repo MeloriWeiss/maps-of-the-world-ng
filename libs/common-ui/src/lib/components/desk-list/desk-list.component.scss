@@ -1,0 +1,43 @@
+.desk-container {
+  background-color: var(--primary-color);
+  border-radius: 30px;
+}
+
+.desk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  padding: 25px 40px 18px;
+  color: var(--light-color);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 25px;
+}
+
+.pagination-top {
+  margin-top: 7px;
+}
+
+.pagination-bottom {
+  margin-top: 30px;
+}
+
+.desk-content {
+  background-color: var(--light-primary-color);
+  border-radius: 30px;
+  padding: 36px 60px 36px 40px;
+  height: 100%;
+}
+
+.desk-blocks {
+  display: grid;
+  grid-template-columns: 1fr 230px;
+  gap: 87px;
+}
+
+.desk-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+}

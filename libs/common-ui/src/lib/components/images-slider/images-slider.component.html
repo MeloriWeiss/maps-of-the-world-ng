@@ -1,0 +1,16 @@
+<owl-carousel-o [options]="options()" #carousel>
+  @for (slide of slides(); track slide.url) {
+    <ng-template carouselSlide>
+      <img [src]="slide.url" alt="Превью мода">
+    </ng-template>
+  }
+</owl-carousel-o>
+
+<div class="carousel-arrows">
+  <button class="button-arrow arrow-prev" (click)="carousel.prev()">
+    <svg icon="arrow-tailless" class="svg16"></svg>
+  </button>
+  <button class="button-arrow arrow-next" (click)="carousel.next()">
+    <svg icon="arrow-tailless" class="svg16"></svg>
+  </button>
+</div>

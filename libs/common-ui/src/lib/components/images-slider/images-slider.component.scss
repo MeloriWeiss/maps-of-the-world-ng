@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  margin: 0 40px 12px;
+  position: relative;
+  height: 150px;
+
+  &.small-slider {
+    height: 111px;
+  }
+}
+
+.carousel-arrows {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  .arrow-prev {
+    position: relative;
+    left: -34px;
+    transform: rotateZ(180deg);
+  }
+
+  .arrow-next {
+    position: relative;
+    right: -34px;
+  }
+}
+
+.button-arrow {
+  padding: 10px;
+  margin: -10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform .3s ease;
+  font-size: 0;
+
+  &.active {
+    transform: rotateZ(90deg);
+  }
+}

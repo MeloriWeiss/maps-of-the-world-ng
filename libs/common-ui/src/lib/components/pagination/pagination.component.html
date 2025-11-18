@@ -1,16 +1,16 @@
-<button class="arrow-btn">
-  <svg icon="arrow" class="svg20 svg prev-page-icon"></svg>
-</button>
-<div class="pagination-numbers">
-  @if (currentPage(); as currentPage) {
+@if (currentPage(); as currentPage) {
+  <button class="arrow-btn" (click)="changePage(currentPage - 1)">
+    <svg icon="arrow" class="svg20 svg prev-page-icon"></svg>
+  </button>
+  <div class="pagination-numbers">
     @for (page of visiblePages(); track page) {
       <span
         [class.active]="page === currentPage"
         class="current-page-number"
       >{{ page }}</span>
     }
-  }
-</div>
-<button class="arrow-btn">
-  <svg icon="arrow" class="svg20 svg next-page-icon"></svg>
-</button>
+  </div>
+  <button class="arrow-btn" (click)="changePage(currentPage + 1)">
+    <svg icon="arrow" class="svg20 svg next-page-icon"></svg>
+  </button>
+}

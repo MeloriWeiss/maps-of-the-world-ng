@@ -5,7 +5,6 @@ import {
   LabeledFormFieldWrapperComponent,
 } from '@wm/common-ui';
 import { LabeledCheckboxComponent } from '@wm/common-ui';
-import { AuthSubmitButtonComponent } from '@wm/common-ui';
 import { Router, RouterLink } from '@angular/router';
 import {
   FormControl,
@@ -20,7 +19,6 @@ import {
     FormInputComponent,
     LabeledFormFieldWrapperComponent,
     LabeledCheckboxComponent,
-    AuthSubmitButtonComponent,
     RouterLink,
     ReactiveFormsModule,
   ],

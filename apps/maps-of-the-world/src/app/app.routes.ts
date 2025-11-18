@@ -1,13 +1,13 @@
 import { Routes } from '@angular/router';
 import {
   canActivateAuth,
+  canActivateNonAuth,
   LoginPageComponent,
   SignupPageComponent,
 } from '@wm/auth';
 import { AuthLayoutComponent } from '@wm/layout/auth';
 import { BaseLayoutComponent } from '@wm/layout/base';
 import { ErrorComponent } from '@wm/common-ui';
-import { ForumPageComponent } from '@wm/forum';
 import { ProfilePageComponent } from '@wm/profile';
 
 export const routes: Routes = [
@@ -16,17 +16,21 @@ export const routes: Routes = [
     component: BaseLayoutComponent,
     children: [
       {
-        path: 'profile/me',
-        component: ProfilePageComponent,
+        path: '',
+        redirectTo: 'profile/me',
         pathMatch: 'full',
       },
       {
         path: 'profile/:id',
-        component: ErrorComponent,
+        component: ProfilePageComponent,
       },
       {
         path: 'forum',
-        component: ForumPageComponent,
+        loadChildren: () => import('@wm/forum').then(m => m.forumRoutes),
+      },
+      {
+        path: 'mods',
+        loadChildren: () => import('@wm/mods').then(m => m.modsRoutes),
       },
     ],
     canActivate: [canActivateAuth],
@@ -48,6 +52,7 @@ export const routes: Routes = [
         title: 'Maps of the world: Регистрация',
       },
     ],
+    canActivate: [canActivateNonAuth],
   },
 
   {

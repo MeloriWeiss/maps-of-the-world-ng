@@ -1,21 +1,32 @@
-import { ChangeDetectionStrategy, Component, effect, forwardRef, input, signal } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  forwardRef,
+  input,
+  signal,
+} from '@angular/core';
+import {
+  ControlValueAccessor,
+  FormControl,
+  NG_VALUE_ACCESSOR,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'wm-search-input',
-  imports: [
-    ReactiveFormsModule
-  ],
+  imports: [ReactiveFormsModule],
   templateUrl: './search-input.component.html',
   styleUrl: './search-input.component.scss',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
       multi: true,
-      useExisting: forwardRef(() => SearchInputComponent)
-    }
+      useExisting: forwardRef(() => SearchInputComponent),
+    },
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchInputComponent implements ControlValueAccessor {
   type = input('text');
@@ -33,6 +44,10 @@ export class SearchInputComponent implements ControlValueAccessor {
       }
       this.innerFormControl.enable();
     });
+
+    this.innerFormControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((value) => this.onChange(value));
   }
 
   writeValue(value: string | null): void {
@@ -51,9 +66,7 @@ export class SearchInputComponent implements ControlValueAccessor {
     this.disabled.set(isDisabled);
   }
 
-  onChange(value: string | null) {
-  }
+  onChange(value: string | null) {}
 
-  onTouched() {
-  }
+  onTouched() {}
 }
