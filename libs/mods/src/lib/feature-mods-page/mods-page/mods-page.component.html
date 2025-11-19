@@ -1,1 +1,60 @@
-<p>mods-page works!</p>
+@if (mode$ | async; as mode) {
+  <div class="container mode">
+    <a routerLink="/mods" class="back-btn">
+      <svg icon="arrow" class="svg18 svg prev-page-icon"></svg>
+      Назад
+    </a>
+
+    <div class="mode__page">
+      <div class="mode__header">
+        <div class="mode__user">
+          <p class="mode__title">{{ mode.name }}</p>
+          <p class="mode__author">{{ mode.author }}</p>
+          <p class="mode__description">{{ mode.description }}</p>
+        </div>
+
+        <div class="mode__stats">
+          <div class="mode__stat">
+            <svg icon="heart-filled" class="svg24"></svg>
+            {{ mode.likesCount }}
+          </div>
+
+          <div class="mode__stat">
+            <svg icon="messages-thin" class="svg28"></svg>
+            {{ mode.commentsCount }}
+          </div>
+        </div>
+      </div>
+
+      <wm-images-slider class="mode__slider" [options]="customOptions" [slides]="mode.images"></wm-images-slider>
+
+      <div class="mode__divider"></div>
+
+      <p class="mode__comments-title">Комментарии:</p>
+
+      <div class="mode__comment-input">
+        <svg icon="avatar-light" class="svg38"></svg>
+        <input class="mode__comment-field" type="text" placeholder="Оставить комментарий...">
+      </div>
+
+      <div class="mode__comment">
+        <svg icon="avatar-light" class="svg34"></svg>
+
+        <div class="mode__comment-body">
+          <div class="mode__comment-header">
+            <p class="mode__comment-username">User</p>
+
+            <div class="mode__comment-meta">
+              <p class="mode__comment-date">25.10.25</p>
+              <p class="mode__comment-time">16:30</p>
+            </div>
+          </div>
+
+          <p class="mode__comment-text">
+            Классные текстуры
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+}

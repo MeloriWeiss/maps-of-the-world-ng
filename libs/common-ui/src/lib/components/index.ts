@@ -8,6 +8,7 @@ import { LabeledCheckboxComponent } from './labeled-checbox/labeled-checkbox.com
 import { DeskListComponent } from './desk-list/desk-list.component';
 import { PaginationService } from './pagination/pagination.service';
 import { ImagesSliderComponent } from './images-slider/images-slider.component';
+import { ModeCardComponent } from './mode-card/mode-card.component';
 
 export {
   FormInputComponent,
@@ -20,4 +21,5 @@ export {
   DeskListComponent,
   PaginationService,
   ImagesSliderComponent,
+  ModeCardComponent,
 };

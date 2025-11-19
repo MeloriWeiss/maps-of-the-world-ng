@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { PaginationComponent } from '../pagination/pagination.component';
+import { PaginationComponent } from '../index';
 import { NgTemplateOutlet } from '@angular/common';
 
 @Component({
@@ -10,5 +10,4 @@ import { NgTemplateOutlet } from '@angular/common';
   styleUrl: './desk-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DeskListComponent {
-}
+export class DeskListComponent {}

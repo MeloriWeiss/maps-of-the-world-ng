@@ -5,10 +5,8 @@ import { ModsFiltersItemComponent } from './mods-filters-item/mods-filters-item.
 
 @Component({
   selector: 'wm-mods-list-sidebar',
-  imports: [
-    AsyncPipe,
-    ModsFiltersItemComponent,
-  ],
+  standalone: true,
+  imports: [AsyncPipe, ModsFiltersItemComponent],
   templateUrl: './mods-list-sidebar.component.html',
   styleUrl: './mods-list-sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
