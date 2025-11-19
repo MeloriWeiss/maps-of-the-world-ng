@@ -1,28 +1,20 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ModeCardComponent, SvgComponent } from '@wm/common-ui';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { MockService } from '@wm/data-access/mock/mock.service';
+import { Mode } from '@wm/data-access/mods';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'wm-profile-page',
-  imports: [
-    ReactiveFormsModule,
-    SvgComponent,
-    ModeCardComponent,
-    AsyncPipe,
-    RouterLinkActive,
-    RouterLink,
-  ],
+  imports: [ReactiveFormsModule, SvgComponent, ModeCardComponent, AsyncPipe],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfilePageComponent {
-  protected readonly booleanAttribute = booleanAttribute;
-  protected readonly isFinite = isFinite;
+  #mockService = inject(MockService);
+
+  mods$: Observable<Mode[]> = this.#mockService.getModsData();
 }

@@ -38,44 +38,52 @@
   </div>
 </div>
 
-<div class="container content">
-  <nav>
-    <ul class="discussions-forums-list">
-      <li>
+<div class="container profile-body">
+  <nav class="profile__nav">
+    <ul class="profile__tabs-list">
+      <li class="profile__tabs-item">
         <button
-          [routerLink]="['maps']"
-          routerLinkActive="active"
-          class="discussions-forums-btn"
+          class="profile__tabs-btn"
         >
           <span>Карты</span>
         </button>
       </li>
-      <li>
+      <li class="profile__tabs-item">
         <button
-          [routerLink]="['texture-packs']"
-          routerLinkActive="active"
-          class="discussions-forums-btn"
+          class="profile__tabs-btn"
         >
           <span>Текстур-паки</span>
         </button>
       </li>
-      <li>
+      <li class="profile__tabs-item">
         <button
-          [routerLink]="['tools']"
-          routerLinkActive="active"
-          class="discussions-forums-btn"
+          class="profile__tabs-btn"
         >
           <span>Понравилось</span>
         </button>
       </li>
     </ul>
   </nav>
+
+  <div class="profile-maps">
+    <div class="profile__published-maps">
+      <h2 class="profile__published-maps-title">Опубликованные карты:</h2>
+
+      <div class="profile__cards">
+        @for (mode of mods$ | async; track mode.id) {
+          <wm-mode-card class="profile__card" [mode]="mode"></wm-mode-card>
+        }
+      </div>
+    </div>
+
+    <div class="profile__created-maps">
+      <h2 class="profile__created-maps-title">Созданные карты:</h2>
+
+      <div class="profile__cards">
+        @for (mode of mods$ | async; track mode.id) {
+          <wm-mode-card class="profile__card" [mode]="mode"></wm-mode-card>
+        }
+      </div>
+    </div>
+  </div>
 </div>
-
-<!--<ng-container>-->
-<!--  @for (mode of mods$ | async; track mode.id) {-->
-<!--    <wm-mode-card [mode]="mode"></wm-mode-card>-->
-<!--  }-->
-<!--</ng-container>-->
-
-<h2 class="profile__subtitle">Опубликованные карты:</h2>

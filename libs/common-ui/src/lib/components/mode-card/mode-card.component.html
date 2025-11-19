@@ -5,7 +5,7 @@
         <svg icon="arrow-tailless" class="svg16"></svg>
       </button>
 
-      <div class="header">
+      <div [routerLink]="['/mods', mode.id]" class="header">
         <div class="mode-name">{{ mode.name }}</div>
         <div class="mode-username">{{ mode.author }}</div>
       </div>

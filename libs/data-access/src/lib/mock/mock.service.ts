@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { Discussion, GetDiscussionsDto } from '../forum';
 import { GetModsDto, Mode } from '../mods';
 
@@ -172,6 +172,121 @@ export class MockService {
     );
   }
 
+  getModsData(): Observable<Mode[]> {
+    return of([
+      {
+        id: 1,
+        name: 'Горная тропа',
+        author: 'Дмитрий',
+        likesCount: 209,
+        commentsCount: 14,
+        description:
+          'Текстуры домов, дорог, окружения и атрибутов деревни дварфов',
+        images: [
+          {
+            url: '/assets/imgs/mods/mode-preview-1.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-2.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-3.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-4.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-5.png',
+          },
+        ],
+      },
+      {
+        id: 2,
+        name: 'Горная тропа',
+        author: 'Дмитрий',
+        likesCount: 209,
+        commentsCount: 14,
+        description:
+          'Текстуры домов, дорог, окружения и атрибутов деревни дварфов',
+        images: [
+          {
+            url: '/assets/imgs/mods/mode-preview-1.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-2.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-3.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-4.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-5.png',
+          },
+        ],
+      },
+      {
+        id: 3,
+        name: 'Горная тропа',
+        author: 'Дмитрий',
+        likesCount: 209,
+        commentsCount: 14,
+        description:
+          'Текстуры домов, дорог, окружения и атрибутов деревни дварфов',
+        images: [
+          {
+            url: '/assets/imgs/mods/mode-preview-1.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-2.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-3.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-4.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-5.png',
+          },
+        ],
+      },
+      {
+        id: 4,
+        name: 'Горная тропа',
+        author: 'Дмитрий',
+        likesCount: 209,
+        commentsCount: 14,
+        description:
+          'Текстуры домов, дорог, окружения и атрибутов деревни дварфов',
+        images: [
+          {
+            url: '/assets/imgs/mods/mode-preview-1.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-2.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-3.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-4.png',
+          },
+          {
+            url: 'assets/imgs/mods/mode-preview-5.png',
+          },
+        ],
+      },
+    ]);
+  }
+
+  getModeById(id: number): Observable<Mode | undefined> {
+    return this.getModsData().pipe(
+      map((mods) => mods.find((mode) => mode.id === id))
+    );
+  }
+
   getModsFilters() {
     return of([
       {
@@ -203,7 +318,7 @@ export class MockService {
             count: 12,
             selected: false,
           },
-        ]
+        ],
       },
       {
         name: 'Интерьер',

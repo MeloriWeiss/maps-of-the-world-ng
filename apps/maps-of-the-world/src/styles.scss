@@ -9,12 +9,14 @@
   --light-gray-color: #AAAAAA;
   --primary-color: #948D81;
   --dark-primary-color: #524E47;
+  --dark-primary-color-rgb: 117, 113, 108;
   --dark-primary-transparent-color: #524E47B2;
   --light-primary-color: #E9E6E3;
   --blue-link-color: #0015FF;
 
   --semi-dark-font-color: #2D2924;
   --dark-gray-font-color: #414141;
+  --light-gray-font-color: #747474;
   --light-transparent-font-color: #FFFFFFCC;
 
   --container-max-width-sm: 1080px;
@@ -74,4 +76,19 @@ a {
 .owl-carousel .owl-item {
   display: grid;
   place-content: center;
+}
+
+.back-btn {
+  width: 100px;
+  height: 33px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 20px;
+  font-family: 'Play', sans-serif;
+  color: var(--light-color);
+  background-color: var(--primary-color);
+  padding: 5px 10px;
+  border-radius: 10px;
+  margin-bottom: 22px;
 }
