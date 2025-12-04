@@ -5,22 +5,22 @@
         <svg icon="arrow-tailless" class="svg16"></svg>
       </button>
 
-      <div [routerLink]="['/mods', mode.id]" class="header">
+      <a [routerLink]="['/mods', mode.id]" class="header">
         <div class="mode-name">{{ mode.name }}</div>
         <div class="mode-username">{{ mode.author }}</div>
-      </div>
+      </a>
     </div>
 
     <div class="statistics">
       <div class="count-statistics">
-        <svg icon="heart-filled" class="svg18"></svg>
+        <svg icon="heart-filled" class="svg18 svg-heart"></svg>
         {{ mode.likesCount }}
       </div>
 
-      <div class="count-statistics">
+      <a class="count-statistics" [routerLink]="['/mods', mode.id]">
         {{ mode.commentsCount }}
         <svg icon="messages-thin" class="svg30"></svg>
-      </div>
+      </a>
     </div>
   </div>
 

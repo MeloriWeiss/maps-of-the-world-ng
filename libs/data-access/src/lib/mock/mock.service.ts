@@ -3,10 +3,17 @@ import { map, Observable, of } from 'rxjs';
 import { Discussion, GetDiscussionsDto } from '../forum';
 import { GetModsDto, Mode } from '../mods';
 
+/**
+ * Сервис для работы с моковыми данными.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class MockService {
+  /**
+   * Получает список обсуждений на форуме.
+   * @returns Массив обсуждений.
+   */
   getDiscussions(params: GetDiscussionsDto): Observable<Discussion[]> {
     return of(
       [
@@ -14,35 +21,35 @@ export class MockService {
           id: 1,
           theme: 'Тема',
           author: 'Иван',
-          createdAt: '20.02.20205',
+          createdAt: '2025-12-01T12:41:06+03:00',
           commentsCount: 9,
         },
         {
           id: 2,
           theme: 'Тема',
           author: 'Иван',
-          createdAt: '20.02.20205',
+          createdAt: '2025-11-01T12:41:06+03:00',
           commentsCount: 9,
         },
         {
           id: 3,
           theme: 'Тема',
           author: 'Иван',
-          createdAt: '20.02.20205',
+          createdAt: '2025-10-02T12:41:06+03:00',
           commentsCount: 9,
         },
         {
           id: 4,
           theme: 'Тема',
           author: 'Владимир',
-          createdAt: '20.02.20205',
+          createdAt: '2025-11-28T12:41:06+03:00',
           commentsCount: 9,
         },
         {
           id: 5,
           theme: 'Тема',
           author: 'Иван',
-          createdAt: '20.02.20205',
+          createdAt: '2025-07-04T12:41:06+03:00',
           commentsCount: 9,
         },
       ]

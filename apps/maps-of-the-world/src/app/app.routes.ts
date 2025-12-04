@@ -32,6 +32,10 @@ export const routes: Routes = [
         path: 'mods',
         loadChildren: () => import('@wm/mods').then((m) => m.modsRoutes),
       },
+      // {
+      //   path: 'workshop',
+      //   loadComponent: () => import('@wm/workshop').then((m) => m.WorkshopPageComponent)
+      // },
     ],
     canActivate: [canActivateAuth],
     title: 'Maps of the world',

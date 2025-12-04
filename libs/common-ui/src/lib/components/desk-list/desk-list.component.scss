@@ -6,7 +6,7 @@
 .desk-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: center;
   padding: 25px 40px 18px;
   color: var(--light-color);
   font-weight: 400;
@@ -32,7 +32,7 @@
 .desk-blocks {
   display: grid;
   grid-template-columns: 1fr 230px;
-  gap: 87px;
+  gap: 50px;
 }
 
 .desk-cards {

@@ -97,6 +97,7 @@
   font-weight: 400;
   font-size: 16px;
   color: var(--light-gray-font-color);
+  outline: none;
 }
 
 .mode__comment {
@@ -132,10 +133,4 @@
   font-weight: 400;
   font-size: 14px;
   color: var(--dark-primary-color);
-}
-
-:host ::ng-deep wm-images-slider .owl-carousel .owl-item img {
-  width: 160px !important;
-  height: 160px !important;
-  object-fit: cover;
 }

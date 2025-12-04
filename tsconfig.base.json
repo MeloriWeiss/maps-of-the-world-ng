@@ -21,8 +21,10 @@
       "@wm/data-access/*": ["libs/data-access/src/lib/*"],
       "@wm/forum": ["libs/forum/src/index.ts"],
       "@wm/layout/*": ["libs/layout/src/lib/*"],
-      "@wm/profile": ["libs/profile/src/index.ts"],
       "@wm/mods": ["libs/mods/src/index.ts"],
+      "@wm/profile": ["libs/profile/src/index.ts"],
+      "@wm/workshop": ["libs/workshop/src/index.ts"],
+      "@wm/shared": ["libs/shared/src/index.ts"]
     },
     "baseUrl": ".",
     "rootDir": "."

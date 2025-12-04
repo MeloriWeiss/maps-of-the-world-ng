@@ -13,7 +13,6 @@
         <p class="stat-card__item">Создано: <span>2</span></p>
         <p class="stat-card__item">Опубликовано: <span>1</span></p>
       </div>
-
     </div>
 
     <div class="profile__user">
@@ -67,7 +66,7 @@
 
   <div class="profile-maps">
     <div class="profile__published-maps">
-      <h2 class="profile__published-maps-title">Опубликованные карты:</h2>
+      <h2 class="profile__published-maps-title">Опубликованные текстур-паки:</h2>
 
       <div class="profile__cards">
         @for (mode of mods$ | async; track mode.id) {
@@ -77,7 +76,7 @@
     </div>
 
     <div class="profile__created-maps">
-      <h2 class="profile__created-maps-title">Созданные карты:</h2>
+      <h2 class="profile__created-maps-title">Созданные текстур-паки:</h2>
 
       <div class="profile__cards">
         @for (mode of mods$ | async; track mode.id) {

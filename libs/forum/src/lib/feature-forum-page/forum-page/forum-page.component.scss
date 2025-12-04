@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  padding-top: 68px;
+  padding-bottom: 112px;
+}
+
+.forum-content {
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+}

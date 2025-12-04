@@ -6,49 +6,7 @@
     <svg icon="search" class="svg20"></svg>
   </wm-search-input>
 
-  <div class="sidebar-actions" sidebar>
-    <button class="new-action-btn">Новое обсуждение</button>
-    <div class="sidebar">
-      <div class="discussions-forums-list-header">
-        <span>Форумы</span>
-        <span>Темы</span>
-      </div>
-      <nav>
-        <ul class="discussions-forums-list">
-          <li>
-            <button
-              [routerLink]="['maps']"
-              routerLinkActive="active"
-              class="discussions-forums-btn"
-            >
-              <span>Карты</span>
-              <span>122</span>
-            </button>
-          </li>
-          <li>
-            <button
-              [routerLink]="['tools']"
-              routerLinkActive="active"
-              class="discussions-forums-btn"
-            >
-              <span>Инструменты</span>
-              <span>4</span>
-            </button>
-          </li>
-          <li>
-            <button
-              [routerLink]="['texture-packs']"
-              routerLinkActive="active"
-              class="discussions-forums-btn"
-            >
-              <span>Текстур-паки</span>
-              <span>12</span>
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </div>
+  <wm-forum-sidebar sidebar></wm-forum-sidebar>
 
   <ng-container cards>
     @for (discussion of discussions$ | async; track discussion.id) {

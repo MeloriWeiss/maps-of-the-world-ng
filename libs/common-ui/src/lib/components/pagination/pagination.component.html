@@ -4,10 +4,11 @@
   </button>
   <div class="pagination-numbers">
     @for (page of visiblePages(); track page) {
-      <span
+      <button
+        (click)="changePage(page)"
         [class.active]="page === currentPage"
-        class="current-page-number"
-      >{{ page }}</span>
+        class="pagination-number no-select"
+      >{{ page }}</button>
     }
   </div>
   <button class="arrow-btn" (click)="changePage(currentPage + 1)">

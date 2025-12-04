@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
-  signal,
 } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import {
@@ -14,14 +13,13 @@ import {
 import {
   ActivatedRoute,
   Router,
-  RouterLink,
-  RouterLinkActive,
 } from '@angular/router';
 import { MockService } from '@wm/data-access/mock/mock.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DiscussionCardComponent } from './discussion-card/discussion-card.component';
 import { debounceTime, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ForumSidebarComponent } from '../../ui';
 
 @Component({
   selector: 'wm-forum-discussions-list',
@@ -29,11 +27,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     AsyncPipe,
     DeskListComponent,
     DiscussionCardComponent,
-    RouterLinkActive,
     SearchInputComponent,
     SvgComponent,
     ReactiveFormsModule,
-    RouterLink,
+    ForumSidebarComponent,
   ],
   templateUrl: './forum-discussions-list.component.html',
   styleUrl: './forum-discussions-list.component.scss',
