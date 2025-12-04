@@ -1,22 +1,26 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { map, switchMap } from 'rxjs';
 import { MockService } from '@wm/data-access/mock/mock.service';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, Location } from '@angular/common';
 import { ImagesSliderComponent, SvgComponent } from '@wm/common-ui';
 import { OwlOptions } from 'ngx-owl-carousel-o';
+import { NavigationHistoryService } from '@wm/shared';
 
 @Component({
   selector: 'wm-mods-page',
   standalone: true,
-  imports: [AsyncPipe, RouterLink, SvgComponent, ImagesSliderComponent],
+  imports: [AsyncPipe, SvgComponent, ImagesSliderComponent],
   templateUrl: './mods-page.component.html',
   styleUrl: './mods-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModsPageComponent {
   #activatedRoute = inject(ActivatedRoute);
+  #location = inject(Location);
+  #router = inject(Router);
   #mockService = inject(MockService);
+  #navigationService = inject(NavigationHistoryService);
 
   mode$ = this.#activatedRoute.paramMap.pipe(
     map((pm) => Number(pm.get('id'))),
@@ -51,4 +55,11 @@ export class ModsPageComponent {
     },
     nav: false,
   };
+
+  back() {
+    if (this.#navigationService.hasPrevRoutes()) {
+      return this.#location.back();
+    }
+    this.#router.navigate(['mods']).then();
+  }
 }

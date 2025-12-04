@@ -8,6 +8,7 @@
   font-family: 'Platypi', sans-serif;
   font-weight: 400;
   align-items: center;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2470588235);
 }
 
 .header {
@@ -31,6 +32,7 @@
   font-size: 15px;
   line-height: 21px;
   color: var(--primary-color);
+  justify-self: start;
 }
 
 .messages-count {

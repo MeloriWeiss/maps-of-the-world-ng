@@ -1,7 +1,10 @@
 <div class="container desk-container">
   <div class="desk-header">
-    <span>Активные темы 1-21 из 138</span>
-    <ng-container [ngTemplateOutlet]="pagination"></ng-container>
+    @if (pageable()) {
+      <span>Активные темы 1-21 из 138</span>
+    } @else {
+      <span>{{ title() }}</span>
+    }
     <ng-content select="[searchControl]"></ng-content>
   </div>
 
@@ -14,12 +17,8 @@
       <ng-content select="[sidebar]"></ng-content>
     </div>
 
-    <ng-container [ngTemplateOutlet]="pagination"></ng-container>
+    @if (pageable()) {
+      <wm-pagination class="pagination-bottom"></wm-pagination>
+    }
   </div>
 </div>
-
-<ng-template #pagination>
-  <wm-pagination
-    class="pagination-bottom"
-  ></wm-pagination>
-</ng-template>

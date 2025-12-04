@@ -19,7 +19,9 @@ export class PaginationComponent {
   currentPage = this.#paginationService.currentPage;
   visiblePages = this.#paginationService.visiblePages;
 
-  changePage(page: number) {
+  changePage(page: number | '...') {
+    if (page === '...') return;
+
     this.#paginationService.changePage(page);
   }
 }

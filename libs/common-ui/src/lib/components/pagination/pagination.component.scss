@@ -8,12 +8,21 @@
   font-weight: 400;
   font-size: 22px;
   line-height: 25px;
+  height: 25px;
 
   &.light {
     color: var(--light-color);
 
     .svg {
       color: var(--light-color);
+    }
+
+    .pagination-number {
+      color: var(--light-color);
+
+      &.active {
+        background-color: var(--light-transparent-color);
+      }
     }
   }
 }
@@ -42,8 +51,16 @@
   gap: 2px;
 }
 
-.current-page-number {
-  &.active {
-    background-color: var(--light-color);
-  }
+.pagination-number {
+  width: 35px;
+  height: 35px;
+  text-align: center;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.pagination-number.active {
+  background-color: var(--light-color);
 }

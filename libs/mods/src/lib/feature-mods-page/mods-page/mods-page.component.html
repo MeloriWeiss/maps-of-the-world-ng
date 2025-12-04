@@ -1,9 +1,9 @@
 @if (mode$ | async; as mode) {
   <div class="container mode">
-    <a routerLink="/mods" class="back-btn">
+    <button (click)="back()" class="back-btn">
       <svg icon="arrow" class="svg18 svg prev-page-icon"></svg>
       Назад
-    </a>
+    </button>
 
     <div class="mode__page">
       <div class="mode__header">
