@@ -1,0 +1,26 @@
+.profile-maps {
+  padding: 33px 20px 42px;
+}
+
+.profile__created-maps-title,
+.profile__published-maps-title {
+  font-size: 26px;
+  font-family: 'Play', sans-serif;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.profile__created-maps-title {
+  margin-top: 40px;
+}
+
+.profile__published-maps,
+.profile__created-maps {
+  width: 90%;
+
+  .profile__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+}

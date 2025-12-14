@@ -1,4 +1,4 @@
-import { forumRoutes } from './forumRoutes';
+import { forumRoutes } from './forum-routes';
 
 export {
   forumRoutes

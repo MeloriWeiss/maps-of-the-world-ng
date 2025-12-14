@@ -9,7 +9,6 @@
   --light-gray-color: #AAAAAA;
   --primary-color: #948D81;
   --dark-primary-color: #524E47;
-  --dark-primary-color-rgb: 117, 113, 108;
   --dark-primary-transparent-color: #524E47B2;
   --light-primary-color: #E9E6E3;
   --blue-link-color: #0015FF;
@@ -102,4 +101,9 @@ a {
 
 .small-slider .owl-carousel .owl-item img {
   width: 111px;
+}
+
+.primary-bg {
+  background: var(--light-primary-color);
+  border-radius: 20px;
 }

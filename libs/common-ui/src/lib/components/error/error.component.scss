@@ -1,3 +1,11 @@
+:host {
+  &.only-error-info {
+    .container {
+      height: auto;
+    }
+  }
+}
+
 .container {
   display: grid;
   place-content: center;

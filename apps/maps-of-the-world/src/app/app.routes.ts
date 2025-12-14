@@ -8,7 +8,6 @@ import {
 import { AuthLayoutComponent } from '@wm/layout/auth';
 import { BaseLayoutComponent } from '@wm/layout/base';
 import { ErrorComponent } from '@wm/common-ui';
-import { ProfilePageComponent } from '@wm/profile';
 
 export const routes: Routes = [
   {
@@ -22,7 +21,7 @@ export const routes: Routes = [
       },
       {
         path: 'profile/:id',
-        component: ProfilePageComponent,
+        loadChildren: () => import('@wm/profile').then((m) => m.profileRoutes),
       },
       {
         path: 'forum',
