@@ -1,1 +1,16 @@
+:host {
+  min-height: 100dvh;
+  display: block;
+  position: relative;
+}
 
+.footer-spy {
+  height: 161px;
+}
+
+.footer {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+}

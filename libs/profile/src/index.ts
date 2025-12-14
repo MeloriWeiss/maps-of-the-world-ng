@@ -1,1 +1,2 @@
-export { ProfilePageComponent } from './lib/feature-profile-page/profile-page.component';
+export * from './lib/constants';
+export * from './lib/feature-profile-page';

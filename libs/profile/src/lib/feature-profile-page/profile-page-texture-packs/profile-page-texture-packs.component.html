@@ -1,0 +1,21 @@
+<div class="profile-maps primary-bg">
+  <div class="profile__published-maps">
+    <h2 class="profile__published-maps-title">Опубликованные текстур-паки:</h2>
+
+    <div class="profile__cards">
+      @for (mode of mods$ | async; track mode.id) {
+        <wm-mode-card [mode]="mode"></wm-mode-card>
+      }
+    </div>
+  </div>
+
+  <div class="profile__created-maps">
+    <h2 class="profile__created-maps-title">Созданные текстур-паки:</h2>
+
+    <div class="profile__cards">
+      @for (mode of mods$ | async; track mode.id) {
+        <wm-mode-card [mode]="mode"></wm-mode-card>
+      }
+    </div>
+  </div>
+</div>

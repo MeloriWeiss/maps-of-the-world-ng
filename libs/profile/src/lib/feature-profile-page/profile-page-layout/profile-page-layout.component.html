@@ -1,0 +1,78 @@
+<div class="container profile-container">
+  <div class="profile-header-wrapper">
+    <div class="profile-header">
+      <div class="profile-stats">
+
+        <div class="stat-card">
+          <h3 class="stat-card__title">Карты</h3>
+          <p class="stat-card__item">Создано: <span>3</span></p>
+          <p class="stat-card__item">Опубликовано: <span>1</span></p>
+        </div>
+
+        <div class="stat-card">
+          <h3 class="stat-card__title">Текстур-паки</h3>
+          <p class="stat-card__item">Создано: <span>2</span></p>
+          <p class="stat-card__item">Опубликовано: <span>1</span></p>
+        </div>
+      </div>
+
+      <div class="profile__user">
+        <div class="profile__user-info">
+          <p class="profile__username">Username</p>
+
+          <div class="metrics">
+            <a class="metrics__item">
+              <svg icon="heart" class="svg30"></svg>
+              209
+            </a>
+
+            <a class="metrics__item">
+              <svg icon="share" class="svg30"></svg>
+              103
+            </a>
+          </div>
+        </div>
+
+        <svg icon="avatar-light" class="svg120"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-body">
+    <nav class="profile__nav">
+      <ul class="profile__tabs-list">
+        <li class="profile__tabs-item">
+          <button
+            [routerLink]="['maps']"
+            routerLinkActive="active"
+            class="profile__tabs-btn"
+          >
+            Карты
+          </button>
+        </li>
+        <li class="profile__tabs-item">
+          <button
+            [routerLink]="['texture-packs']"
+            routerLinkActive="active"
+            class="profile__tabs-btn"
+          >
+            Текстур-паки
+          </button>
+        </li>
+        <li class="profile__tabs-item">
+          <button
+            [routerLink]="['favourite']"
+            routerLinkActive="active"
+            class="profile__tabs-btn"
+          >
+            Понравилось
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
