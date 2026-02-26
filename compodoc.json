@@ -1,4 +1,4 @@
 {
-  "output": "documentation",
+  "output": "docs",
   "tsconfig": "tsconfig.json"
 }

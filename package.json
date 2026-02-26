@@ -6,8 +6,10 @@
     "start": "nx run maps-of-the-world:serve --open",
     "build": "nx build maps-of-the-world",
     "doc": "compodoc -p compodoc.json",
+    "lint": "nx run-many --target=lint --all",
+    "test": "nx run-many --target=test --all",
     "watch": "nx build --watch --configuration development",
-    "test": "nx test"
+    "prepare": "husky"
   },
   "private": true,
   "dependencies": {
@@ -52,6 +54,7 @@
     "angular-eslint": "^19.2.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
+    "husky": "^9.1.7",
     "jasmine-core": "~5.6.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
@@ -68,5 +71,9 @@
     "ts-node": "10.9.1",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.40.0"
-  }
+  },
+  "main": "index.js",
+  "repository": "https://github.com/gmhelper/maps-of-the-world.git",
+  "author": "Evgeniy Nazarov <zentorno.2000@mail.ru>",
+  "license": "MIT"
 }
