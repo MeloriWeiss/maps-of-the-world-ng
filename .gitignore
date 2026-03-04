@@ -41,6 +41,12 @@ testem.log
 .DS_Store
 Thumbs.db
 
+# Docs
+/docs
+/documentation
+
+# Npm
+package-lock.json
 
 
 .nx/cache

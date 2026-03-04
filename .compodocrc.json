@@ -1,0 +1,9 @@
+{
+  "tsconfig": "./tsconfig.compodoc.json",
+  "output": "./documentation",
+  "name": "Maps of the World",
+  "basePath": ".",
+  "disableCoverage": false,
+  "disablePrivate": false,
+  "disableRoutes": false
+}
