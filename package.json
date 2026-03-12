@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "nx run maps-of-the-world:serve --open",
     "build": "nx build maps-of-the-world",
+    "build:prod": "nx build maps-of-the-world --prod",
     "lint": "nx run-many --target=lint --all",
     "test": "nx run-many --target=test --all",
     "docs:gen": "rimraf documentation && compodoc -p .compodocrc.json",
