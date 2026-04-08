@@ -1,0 +1,85 @@
+<div class="layers">
+  <div class="layers__header">
+    <span class="layers__title">Слои</span>
+    <button type="button" class="layers__add" (click)="addLayer()">+</button>
+  </div>
+
+  <!--  @if (layers(); as layers) {-->
+  <!--    @if (layersCount()) {-->
+  <!--      <ul class="layers__list">-->
+  <!--        @for (layerId of layersOrder(); track layerId) {-->
+  <!--          <li-->
+  <!--            class="layers__item"-->
+  <!--            [class.layers__item&#45;&#45;active]="layerId === activeLayerId()"-->
+  <!--            draggable="true"-->
+  <!--            (dragstart)="onLayerDragStart(layerId, $event)"-->
+  <!--            (dragover)="onLayerDragOver($event)"-->
+  <!--            (drop)="onLayerDrop(layerId, $event)"-->
+  <!--          >-->
+  <!--            <div class="layers__row">-->
+  <!--              @if (editingLayer.id !== layerId) {-->
+  <!--                <button-->
+  <!--                  type="button"-->
+  <!--                  class="layers__name"-->
+  <!--                  (click)="setActiveLayer(layerId)"-->
+  <!--                  (dblclick)="startRename(layerId)"-->
+  <!--                >-->
+  <!--                  {{ layers[layerId].name }}-->
+  <!--                </button>-->
+  <!--              } @else if (editingLayer.id === layerId) {-->
+  <!--                <input-->
+  <!--                  class="layers__name-input"-->
+  <!--                  [value]="editingLayer.name"-->
+  <!--                  (input)="onEditingNameChange($event)"-->
+  <!--                  (blur)="finishRename(layerId)"-->
+  <!--                  (keydown.enter)="finishRename(layerId)"-->
+  <!--                  (keydown.escape)="stopEditing()"-->
+  <!--                />-->
+  <!--              }-->
+
+  <!--              <div class="layers__controls">-->
+  <!--                <button-->
+  <!--                  type="button"-->
+  <!--                  class="layers__order"-->
+  <!--                  (click)="moveLayerUp(layerId)"-->
+  <!--                >-->
+  <!--                  ▲-->
+  <!--                </button>-->
+
+  <!--                <button-->
+  <!--                  type="button"-->
+  <!--                  class="layers__order"-->
+  <!--                  (click)="moveLayerDown(layerId)"-->
+  <!--                >-->
+  <!--                  ▼-->
+  <!--                </button>-->
+
+  <!--                <button-->
+  <!--                  type="button"-->
+  <!--                  class="layers__visibility"-->
+  <!--                  (click)="toggleLayerVisibility(layerId)"-->
+  <!--                >-->
+  <!--                  {{ layers[layerId].visible ? 'Пок' : 'Скр' }}-->
+  <!--                </button>-->
+
+  <!--                <button-->
+  <!--                  type="button"-->
+  <!--                  class="layers__remove"-->
+  <!--                  (click)="removeLayer(layerId)"-->
+  <!--                  [disabled]="layersCount() <= 1"-->
+  <!--                >-->
+  <!--                  ✕-->
+  <!--                </button>-->
+  <!--              </div>-->
+  <!--            </div>-->
+
+  <!--          </li>-->
+  <!--        }-->
+  <!--      </ul>-->
+  <!--    } @else {-->
+  <!--      <div class="layers__empty">-->
+  <!--        Нет слоёв-->
+  <!--      </div>-->
+  <!--    }-->
+  <!--  }-->
+</div>

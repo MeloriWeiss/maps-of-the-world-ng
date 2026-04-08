@@ -1,0 +1,20 @@
+<wm-base-modal>
+  <div class="layers__modal">
+    <div class="layers__modal-title">{{ title() }}</div>
+    <div class="layers__modal-text">
+      {{ subtitle() }}
+    </div>
+    <div class="layers__modal-actions">
+      <button
+        type="button"
+        class="layers__modal-btn layers__modal-btn--danger"
+        (click)="confirm(true)"
+      >
+        {{ agreeBtnText() }}
+      </button>
+      <button type="button" class="layers__modal-btn" (click)="confirm(false)">
+        {{ rejectBtnText() }}
+      </button>
+    </div>
+  </div>
+</wm-base-modal>

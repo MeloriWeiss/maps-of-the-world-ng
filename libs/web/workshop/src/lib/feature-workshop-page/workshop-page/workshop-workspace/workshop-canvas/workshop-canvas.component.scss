@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  overflow: hidden;
+  user-select: none;
+  height: 100%;
+}
+
+.workshop__canvas {
+  display: block;
+  background-color: var(--dark-bg-color);
+  overflow: clip;
+  overflow-clip-margin: content-box;
+}

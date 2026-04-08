@@ -1,0 +1,128 @@
+.layers {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+.layers__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.layers__title {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #fff;
+}
+
+.layers__add {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: #16b7ff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.layers__add:hover {
+  background: #0fa1e0;
+}
+
+.layers__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.layers__item {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.12);
+  cursor: grab;
+}
+
+.layers__item--active {
+  background: rgba(22, 183, 255, 0.25);
+}
+
+.layers__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.layers__name {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.layers__name:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.layers__name-input {
+  flex: 1;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+.layers__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.layers__order,
+.layers__visibility,
+.layers__remove {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 11px;
+}
+
+.layers__order:disabled,
+.layers__remove:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.layers__order:hover:not(:disabled),
+.layers__visibility:hover,
+.layers__remove:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.layers__empty {
+  margin-top: 8px;
+  opacity: 0.7;
+  color: #fff;
+}

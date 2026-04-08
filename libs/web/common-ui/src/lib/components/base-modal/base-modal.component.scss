@@ -1,0 +1,18 @@
+:host {
+  position: fixed;
+  inset: 0;
+  background-color: var(--dark-transparent-color);
+  display: grid;
+  place-content: center;
+}
+
+.modal-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--dark-color);
+  background: var(--light-color);
+  border-radius: 6px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px var(--dark-transparent-color);
+}

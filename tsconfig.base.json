@@ -16,19 +16,18 @@
     "target": "ES2022",
     "module": "ES2022",
     "paths": {
-      "@wm/auth": ["libs/auth/src/index.ts"],
-      "@wm/common-ui": ["libs/common-ui/src/index.ts"],
-      "@wm/data-access/*": ["libs/data-access/src/lib/*"],
-      "@wm/forum": ["libs/forum/src/index.ts"],
-      "@wm/layout/*": ["libs/layout/src/lib/*"],
-      "@wm/mods": ["libs/mods/src/index.ts"],
-      "@wm/profile": ["libs/profile/src/index.ts"],
-      "@wm/shared": ["libs/shared/src/index.ts"],
-      "@wm/workshop": ["libs/workshop/src/index.ts"],
-      "@wm/shared": ["libs/shared/src/index.ts"],
-      "@wm/auth-api": ["libs/backend/auth-api/src/index.ts"],
-      "@wm/database": ["libs/backend/database/src/index.ts"]
-      "@wm/home": ["libs/home/src/index.ts"]
+      "@wm/auth": ["libs/web/auth/src/index.ts"],
+      "@wm/auth-api": ["libs/api/auth-api/src/index.ts"],
+      "@wm/common-ui": ["libs/web/common-ui/src/index.ts"],
+      "@wm/data-access/*": ["libs/web/data-access/src/lib/*"],
+      "@wm/database": ["libs/api/database/src/index.ts"],
+      "@wm/forum": ["libs/web/forum/src/index.ts"],
+      "@wm/home": ["libs/web/home/src/index.ts"],
+      "@wm/layout/*": ["libs/web/layout/src/lib/*"],
+      "@wm/mods": ["libs/web/mods/src/index.ts"],
+      "@wm/profile": ["libs/web/profile/src/index.ts"],
+      "@wm/shared": ["libs/web/shared/src/index.ts"],
+      "@wm/workshop": ["libs/web/workshop/src/index.ts"]
     },
     "baseUrl": ".",
     "rootDir": "."

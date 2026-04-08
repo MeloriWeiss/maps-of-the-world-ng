@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  background-color: var(--dark-primary-color);
+}
+
+.controls__header {
+  padding-bottom: 10px;
+}
+
+.controls__body {
+  display: grid;
+  grid-template-columns: 50px 1fr 300px;
+}

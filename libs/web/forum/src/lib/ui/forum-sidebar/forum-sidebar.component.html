@@ -1,0 +1,34 @@
+<div class="forum-sidebar">
+  <div class="sidebar-actions">
+    <div class="sidebar-mobile">
+      <span class="sidebar-active-category">{{ getActiveLabel() }}</span>
+      <svg class="svg15" icon="arrow-tailless" />
+    </div>
+
+    <button class="new-action-btn">Новое обсуждение</button>
+  </div>
+
+  <div class="sidebar">
+    <div class="discussions-forums-list-header">
+      <span>Форумы</span>
+      <span>Темы</span>
+    </div>
+
+    <nav>
+      <ul class="discussions-forums-list">
+        @for (forum of forums; track forum) {
+          <li>
+            <button
+              [routerLink]="[forum.link]"
+              routerLinkActive="active"
+              class="discussions-forums-btn"
+            >
+              <span>{{ forum.label }}</span>
+              <span>{{ forum.count }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </nav>
+  </div>
+</div>

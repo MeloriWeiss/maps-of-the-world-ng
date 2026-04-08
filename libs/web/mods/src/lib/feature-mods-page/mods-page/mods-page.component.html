@@ -1,0 +1,85 @@
+@if (mode$ | async; as mode) {
+  <div class="container mode">
+    <nav class="mode__breadcrumbs-outer">
+      <span class="mode__breadcrumbs-item">{{
+        'Главная > Моды > Деревня Дварфов'
+      }}</span>
+    </nav>
+
+    <aside class="mode__sidebar-actions">
+      <div class="sidebar-mobile">
+        <span class="mode__filter-label">Выберите фильтр...</span>
+        <svg class="svg15" icon="arrow-tailless" />
+      </div>
+
+      <button class="new-action-btn">Новый текстур-пак</button>
+    </aside>
+
+    <article class="mode__card">
+      <nav class="mode__breadcrumbs-inner">
+        <span class="mode__breadcrumb-text">{{
+          'Главная > Моды > Деревня Дварфов'
+        }}</span>
+
+        <wm-search-input class="mode__search">
+          <svg icon="search" class="svg20"></svg>
+        </wm-search-input>
+      </nav>
+
+      <div class="mode__card-body">
+        <button (click)="back()" class="back-btn">
+          <svg icon="arrow" class="svg18 svg prev-page-icon"></svg>
+          <span>Назад</span>
+        </button>
+
+        <div class="mode__content-wrapper">
+          <section class="mode__main-section">
+            <header class="mode__header">
+              <div class="mode__user-info">
+                <h1 class="mode__title">{{ mode.name }}</h1>
+
+                <div class="mode__author">
+                  <svg
+                    icon="avatar-light"
+                    class="mode__author-avatar svg18"
+                  ></svg>
+
+                  <span class="mode__author-name">{{ mode.author }}</span>
+                </div>
+
+                <p class="mode__description">{{ mode.description }}</p>
+              </div>
+
+              <div class="mode__stats">
+                <button class="mode__stat">
+                  <svg icon="heart-filled" class="svg24"></svg>
+                  {{ mode.likesCount }}
+                </button>
+
+                <button class="mode__stat">
+                  <svg icon="messages-thin" class="svg28"></svg>
+                  {{ mode.commentsCount }}
+                </button>
+              </div>
+            </header>
+
+            <wm-images-slider
+              class="mode__slider"
+              [options]="customOptions"
+              [slides]="mode.images"
+            ></wm-images-slider>
+          </section>
+
+          <hr class="mode__divider" />
+
+          <wm-comments-section
+            [comments]="comments | async"
+            class="mode__comments-section"
+          ></wm-comments-section>
+        </div>
+      </div>
+    </article>
+  </div>
+} @else {
+  <wm-error></wm-error>
+}

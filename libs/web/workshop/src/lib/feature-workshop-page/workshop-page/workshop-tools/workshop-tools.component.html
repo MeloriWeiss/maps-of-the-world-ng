@@ -1,0 +1,20 @@
+<form class="controls__header" [formGroup]="drawSetupForm">
+  <label>
+    Color:
+    <input type="color" formControlName="strokeColor" />
+  </label>
+  <label>
+    Line Width:
+    <input type="range" min="1" max="20" formControlName="lineWidth" />
+  </label>
+  <label>
+    Opacity:
+    <input type="range" min="0" max="1" step="0.01" formControlName="opacity" />
+  </label>
+  <button (click)="clearCanvas()" type="button">Clear</button>
+</form>
+<div class="controls__body">
+  <wm-workshop-left-sidebar></wm-workshop-left-sidebar>
+  <wm-workshop-workspace></wm-workshop-workspace>
+  <wm-workshop-right-sidebar></wm-workshop-right-sidebar>
+</div>

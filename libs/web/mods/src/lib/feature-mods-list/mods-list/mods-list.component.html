@@ -1,0 +1,19 @@
+<wm-desk-list [title]="`Текстур-паки 1-10 из 138`">
+  <wm-search-input
+    class="search-input"
+    [formControl]="searchControl"
+    searchControl
+  >
+    <svg icon="search" class="svg20"></svg>
+  </wm-search-input>
+
+  <ng-template #sidebar>
+    <wm-mods-list-sidebar></wm-mods-list-sidebar>
+  </ng-template>
+
+  <ng-container cards>
+    @for (mode of mods$ | async; track mode.id) {
+      <wm-mode-card [mode]="mode"></wm-mode-card>
+    }
+  </ng-container>
+</wm-desk-list>

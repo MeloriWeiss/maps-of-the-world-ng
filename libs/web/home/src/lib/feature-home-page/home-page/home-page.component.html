@@ -1,0 +1,96 @@
+<main class="container home">
+  <section class="home__hero">
+    <img class="home__logo" src="/assets/imgs/new-logo.png" alt="logo" />
+
+    <p class="home__slogan">
+      <strong class="company-name">GameMaster Helper</strong> — онлайн редактор
+      карт для НРИ
+    </p>
+
+    <div class="home__stats">
+      <div class="home__stat-item">
+        <span class="home__stat-value">1K+</span>
+        <span class="home__stat-label"
+          >Создано <br />
+          карт</span
+        >
+      </div>
+
+      <div class="home__stat-item">
+        <span class="home__stat-value">100+</span>
+        <span class="home__stat-label">Паков с <br />текстурами</span>
+      </div>
+
+      <div class="home__stat-item">
+        <span class="home__stat-value">500+</span>
+        <span class="home__stat-label"
+          >Тем на <br />
+          форуме</span
+        >
+      </div>
+
+      <div class="home__stat-item">
+        <span class="home__stat-value">4K</span>
+        <span class="home__stat-label"
+          >Качество <br />
+          скачивания</span
+        >
+      </div>
+    </div>
+
+    <button class="home__action-button">Попробовать</button>
+  </section>
+
+  <div class="home__sections">
+    <section class="maps-section home__section">
+      <header class="section__header">
+        <h2 class="section__title">Популярные карты:</h2>
+
+        <a [routerLink]="['/profile/me/maps']" class="btn-more">
+          Еще
+          <svg icon="arrow" class="svg16 btn-more__icon"></svg>
+        </a>
+      </header>
+
+      <div class="maps-section__content">
+        <wm-map-card [isLikeable]="true"></wm-map-card>
+        <wm-map-card [isLikeable]="true"></wm-map-card>
+        <wm-map-card [isLikeable]="true"></wm-map-card>
+      </div>
+    </section>
+
+    <section class="modes-section home__section">
+      <header class="section__header">
+        <h2 class="section__title">Популярные текстур-паки:</h2>
+
+        <a [routerLink]="['/mods']" class="btn-more">
+          Еще
+          <svg icon="arrow" class="svg16 btn-more__icon"></svg>
+        </a>
+      </header>
+
+      <div class="modes-section__content">
+        @for (mode of modes | async; track mode.id) {
+          <wm-mode-card [mode]="mode"></wm-mode-card>
+        }
+      </div>
+    </section>
+
+    <section class="discussions-section home__section">
+      <header class="section__header">
+        <h2 class="section__title">Популярные обсуждения:</h2>
+
+        <a [routerLink]="['/forum']" class="btn-more">
+          Еще
+          <svg icon="arrow" class="svg16 btn-more__icon"></svg>
+        </a>
+      </header>
+
+      <div class="discussion-section__content">
+        @for (discussion of discussions | async; track discussion.id) {
+          <wm-discussion-card [discussion]="discussion"></wm-discussion-card>
+        }
+      </div>
+    </section>
+  </div>
+</main>
