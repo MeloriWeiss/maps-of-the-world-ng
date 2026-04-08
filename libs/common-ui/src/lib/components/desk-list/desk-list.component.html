@@ -1,24 +1,28 @@
-<div class="container desk-container">
-  <div class="desk-header">
-    @if (pageable()) {
-      <span>Активные темы 1-21 из 138</span>
-    } @else {
+<div class="container">
+  <div class="desk-container">
+    <div class="desk-header">
+      @if (pageable()) {
       <span>{{ title() }}</span>
-    }
-    <ng-content select="[searchControl]"></ng-content>
-  </div>
-
-  <div class="desk-content">
-    <div class="desk-blocks">
-      <div class="desk-cards">
-        <ng-content select="[cards]"></ng-content>
-      </div>
-
-      <ng-content select="[sidebar]"></ng-content>
+      } @else {
+      <span class="desk-title">{{ crumbs() }}</span>
+      }
+      <ng-content select="[searchControl]"></ng-content>
     </div>
 
-    @if (pageable()) {
+    <div class="desk-content">
+      <div class="desk-blocks">
+        <div class="desk-cards">
+          <ng-content select="[cards]"></ng-content>
+        </div>
+
+        <div class="desk-sidebar desktop-only">
+          <ng-container [ngTemplateOutlet]="sidebarTemplate"></ng-container>
+        </div>
+      </div>
+
+      @if (pageable()) {
       <wm-pagination class="pagination-bottom"></wm-pagination>
-    }
+      }
+    </div>
   </div>
 </div>

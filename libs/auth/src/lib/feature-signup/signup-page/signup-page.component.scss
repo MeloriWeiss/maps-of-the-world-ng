@@ -1,27 +1,31 @@
+@use 'media' as *;
+@use 'functions' as *;
+@use 'mixins' as *;
+
 .register-form {
-  width: clamp(370px, 28vw, 560px);
+  width: fluid(570, 290);
 }
 
 .registration-header {
-  font-family: 'Platypi', sans-serif;
-  font-weight: 500;
-  font-size: 32px;
-  margin-bottom: 36px;
+  @include fluid-text(32, 18);
+  line-height: fluid(37, 21);
+  font-family: 'Platypi', serif;
+  font-weight: 400;
+  margin-bottom: fluid(46, 27);
 }
 
 .registration-body {
   display: grid;
-  grid-gap: 30px;
+  grid-gap: fluid(30, 16);
   font-family: 'Play', sans-serif;
-  font-size: 20px;
+  @include fluid-text(20, 14);
+  line-height: fluid(23, 16);
+  margin-bottom: rem(21);
 }
 
 .register-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 24px;
-  font-size: 11px;
+  @include flex-center();
+  font-size: rem(11);
   color: var(--dark-color);
 
   a {

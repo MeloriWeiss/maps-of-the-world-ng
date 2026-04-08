@@ -5,7 +5,7 @@ import {
   SearchInputComponent,
   SvgComponent,
 } from '@wm/common-ui';
-import { MockService } from '@wm/data-access/mock/mock.service';
+import { MockService } from '@wm/data-access/mock';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, switchMap, tap } from 'rxjs';
@@ -13,7 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe } from '@angular/common';
 import { ModeCardComponent } from '@wm/common-ui';
 import { CarouselModule } from 'ngx-owl-carousel-o';
-import { ModsListSidebarComponent } from './mods-list-sidebar/mods-list-sidebar.component';
+import { ModsListSidebarComponent } from './mods-list-sidebar';
 
 @Component({
   selector: 'wm-mods-list',

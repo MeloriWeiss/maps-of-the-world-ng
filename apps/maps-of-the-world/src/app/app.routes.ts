@@ -16,8 +16,12 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'profile/me',
+        redirectTo: 'home',
         pathMatch: 'full',
+      },
+      {
+        path: 'home',
+        loadChildren: () => import('@wm/home').then((m) => m.HomeRoutes),
       },
       {
         path: 'profile/:id',
@@ -33,7 +37,8 @@ export const routes: Routes = [
       },
       {
         path: 'workshop',
-        loadComponent: () => import('@wm/workshop').then((m) => m.WorkshopPageComponent)
+        loadComponent: () =>
+          import('@wm/workshop').then((m) => m.WorkshopPageComponent),
       },
     ],
     canActivate: [canActivateAuth],

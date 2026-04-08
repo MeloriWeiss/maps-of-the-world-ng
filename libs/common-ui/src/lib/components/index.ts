@@ -9,6 +9,10 @@ import { DeskListComponent } from './desk-list/desk-list.component';
 import { PaginationService } from './pagination/pagination.service';
 import { ImagesSliderComponent } from './images-slider/images-slider.component';
 import { ModeCardComponent } from './mode-card/mode-card.component';
+import { CommentInputComponent } from './comment-input/comment-input.component';
+import { CommentComponent } from './comment/comment.component';
+import { MapCardComponent } from './map-card/map-card.component';
+import { DiscussionCardComponent } from './discussion-card/discussion-card.component';
 
 export {
   FormInputComponent,
@@ -22,4 +26,8 @@ export {
   PaginationService,
   ImagesSliderComponent,
   ModeCardComponent,
+  CommentInputComponent,
+  CommentComponent,
+  MapCardComponent,
+  DiscussionCardComponent,
 };

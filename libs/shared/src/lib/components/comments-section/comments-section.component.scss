@@ -1,0 +1,24 @@
+@use 'media' as *;
+@use 'functions' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  background-color: var(--light-color);
+  padding: fluid(12, 11) fluid(20, 8);
+  border-radius: fluid(15, 10);
+  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgba(0, 0, 0, 0.25);
+}
+
+.comments-section__title {
+  @include fluid-text(18, 14);
+  font-family: 'Play', sans-serif;
+  font-weight: 400;
+  line-height: fluid(21, 16);
+  color: var(--dark-color);
+  margin-bottom: rem(15);
+}
+
+.comments-section__input {
+  margin-bottom: fluid(35, 20);
+}

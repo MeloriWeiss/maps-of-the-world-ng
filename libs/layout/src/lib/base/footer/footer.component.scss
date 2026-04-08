@@ -1,65 +1,94 @@
+@use 'functions' as *;
+@use 'mixins' as *;
+@use 'media' as *;
+
 :host {
   display: block;
   background-color: var(--dark-primary-color);
-  padding: 30px 277px 36px 115px;
+  padding: fluid(32, 19) fluid(277, 80) fluid(36, 32) fluid(107, 97);
   color: var(--light-color);
 }
 
 .footer-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @include mobile-above {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  @include mobile {
+    @include flex-center();
+    flex-direction: column;
+    gap: rem(6);
+  }
 }
 
 .company-info {
   display: grid;
-  grid-template-columns: 44px 1fr;
-  column-gap: 16px;
-  row-gap: 19px;
+  grid-template-columns: rem(44) 1fr;
+  column-gap: rem(16);
+  row-gap: rem(19);
   align-items: center;
 
   .company-name {
     font-family: 'Platypi', sans-serif;
     font-weight: 400;
-    font-size: 20px;
-    line-height: 28px;
+    @include fluid-text(20, 16);
+    line-height: rem(28);
+    white-space: nowrap;
+  }
+
+  .company-logo {
+    @include square(fluid(45, 40));
   }
 
   .policy-info {
     grid-column: 2 / 3;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: rem(4);
+
+    @include mobile {
+      grid-column: 1 / 3;
+      @include flex-center();
+      flex-direction: column;
+    }
   }
 
   .policy-link {
     text-decoration: underline;
     color: var(--light-color);
-    font-size: 14px;
-    line-height: 16px;
+    @include fluid-text(14, 11);
+    line-height: rem(16);
   }
 }
 
 .contacts {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: fluid(36, 25);
+
+  @include mobile {
+    @include flex-center();
+    flex-direction: column;
+  }
 
   .email-info {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: rem(6);
   }
 
   .email {
-    font-size: 18px;
-    line-height: 21px;
-    margin-bottom: 2px;
+    @include fluid-text(18, 11);
+    line-height: rem(21);
+    margin-bottom: rem(2);
+    white-space: nowrap;
   }
 
   .social-links {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: rem(18);
   }
 }

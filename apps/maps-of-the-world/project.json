@@ -31,6 +31,9 @@
           "node_modules/ngx-owl-carousel-o/lib/styles/prebuilt-themes/owl.theme.default.min.css",
           "apps/maps-of-the-world/src/styles.scss"
         ],
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/shared/src/lib/styles"]
+        },
         "scripts": []
       },
       "configurations": {

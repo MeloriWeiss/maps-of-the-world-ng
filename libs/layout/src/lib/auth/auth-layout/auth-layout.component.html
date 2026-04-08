@@ -1,11 +1,19 @@
-<div class="auth-content">
-  <router-outlet></router-outlet>
+<wm-header class="header mobile-only"></wm-header>
+
+<div class="auth-layout">
+  <div class="auth-content">
+    <router-outlet></router-outlet>
+  </div>
+
+  <img
+    class="auth-background"
+    src="/assets/imgs/auth-bg.png"
+    aria-hidden="true"
+    alt="Old Map Background Image"
+    loading="eager"
+  />
 </div>
 
-<img
-  class="auth-background"
-  src="/assets/imgs/auth-bg.png"
-  aria-hidden="true"
-  alt=""
-  loading="eager"
->
+<div class="footer">
+  <wm-footer class="mobile-only"></wm-footer>
+</div>

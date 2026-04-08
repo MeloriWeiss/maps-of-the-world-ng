@@ -1,0 +1,68 @@
+@use '../../../../../shared/src/lib/styles/functions' as *;
+@use '../../../../../shared/src/lib/styles/media' as *;
+@use '../../../../../shared/src/lib/styles/mixins' as *;
+
+:host {
+  display: block;
+  width: fluid(269, 177);
+  background: var(--dark-primary-color);
+  color: var(--light-color);
+  border-radius: rem(20);
+  position: relative;
+}
+
+.map-card__image {
+  width: 100%;
+  border-radius: rem(20);
+  border: fluid(2, 1) solid var(--light-transparent-font-color);
+}
+
+.label__non-likeable {
+  text-align: center;
+  margin: fluid(12, 5) 0 fluid(12, 10);
+}
+
+.label__likeable {
+  margin-left: fluid(5, 3);
+}
+
+.label__likeable,
+.label__non-likeable {
+  font-family: 'Platypi', sans-serif;
+  @include fluid-text(20, 13);
+  line-height: rem(18);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.map-card__label {
+  display: grid;
+  align-items: center;
+  grid-template-columns: fluid(36, 23) 1fr 1fr;
+  margin: rem(3) fluid(8, 5) fluid(11, 8);
+}
+
+.likes-and-shares {
+  @include flex-center();
+  gap: fluid(5, 3);
+  margin-left: fluid(10, 8);
+  margin-top: rem(3);
+}
+
+.icon {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  color: var(--light-color);
+  font-size: rem(13);
+  font-family: 'Platypi', sans-serif;
+  cursor: pointer;
+}
+
+.svg36 {
+  @include square(fluid(36, 23));
+}
+
+.svg16 {
+  @include square(fluid(16, 11));
+}

@@ -1,0 +1,72 @@
+@use '../../../../../shared/src/lib/styles/functions' as *;
+@use '../../../../../shared/src/lib/styles/media' as *;
+@use '../../../../../shared/src/lib/styles/mixins' as *;
+
+.discussion-card {
+  padding: rem(9) fluid(67, 17) rem(9) fluid(47, 31);
+  background-color: var(--light-color);
+  border-radius: fluid(15, 10);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Platypi', serif;
+  font-weight: 400;
+  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgba(0, 0, 0, 0.25);
+}
+
+.header {
+  justify-self: start;
+}
+
+.discussion-theme {
+  font-family: 'Play', sans-serif;
+  @include fluid-text(20, 14);
+  line-height: fluid(23, 16);
+  color: var(--semi-dark-font-color);
+}
+
+.discussion-username {
+  @include fluid-text(18, 11);
+  line-height: fluid(25, 15);
+  color: var(--dark-primary-color);
+}
+
+.discussion-info {
+  @include flex-center();
+  gap: fluid(88, 21);
+}
+
+.time-ago {
+  @include fluid-text(15, 11);
+  line-height: fluid(21, 15);
+  color: var(--primary-color);
+  justify-self: start;
+}
+
+.stats {
+  display: flex;
+  gap: rem(11);
+}
+
+.messages-count,
+.likes-count {
+  @include fluid-text(18, 11);
+  @include flex-center();
+  line-height: fluid(25, 15);
+  color: var(--dark-primary-color);
+  gap: rem(3);
+
+  @include tablet {
+    flex-direction: row-reverse;
+  }
+}
+
+.likes-count {
+  @include tablet-above {
+    @include visually-hidden;
+  }
+}
+
+.svg35 {
+  @include square(fluid(35, 10));
+}

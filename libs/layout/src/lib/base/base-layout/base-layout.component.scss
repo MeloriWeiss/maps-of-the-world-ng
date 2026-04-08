@@ -1,16 +1,18 @@
 :host {
   min-height: 100dvh;
-  display: block;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .footer-spy {
   height: 161px;
 }
 
+:host > div:not(.footer) {
+  flex: 1 0 auto;
+}
+
 .footer {
-  position: absolute;
   width: 100%;
-  bottom: 0;
-  left: 0;
+  flex: 0 0 auto;
 }

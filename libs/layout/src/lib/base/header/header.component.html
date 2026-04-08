@@ -1,14 +1,34 @@
 <header class="header">
   <div class="header-left-side">
     <a [routerLink]="['/']" class="linked-block">
-      <img src="/assets/imgs/logo.png" alt="Логотип">
+      <img src="/assets/imgs/new-logo.png" class="company-logo" alt="Логотип" />
     </a>
+
     <wm-search-input [formControl]="searchControl">
       <svg icon="search" class="svg20"></svg>
     </wm-search-input>
+
+    <button
+      [class.is-active]="isMenuOpen()"
+      (click)="toggleMenu()"
+      type="button"
+      class="burger-button"
+    >
+      <span class="burger-button__line"></span>
+      <span class="burger-button__line"></span>
+      <span class="burger-button__line"></span>
+    </button>
+
+    <div
+      [class.active]="isMenuOpen()"
+      (click)="closeMenu()"
+      (keydown.escape)="closeMenu()"
+      tabindex="0"
+      class="menu-overlay"
+    ></div>
   </div>
 
-  <div class="header-right-side">
+  <div [class.is-open]="isMenuOpen()" class="header-right-side">
     <nav>
       <ul class="header-nav-list">
         <li>
@@ -16,32 +36,45 @@
             [routerLink]="['workshop']"
             routerLinkActive="active"
             class="header-nav-link"
-          >Мастерская</a>
+            (click)="closeMenu()"
+            >Мастерская</a
+          >
         </li>
         <li>
           <a
             [routerLink]="['forum']"
             routerLinkActive="active"
             class="header-nav-link"
-          >Форум</a>
+            (click)="closeMenu()"
+            >Форум</a
+          >
         </li>
         <li>
           <a
             [routerLink]="['mods']"
             routerLinkActive="active"
             class="header-nav-link"
-          >Моды</a>
+            (click)="closeMenu()"
+            >Моды</a
+          >
         </li>
         <li>
           <a
             [routerLink]="['about']"
             routerLinkActive="active"
             class="header-nav-link"
-          >О нас</a>
+            (click)="closeMenu()"
+            >О нас</a
+          >
         </li>
       </ul>
     </nav>
-    <a [routerLink]="['profile', 'me']" class="linked-block avatar-link">
+
+    <a
+      (click)="closeMenu()"
+      [routerLink]="['profile', 'me']"
+      class="linked-block avatar-link"
+    >
       <svg icon="avatar" class="svg40"></svg>
     </a>
   </div>

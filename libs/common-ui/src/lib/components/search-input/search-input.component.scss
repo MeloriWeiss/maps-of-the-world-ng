@@ -1,31 +1,37 @@
+@use 'mixins' as *;
+@use 'functions' as *;
+@use 'media' as *;
+
 :host {
   position: relative;
+  width: fluid(260, 177);
+  min-width: rem(177);
 }
 
 .search-input {
-  width: 260px;
+  width: 100%;
   background: var(--light-transparent-color);
-  padding: 4px 19px 4px 46px;
-  height: 30px;
+  padding: rem(4) rem(20) rem(4) rem(46);
+  height: rem(30);
   border: none;
-  border-radius: 15px;
+  border-radius: rem(15);
   outline: none;
   color: var(--light-color);
-  font-size: 18px;
-  line-height: 23px;
+  @include fluid-text(20, 14);
+  line-height: rem(23);
 
   &::placeholder {
     color: var(--light-color);
     font-family: 'Play', sans-serif;
     font-weight: 400;
-    font-size: 20px;
-    line-height: 23px;
+    @include fluid-text(20, 14);
+    line-height: rem(23);
   }
 }
 
 .search-input-icon {
   position: absolute;
-  top: 7px;
-  left: 19px;
+  top: rem(8);
+  left: rem(20);
   color: var(--light-color);
 }

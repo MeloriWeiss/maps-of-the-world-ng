@@ -1,25 +1,30 @@
-@use "styles/fonts";
-@use "styles/svg";
+@use 'styles/fonts';
+@use 'styles/svg';
+@use 'media' as *;
+@use 'functions' as *;
+@use 'mixins' as *;
 
 :root {
   --dark-color: #000000;
-  --light-color: #FFFFFF;
-  --light-transparent-color: #FFFFFF4C;
-  --gray-color: #4E4E4E;
-  --light-gray-color: #AAAAAA;
-  --primary-color: #948D81;
-  --dark-primary-color: #524E47;
-  --dark-primary-transparent-color: #524E47B2;
-  --light-primary-color: #E9E6E3;
-  --blue-link-color: #0015FF;
+  --light-color: #ffffff;
+  --light-bg-color: #f4f4f4;
+  --light-transparent-color: #ffffff4c;
+  --gray-color: #4e4e4e;
+  --light-gray-color: #aaaaaa;
+  --primary-color: #948d81;
+  --dark-primary-color: #524e47;
+  --dark-primary-transparent-color: #524e47b2;
+  --light-primary-color: #e9e6e3;
+  --blue-link-color: #0015ff;
 
-  --semi-dark-font-color: #2D2924;
+  --semi-dark-font-color: #2d2924;
   --dark-gray-font-color: #414141;
   --light-gray-font-color: #747474;
-  --light-transparent-font-color: #FFFFFFCC;
+  --light-transparent-font-color: #ffffffcc;
 
-  --container-max-width-sm: 1080px;
-  --container-max-width-md: 1150px;
+  // Отказано в применении
+  --container-max-width-sm: 1080;
+  --container-max-width-md: 1150;
 }
 
 *,
@@ -34,9 +39,13 @@ body {
   height: 100dvh;
   background-color: var(--light-color);
   color: var(--dark-color);
-  font-family: "Play", sans-serif;
+  font-family: 'Play', sans-serif;
   font-weight: 400;
   font-style: normal;
+
+  @include mobile {
+    background-color: var(--light-bg-color);
+  }
 }
 
 li {
@@ -47,9 +56,16 @@ a {
   text-decoration: none;
 }
 
+button {
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  outline: none;
+}
+
 .container {
   margin: 0 auto;
-  max-width: var(--container-max-width-md);
+  width: fluid(1150, 370);
 }
 
 .linked-block {
@@ -58,15 +74,22 @@ a {
 
 .button {
   width: 100%;
-  border-radius: 15px;
-  padding-top: 9px;
-  padding-bottom: 10px;
+  border-radius: rem(15);
+  padding-top: rem(9);
+  padding-bottom: rem(10);
   border: none;
   cursor: pointer;
   background: var(--gray-color);
   color: var(--light-color);
-  font-family: 'Platypi', sans-serif;
-  font-size: 15px;
+  font-family: 'Platypi', serif;
+  font-size: rem(15);
+
+  @include mobile {
+    width: rem(216);
+    padding: rem(9) rem(35) rem(14);
+    margin: auto;
+    background-color: var(--primary-color);
+  }
 }
 
 .no-select {
@@ -79,31 +102,59 @@ a {
 }
 
 .back-btn {
-  width: 100px;
-  height: 33px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 20px;
+  width: rem(100);
+  height: rem(33);
+  @include flex-center();
+  gap: rem(6);
+  font-size: rem(20);
   font-family: 'Play', sans-serif;
   color: var(--light-color);
   background-color: var(--primary-color);
   border: none;
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 10px;
-  margin-bottom: 22px;
+  padding: rem(5) rem(10);
+  border-radius: rem(10);
+  margin-bottom: rem(22);
 }
 
 .owl-carousel .owl-item img {
-  width: 150px;
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .small-slider .owl-carousel .owl-item img {
-  width: 111px;
+  width: fluid(111, 65);
 }
 
 .primary-bg {
   background: var(--light-primary-color);
-  border-radius: 20px;
+  border-radius: rem(20);
+}
+
+// Применялось для тестов со слайдером
+//.owl-stage {
+//  background-color: tomato;
+//}
+
+.no-scroll {
+  overflow: hidden;
+}
+
+.new-action-btn,
+.sidebar-mobile {
+  @include fluid-text(20, 14);
+  line-height: rem(16);
+  color: var(--light-color);
+  border: none;
+  padding: rem(21) 0;
+  width: 100%;
+  cursor: pointer;
+  border-radius: fluid(15, 10);
+
+  @include tablet {
+    padding-top: rem(13);
+    padding-bottom: rem(11);
+    margin-bottom: rem(20);
+  }
 }

@@ -1,11 +1,18 @@
+@use 'functions' as *;
+
 :host {
   display: block;
-  padding-top: 68px;
-  padding-bottom: 112px;
+  padding-top: fluid(68, 50);
+  padding-bottom: fluid(120, 85);
 }
 
 .forum-content {
   display: flex;
   flex-direction: column;
-  gap: 35px;
+  gap: fluid(35, 15);
+}
+
+.search-input {
+  width: fluid(236, 142);
+  min-width: rem(142);
 }

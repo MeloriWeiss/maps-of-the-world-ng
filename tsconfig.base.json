@@ -23,8 +23,9 @@
       "@wm/layout/*": ["libs/layout/src/lib/*"],
       "@wm/mods": ["libs/mods/src/index.ts"],
       "@wm/profile": ["libs/profile/src/index.ts"],
+      "@wm/shared": ["libs/shared/src/index.ts"],
       "@wm/workshop": ["libs/workshop/src/index.ts"],
-      "@wm/shared": ["libs/shared/src/index.ts"]
+      "@wm/home": ["libs/home/src/index.ts"]
     },
     "baseUrl": ".",
     "rootDir": "."

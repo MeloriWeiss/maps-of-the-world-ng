@@ -1,26 +1,25 @@
-<form
-  class="login-form"
-  [formGroup]="loginForm"
->
-  <h1 class="login-header">
-    С возвращением!
-  </h1>
+<form class="login-form" [formGroup]="loginForm">
+  <h1 class="login-header">С возвращением!</h1>
 
   <div class="login-body">
     <wm-labeled-form-field-wrapper label="Адрес электронной почты">
-      <wm-form-input placeholder='Введите адрес электронной почты'></wm-form-input>
+      <wm-form-input
+        placeholder="Введите адрес электронной почты"
+      ></wm-form-input>
     </wm-labeled-form-field-wrapper>
 
     <wm-labeled-form-field-wrapper label="Пароль">
       <wm-form-input placeholder="Введите пароль"></wm-form-input>
     </wm-labeled-form-field-wrapper>
 
-    <wm-labeled-checkbox label="Выполнять вход автоматически"></wm-labeled-checkbox>
+    <wm-labeled-checkbox
+      label="Выполнять вход автоматически"
+    ></wm-labeled-checkbox>
 
     <button class="button" type="submit">Войти</button>
   </div>
 
-  <p class='login-link'>
-    Ещё нет аккаунта?&nbsp;<a [routerLink]="['/signup']">Зарегистрироваться</a>
+  <p class="login-link">
+    Еще нет аккаунта?&nbsp;<a [routerLink]="['/signup']">Зарегистрироваться</a>
   </p>
 </form>

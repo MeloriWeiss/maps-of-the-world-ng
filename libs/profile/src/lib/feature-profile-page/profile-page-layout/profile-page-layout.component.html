@@ -2,33 +2,40 @@
   <div class="profile-header-wrapper">
     <div class="profile-header">
       <div class="profile-stats">
-
         <div class="stat-card">
           <h3 class="stat-card__title">Карты</h3>
-          <p class="stat-card__item">Создано: <span>3</span></p>
-          <p class="stat-card__item">Опубликовано: <span>1</span></p>
+          <p class="stat-card__item">
+            Создано: <span>{{ 3 }}</span>
+          </p>
+          <p class="stat-card__item">
+            Опубликовано: <span>{{ 2 }}</span>
+          </p>
         </div>
 
         <div class="stat-card">
           <h3 class="stat-card__title">Текстур-паки</h3>
-          <p class="stat-card__item">Создано: <span>2</span></p>
-          <p class="stat-card__item">Опубликовано: <span>1</span></p>
+          <p class="stat-card__item">
+            Создано: <span>{{ 4 }}</span>
+          </p>
+          <p class="stat-card__item">
+            Опубликовано: <span>{{ 3 }}</span>
+          </p>
         </div>
       </div>
 
       <div class="profile__user">
         <div class="profile__user-info">
-          <p class="profile__username">Username</p>
+          <p class="profile__username">{{ 'Username' }}</p>
 
           <div class="metrics">
             <a class="metrics__item">
-              <svg icon="heart" class="svg30"></svg>
-              209
+              <svg icon="heart" class="svg28"></svg>
+              {{ 209 }}
             </a>
 
             <a class="metrics__item">
-              <svg icon="share" class="svg30"></svg>
-              103
+              <svg icon="share" class="svg28"></svg>
+              {{ 102 }}
             </a>
           </div>
         </div>

@@ -1,26 +1,52 @@
+@use 'functions' as *;
+@use 'media' as *;
+@use 'mixins' as *;
+
 .profile-maps {
-  padding: 33px 20px 42px;
+  padding: rem(33) rem(20) rem(42);
+
+  @include mobile {
+    padding: 0;
+  }
+}
+
+.primary-bg {
+  @include mobile {
+    background-color: transparent;
+  }
 }
 
 .profile__created-maps-title,
 .profile__published-maps-title {
-  font-size: 26px;
+  font-size: rem(26);
   font-family: 'Play', sans-serif;
-  font-weight: 500;
-  margin-bottom: 20px;
+  font-weight: 400;
+  margin-bottom: rem(20);
+
+  @include mobile {
+    font-size: rem(16);
+  }
 }
 
 .profile__created-maps-title {
-  margin-top: 40px;
+  margin-top: rem(20);
+
+  @include mobile {
+    margin-top: rem(25);
+  }
 }
 
 .profile__published-maps,
 .profile__created-maps {
   width: 90%;
 
+  @include tablet {
+    width: 100%;
+  }
+
   .profile__cards {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: fluid(18, 11);
   }
 }

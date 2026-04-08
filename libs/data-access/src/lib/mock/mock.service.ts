@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { map, Observable, of } from 'rxjs';
 import { Discussion, GetDiscussionsDto } from '../forum';
 import { GetModsDto, Mode } from '../mods';
+import { CommentItem } from '../shared/interfaces/commentItem';
 
 /**
  * Сервис для работы с моковыми данными.
@@ -23,6 +24,7 @@ export class MockService {
           author: 'Иван',
           createdAt: '2025-12-01T12:41:06+03:00',
           commentsCount: 9,
+          likes: 12,
         },
         {
           id: 2,
@@ -30,6 +32,7 @@ export class MockService {
           author: 'Иван',
           createdAt: '2025-11-01T12:41:06+03:00',
           commentsCount: 9,
+          likes: 12,
         },
         {
           id: 3,
@@ -37,6 +40,7 @@ export class MockService {
           author: 'Иван',
           createdAt: '2025-10-02T12:41:06+03:00',
           commentsCount: 9,
+          likes: 12,
         },
         {
           id: 4,
@@ -44,6 +48,7 @@ export class MockService {
           author: 'Владимир',
           createdAt: '2025-11-28T12:41:06+03:00',
           commentsCount: 9,
+          likes: 12,
         },
         {
           id: 5,
@@ -51,6 +56,7 @@ export class MockService {
           author: 'Иван',
           createdAt: '2025-07-04T12:41:06+03:00',
           commentsCount: 9,
+          likes: 12,
         },
       ]
         .filter((discussion) =>
@@ -332,6 +338,41 @@ export class MockService {
         value: 'interior',
         count: 13,
         extras: [],
+      },
+    ]);
+  }
+
+  getComments(): Observable<CommentItem[]> {
+    return of([
+      {
+        id: 1,
+        user: 'User 1',
+        text: 'Классные текстуры!',
+        date: '2026-04-02T10:00:00+03:00',
+        replies: [
+          {
+            id: 2,
+            user: 'User 2 lasf djf ;l ks a d j; l k f s ak ;ldjf;lksjadl;kfl;sakdjfl;kasjdlfjslakdjflaskdfjlsadkfjalk;',
+            text: 'Согласен!',
+            date: '2026-04-02T15:30:00+03:00',
+            replies: [],
+          },
+          {
+            id: 3,
+            user: 'User 3',
+            text: 'А мне не очень...',
+            date: '2026-04-02T15:30:00+03:00',
+            replies: [
+              {
+                id: 4,
+                user: 'User 4',
+                text: '  Lorem ipsum dolor sit amet, consectetur adipisicing elit. A amet consectetur consequuntur deserunt dolorem doloremque ea eum, fugit ipsam nam nemo, neque repudiandae rerum sunt, vitae voluptate voluptatum? Distinctio, voluptate?\n',
+                date: '2026-04-02T15:32:00+03:00',
+                replies: [],
+              },
+            ],
+          },
+        ],
       },
     ]);
   }

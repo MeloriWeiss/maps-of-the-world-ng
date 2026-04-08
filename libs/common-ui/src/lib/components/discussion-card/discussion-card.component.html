@@ -1,0 +1,26 @@
+@if (discussion(); as discussion) {
+<div class="discussion-card">
+  <a class="header" [routerLink]="[`/forum`, discussion.id]">
+    <div class="discussion-theme">{{ discussion.theme }}</div>
+    <div class="discussion-username">{{ discussion.author }}</div>
+  </a>
+
+  <div class="discussion-info">
+    <div class="time-ago">
+      {{ discussion.createdAt | dateDiff }}
+    </div>
+
+    <div class="stats">
+      <a [routerLink]="[discussion.id]" class="likes-count">
+        {{ discussion.likes }}
+        <svg icon="heart-filled" class="svg35"></svg>
+      </a>
+
+      <a [routerLink]="[discussion.id]" class="messages-count">
+        {{ discussion.commentsCount }}
+        <svg icon="messages" class="svg35"></svg>
+      </a>
+    </div>
+  </div>
+</div>
+}

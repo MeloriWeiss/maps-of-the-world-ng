@@ -4,6 +4,7 @@ export interface Discussion {
   author: string;
   createdAt: string;
   commentsCount: number;
+  likes: number;
 }
 
 export interface GetDiscussionsDto {

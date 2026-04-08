@@ -1,3 +1,6 @@
+@use 'functions' as *;
+@use 'mixins' as *;
+
 :host {
   &.only-error-info {
     .container {
@@ -13,27 +16,26 @@
 }
 
 .error-block {
-  max-width: 500px;
-  border-radius: 14px;
+  max-width: rem(500);
+  border-radius: rem(14);
   background-color: var(--light-primary-color);
-  padding: 18px 30px 30px;
+  padding: rem(18) rem(30) rem(30);
   text-align: center;
-  display: flex;
+  @include flex-center();
   flex-direction: column;
-  gap: 20px;
-  align-items: center;
+  gap: rem(20);
 }
 
 .error-code {
-  font-size: 60px;
+  @include fluid-text(60, 45);
   font-weight: 800;
 }
 
 .error-text {
-  font-size: 30px;
+  @include fluid-text(30, 20);
   font-weight: 800;
 }
 
 .button {
-  width: 140px;
+  width: rem(140);
 }

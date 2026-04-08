@@ -1,14 +1,21 @@
+@use 'functions' as *;
+@use 'media' as *;
+
 .form-input {
   width: 100%;
-  height: 32px;
-  border: 1px solid var(--light-gray-color);
+  height: rem(32);
+  border: rem(1) solid var(--light-gray-color);
   color: var(--dark-color);
-  border-radius: 10px;
-  padding: 9px;
-  font-size: 13px;
+  border-radius: rem(10);
+  padding: rem(9);
+  font-size: rem(13);
   outline: none;
 
   &::placeholder {
     color: var(--light-gray-color);
+  }
+
+  @include tablet {
+    padding: rem(9) rem(14);
   }
 }

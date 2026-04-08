@@ -1,0 +1,64 @@
+@use 'media' as *;
+@use 'functions' as *;
+@use 'mixins' as *;
+
+.comment__wrapper {
+  //display: flex;
+  display: grid;
+  grid-template-columns: fluid(34, 21) 1fr;
+  column-gap: fluid(11, 5);
+  margin-bottom: rem(10);
+}
+
+.comment__header {
+  display: flex;
+  gap: rem(6);
+  width: 100%;
+  align-items: center;
+}
+
+.comment__meta {
+  display: flex;
+  gap: rem(6);
+  font-family: 'Platypi', sans-serif;
+  font-weight: 400;
+  @include fluid-text(12, 11);
+  color: var(--light-gray-font-color);
+}
+
+.comment__username {
+  @include fluid-text(16, 13);
+  font-family: 'Platypi', sans-serif;
+  font-weight: 400;
+  max-width: fluid(180, 70);
+
+  color: var(--dark-color);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.comment__content {
+  @include fluid-text(14, 13);
+  font-family: 'Play', sans-serif;
+  font-weight: 400;
+  color: var(--dark-primary-color);
+}
+
+.comment__reply-btn {
+  display: flex;
+  align-items: center;
+  gap: rem(2);
+  color: var(--light-gray-font-color);
+  font-size: rem(11);
+  margin-top: fluid(5, 3);
+}
+
+.svg34 {
+  @include square(fluid(34, 21));
+  min-width: fluid(34, 21);
+}
+
+.comment__replies {
+  margin-left: fluid(30, 25);
+}

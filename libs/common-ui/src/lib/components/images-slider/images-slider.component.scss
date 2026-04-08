@@ -1,11 +1,15 @@
+@use 'functions' as *;
+@use 'media' as *;
+@use 'mixins' as *;
+
 :host {
   display: block;
-  margin: 0 40px 12px;
+  margin: 0 rem(40);
   position: relative;
-  height: 150px;
+  //height: fluid(150, 90);
 
   &.small-slider {
-    height: 111px;
+    height: fluid(111, 65);
   }
 }
 
@@ -20,23 +24,23 @@
 
   .arrow-prev {
     position: relative;
-    left: -34px;
+    left: rem(-34);
     transform: rotateZ(180deg);
   }
 
   .arrow-next {
     position: relative;
-    right: -34px;
+    right: rem(-34);
   }
 }
 
 .button-arrow {
-  padding: 10px;
-  margin: -10px;
+  padding: rem(10);
+  margin: rem(-10);
   border: none;
   background: none;
   cursor: pointer;
-  transition: transform .3s ease;
+  transition: transform 0.3s ease;
   font-size: 0;
 
   &.active {

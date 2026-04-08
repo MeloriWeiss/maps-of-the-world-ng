@@ -1,28 +1,35 @@
+@use 'functions' as *;
+@use 'media' as *;
+@use 'mixins' as *;
+
 .post-block {
   background-color: var(--light-color);
-  border-radius: 15px;
-  padding: 15px 20px;
+  border-radius: fluid(15, 10);
+  padding: fluid(15, 12) fluid(25, 16) 0 fluid(25, 16);
+  box-shadow: 0 fluid(4, 2) fluid(4, 2) 0 rgba(0, 0, 0, 0.25);
 }
 
 .post-header {
   display: flex;
   align-items: center;
-  gap: 30px;
-  padding-bottom: 15px;
+  gap: rem(30);
+  padding-bottom: fluid(12, 10);
+
+  @include tablet {
+    justify-content: space-between;
+  }
 }
 
 .user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  @include flex-center();
+  gap: fluid(10, 7);
 }
 
 .time-ago {
   font-family: 'Platypi', sans-serif;
-  font-size: 15px;
-  line-height: 21px;
+  @include fluid-text(15, 11);
+  line-height: fluid(21, 15);
   color: var(--primary-color);
-  margin-top: 2px;
 }
 
 .avatar-placeholder {
@@ -30,27 +37,32 @@
 }
 
 .username {
-  font-family: 'Platypi', sans-serif;
-  font-size: 18px;
-  line-height: 25px;
+  font-family: 'Platypi', serif;
+  @include fluid-text(18, 14);
+  line-height: fluid(25, 19);
   color: var(--dark-primary-color);
 }
 
 .post-content {
-  padding-left: 40px;
-  padding-right: 40px;
+  @include laptop-above {
+    padding-left: rem(35);
+  }
 }
 
 .post-theme {
-  font-size: 22px;
-  line-height: 25px;
+  @include fluid-text(22, 16);
+  line-height: fluid(25, 19);
   color: var(--semi-dark-font-color);
 }
 
 .post-body {
-  margin-top: 14px;
-  margin-bottom: 25px;
-  font-size: 18px;
-  line-height: 21px;
+  margin-top: fluid(14, 10);
+  padding-bottom: fluid(38, 26);
+  @include fluid-text(18, 11);
+  line-height: fluid(21, 13);
   color: var(--dark-color);
+}
+
+.svg34 {
+  @include square(fluid(34, 21));
 }

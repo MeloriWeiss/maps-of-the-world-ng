@@ -1,8 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import {
   DeskListComponent,
@@ -10,13 +6,10 @@ import {
   SearchInputComponent,
   SvgComponent,
 } from '@wm/common-ui';
-import {
-  ActivatedRoute,
-  Router,
-} from '@angular/router';
-import { MockService } from '@wm/data-access/mock/mock.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MockService } from '@wm/data-access/mock';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { DiscussionCardComponent } from './discussion-card/discussion-card.component';
+import { DiscussionCardComponent } from '@wm/common-ui';
 import { debounceTime, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ForumSidebarComponent } from '../../ui';
@@ -36,6 +29,7 @@ import { ForumSidebarComponent } from '../../ui';
   styleUrl: './forum-discussions-list.component.scss',
   providers: [PaginationService],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
 })
 export class ForumDiscussionsListComponent {
   #activatedRoute = inject(ActivatedRoute);

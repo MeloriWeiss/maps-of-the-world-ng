@@ -1,21 +1,72 @@
+@use 'mixins' as *;
+@use 'media' as *;
+@use 'functions' as *;
+
 :host {
-  display: grid;
-  grid-template-columns: 1fr minmax(200px, 45vw);
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+@include tablet {
+  :host > div:not(.footer) {
+    flex: 1 0 auto;
+  }
+
+  .footer {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+}
+
+.mobile-only {
+  @include mobile-above {
+    @include visually-hidden;
+  }
+}
+
+.auth-layout {
+  @include flex-center();
+  flex: 1 0 auto;
   width: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 .auth-background {
-  background-repeat: no-repeat;
+  min-width: 0;
+  object-position: center;
+  object-fit: cover;
   height: 100dvh;
-  width: auto;
   justify-self: right;
   pointer-events: none;
+  border-radius: rem(45) 0 0 rem(45);
+  flex: 1;
+
+  @include laptop {
+    flex: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 0;
+    z-index: 1;
+  }
 }
 
 .auth-content {
-  display: grid;
-  grid-template-rows: 0 1fr;
-  align-items: center;
-  justify-content: center;
+  @include flex-center();
+  width: 50%;
+  z-index: 2;
+  flex: 1;
+
+  @include laptop {
+    flex: 0;
+    display: block;
+    width: fluid(1080, 370);
+    background-color: var(--light-color);
+    padding: rem(40) rem(16) rem(60);
+    border-radius: rem(15);
+  }
 }

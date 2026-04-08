@@ -1,0 +1,13 @@
+<div class="comment-input">
+  <div class="comment-input__wrapper">
+    <svg icon="avatar-light" class="svg34"></svg>
+    <textarea
+      [formControl]="commentControl"
+      (input)="onTextareaInput($event)"
+      rows="1"
+      class="comment-input__field"
+      type="text"
+      [placeholder]="placeholder()"
+    ></textarea>
+  </div>
+</div>

@@ -1,33 +1,36 @@
+@use 'functions' as *;
+@use 'media' as *;
+@use 'mixins' as *;
+
 :host {
   display: block;
-  padding: 9px 13px 8px;
+  padding: rem(9) rem(16) rem(8);
   background-color: var(--light-color);
-  border-radius: 15px;
-  box-shadow: 0 4px 4px #0000003F;
+  border-radius: fluid(15, 10);
+  box-shadow: 0 rem(4) rem(4) #0000003f;
 }
 
 .card-preview {
-  padding-right: 31px;
+  padding-right: fluid(33, 0);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-family: 'Platypi', sans-serif;
   font-weight: 400;
-  align-items: center;
 }
 
 .main-info {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  @include flex-center();
+  gap: rem(22);
 }
 
 .button-arrow {
-  padding: 10px;
-  margin: -10px;
+  padding: rem(10);
+  margin: rem(-10);
   border: none;
   background: none;
   cursor: pointer;
-  transition: transform .3s ease;
+  transition: transform 0.3s ease;
   font-size: 0;
 
   &.active {
@@ -36,46 +39,70 @@
 }
 
 .header {
+  display: flex;
+  flex-direction: column;
   justify-self: start;
+  gap: rem(2);
   cursor: pointer;
+
+  @include mobile {
+    margin-left: rem(-13);
+  }
 }
 
 .mode-name {
+  @include fluid-text(20, 14);
   font-family: 'Play', sans-serif;
-  font-size: 20px;
-  line-height: 23px;
+  line-height: fluid(23, 16);
   color: var(--semi-dark-font-color);
 }
 
 .mode-username {
-  font-size: 18px;
-  line-height: 25px;
+  font-family: 'Platypi', serif;
+  @include fluid-text(18, 11);
+  line-height: fluid(25, 15);
   color: var(--dark-primary-color);
 }
 
 .statistics {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  @include flex-center();
+  gap: fluid(13, 10);
 }
 
 .count-statistics {
-  font-size: 18px;
-  line-height: 25px;
+  @include flex-center();
+  @include fluid-text(18, 11);
+  line-height: rem(15);
   color: var(--dark-primary-color);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 3px;
+  gap: fluid(4, 2);
 
   .svg-heart {
-    margin-top: 2px;
+    margin-top: rem(1);
   }
 }
 
 .mode-description {
-  font-size: 14px;
-  line-height: 16px;
+  @include fluid-text(14, 11);
+  line-height: rem(16);
+  max-height: fit-content;
   color: var(--dark-primary-color);
-  padding: 8px 38px 20px;
+  padding: fluid(8, 5) rem(38) fluid(20, 10);
+
+  @include mobile {
+    margin-left: rem(-13);
+  }
+}
+
+.card-extra.is-opened {
+  @include mobile {
+    margin-bottom: rem(18);
+  }
+}
+
+.svg18 {
+  @include square(fluid(18, 10));
+}
+
+.svg30 {
+  @include square(fluid(30, 10));
 }

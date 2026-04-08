@@ -1,6 +1,6 @@
-import {CanActivateFn, Router} from '@angular/router';
-import {inject} from '@angular/core';
-import {AuthService} from '@wm/data-access/auth';
+import { CanActivateFn, Router } from '@angular/router';
+import { inject } from '@angular/core';
+import { AuthService } from '@wm/data-access/auth';
 
 export const canActivateAuth: CanActivateFn = () => {
   const isAuth = inject(AuthService).isAuthorized;
@@ -8,4 +8,4 @@ export const canActivateAuth: CanActivateFn = () => {
     return true;
   }
   return inject(Router).createUrlTree(['login']);
-}
+};

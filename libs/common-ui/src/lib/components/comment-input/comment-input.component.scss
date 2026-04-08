@@ -1,0 +1,67 @@
+@use 'media' as *;
+@use 'functions' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+}
+
+.comment-input {
+  background-color: var(--primary-color);
+  border-radius: rem(10);
+  padding: rem(8) fluid(16, 8) rem(8) rem(8);
+
+  @include tablet {
+    padding: rem(8);
+  }
+}
+
+.comment-input__wrapper {
+  display: flex;
+  align-items: start;
+  gap: fluid(12, 8);
+
+  @include tablet {
+    background-color: var(--light-primary-color);
+    border-radius: rem(8);
+    padding: 0 rem(8);
+  }
+}
+
+.comment-input__field {
+  width: 100%;
+  height: auto;
+  min-height: rem(35);
+  max-height: rem(111);
+  @include fluid-text(16, 13);
+  font-family: 'Play', sans-serif;
+  font-weight: 400;
+  line-height: rem(19);
+  border-radius: fluid(10, 8);
+  background-color: var(--light-primary-color);
+  color: var(--light-gray-font-color);
+  padding: rem(8) rem(12);
+  border: none;
+  outline: none;
+  resize: none;
+
+  @include tablet {
+    padding: rem(10) 0;
+    line-height: rem(15);
+    background-color: transparent;
+  }
+}
+
+.svg34 {
+  @include square(rem(34));
+
+  @include laptop {
+    @include square(rem(27));
+    margin-top: rem(5);
+  }
+
+  @include mobile {
+    @include square(rem(21));
+    margin-top: rem(8);
+  }
+}
