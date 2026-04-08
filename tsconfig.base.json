@@ -25,6 +25,9 @@
       "@wm/profile": ["libs/profile/src/index.ts"],
       "@wm/shared": ["libs/shared/src/index.ts"],
       "@wm/workshop": ["libs/workshop/src/index.ts"],
+      "@wm/shared": ["libs/shared/src/index.ts"],
+      "@wm/auth-api": ["libs/backend/auth-api/src/index.ts"],
+      "@wm/database": ["libs/backend/database/src/index.ts"]
       "@wm/home": ["libs/home/src/index.ts"]
     },
     "baseUrl": ".",

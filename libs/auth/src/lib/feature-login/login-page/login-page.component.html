@@ -1,4 +1,4 @@
-<form class="login-form" [formGroup]="loginForm">
+<form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
   <h1 class="login-header">С возвращением!</h1>
 
   <div class="login-body">
@@ -16,10 +16,10 @@
       label="Выполнять вход автоматически"
     ></wm-labeled-checkbox>
 
-    <button class="button" type="submit">Войти</button>
+    <button class="button">Войти</button>
   </div>
 
   <p class="login-link">
-    Еще нет аккаунта?&nbsp;<a [routerLink]="['/signup']">Зарегистрироваться</a>
+    Ещё нет аккаунта?&nbsp;<a [routerLink]="['/signup']">Зарегистрироваться</a>
   </p>
 </form>

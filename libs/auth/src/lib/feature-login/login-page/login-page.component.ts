@@ -12,6 +12,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { firstValueFrom, tap } from 'rxjs';
 
 @Component({
   selector: 'wm-login-page',
@@ -27,8 +28,8 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginPageComponent {
-  authService = inject(AuthService);
-  router = inject(Router);
+  #router = inject(Router);
+  #authService = inject(AuthService);
 
   loginForm = new FormGroup({
     email: new FormControl<string | null>('', {
@@ -39,7 +40,14 @@ export class LoginPageComponent {
     }),
   });
 
-  onSubmit() {
-    /* empty */
+  login() {
+    firstValueFrom(
+      this.#authService.login().pipe(
+        tap((res) => {
+          if (!res.logged) return;
+          this.#router.navigate(['/']).then();
+        }),
+      ),
+    ).then();
   }
 }

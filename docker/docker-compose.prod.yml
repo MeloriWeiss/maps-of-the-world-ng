@@ -1,0 +1,16 @@
+services:
+  api:
+    container_name: api-prod
+    build:
+      context: ..
+      dockerfile: ./apps/api/prod.Dockerfile
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: root
+      DB_PASSWORD: root_prod
+      DB_NAME: maindb
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
