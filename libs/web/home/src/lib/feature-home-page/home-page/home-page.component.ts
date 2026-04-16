@@ -4,9 +4,9 @@ import {
   MapCardComponent,
   ModeCardComponent,
   SvgComponent,
-} from '@wm/common-ui';
+} from '@wm/web/common-ui';
 import { RouterLink } from '@angular/router';
-import { MockService } from '@wm/data-access/mock';
+import { MockService } from '@wm/web/data-access/mock';
 import { AsyncPipe } from '@angular/common';
 
 @Component({

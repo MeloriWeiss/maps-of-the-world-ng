@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NavigationManagerComponent } from '@wm/shared';
-import { ModalHostComponent } from '@wm/common-ui';
+import { NavigationManagerComponent } from '@wm/web/web-shared';
+import { ModalHostComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'app-root',

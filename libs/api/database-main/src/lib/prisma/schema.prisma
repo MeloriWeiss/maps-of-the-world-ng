@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  email        String @unique
+  username     String
+  passwordHash String
+
+  // relations
+  maps          Map[]
+  mapComments   MapComment[]
+  forums        Forum[]
+  forumComments ForumComment[]
+
+  personalAccount PersonalAccount? @relation("UserPersonalAccount")
+  sessions        UserSession[]
+}
+
+model Map {
+  id            Int     @id @default(autoincrement())
+  name          String
+  body          String
+  description   String?
+  isPublished   Boolean
+  likesCount    Int?
+  commentsCount Int?
+  userId        Int
+
+  // relations
+  user     User         @relation(fields: [userId], references: [id])
+  comments MapComment[]
+}
+
+model MapComment {
+  id        Int      @id @default(autoincrement())
+  comment   String
+  createdAt DateTime @default(now())
+  mapId     Int
+  authorId  Int
+
+  // relations
+  map    Map  @relation(fields: [mapId], references: [id])
+  author User @relation(fields: [authorId], references: [id])
+}
+
+model Forum {
+  id        Int      @id @default(autoincrement())
+  title     String
+  post      String
+  createdAt DateTime @default(now())
+  authorId  Int
+
+  // relations
+  author   User           @relation(fields: [authorId], references: [id])
+  comments ForumComment[]
+}
+
+model ForumComment {
+  id        Int      @id @default(autoincrement())
+  comment   String
+  createdAt DateTime @default(now())
+  forumId   Int
+  authorId  Int
+
+  // relations
+  forum  Forum @relation(fields: [forumId], references: [id])
+  author User  @relation(fields: [authorId], references: [id])
+}
+
+model PersonalAccount {
+  id       Int     @id @default(autoincrement())
+  nickname String?
+
+  // relations
+  userId Int  @unique
+  user   User @relation("UserPersonalAccount", fields: [userId], references: [id])
+}
+
+model UserSession {
+  id         Int      @id @default(autoincrement())
+  tokenHash  String
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  expiresAt  DateTime
+
+  // relations
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+}

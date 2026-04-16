@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { ModalService } from '../base-modal/modal.service';
 import { BaseModalComponent } from '../base-modal/base-modal.component';
-import { ModalClose } from '@wm/data-access/shared';
+import { ModalClose } from '@wm/web/data-access/shared';
 
 @Component({
   selector: 'wm-confirmation-modal',

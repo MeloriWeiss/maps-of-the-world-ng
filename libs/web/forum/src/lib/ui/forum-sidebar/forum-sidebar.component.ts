@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { SvgComponent } from '@wm/common-ui';
+import { SvgComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-forum-sidebar',

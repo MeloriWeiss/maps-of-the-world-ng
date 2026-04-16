@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ModeCardComponent } from '@wm/common-ui';
+import { ModeCardComponent } from '@wm/web/common-ui';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
-import { MockService } from '@wm/data-access/mock';
-import { Mode } from '@wm/data-access/mods';
+import { MockService } from '@wm/web/data-access/mock';
+import { Mode } from '@wm/web/data-access/mods';
 import { Observable } from 'rxjs';
 
 @Component({

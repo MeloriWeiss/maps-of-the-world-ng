@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { CommentComponent, CommentInputComponent } from '@wm/common-ui';
+import { CommentComponent, CommentInputComponent } from '@wm/web/common-ui';
 import { ReactiveFormsModule } from '@angular/forms';
-import { CommentItem } from '@wm/data-access/shared';
+import { CommentItem } from '@wm/web/data-access/shared';
 
 @Component({
   selector: 'wm-comments-section',

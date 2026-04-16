@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { CollapsibleDirective, SvgComponent } from '@wm/common-ui';
+import { CollapsibleDirective, SvgComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-mods-filters-item',

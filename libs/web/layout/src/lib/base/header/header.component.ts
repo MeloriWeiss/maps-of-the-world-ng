@@ -5,9 +5,11 @@ import {
   Renderer2,
   signal,
 } from '@angular/core';
-import { SearchInputComponent, SvgComponent } from '@wm/common-ui';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { SearchInputComponent, SvgComponent } from '@wm/web/common-ui';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { AuthService } from '@wm/web/data-access/auth';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'wm-header',
@@ -23,6 +25,8 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
+  #authService = inject(AuthService);
+
   searchControl = new FormControl('');
 
   isMenuOpen = signal<boolean>(false);
@@ -39,5 +43,9 @@ export class HeaderComponent {
   closeMenu() {
     this.isMenuOpen.set(false);
     this.r2.removeClass(document.body, 'no-scroll');
+  }
+
+  logout() {
+    firstValueFrom(this.#authService.logout()).then();
   }
 }

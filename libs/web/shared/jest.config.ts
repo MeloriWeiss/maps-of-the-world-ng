@@ -1,5 +1,5 @@
 export default {
-  displayName: 'shared',
+  displayName: '@wm/web/web-shared',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/shared',

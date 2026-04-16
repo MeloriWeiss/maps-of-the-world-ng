@@ -1,7 +1,7 @@
 import { Injectable, Type, ViewContainerRef } from '@angular/core';
 import { outputToObservable } from '@angular/core/rxjs-interop';
 import { Observable, of } from 'rxjs';
-import { BaseObject, ModalClose } from '@wm/data-access/shared';
+import { BaseObject, ModalClose } from '@wm/web/data-access/shared';
 
 @Injectable({
   providedIn: 'root',

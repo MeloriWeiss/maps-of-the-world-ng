@@ -19,9 +19,7 @@ export class ModalHostComponent {
 
   @ViewChild('modalHost', { read: ViewContainerRef })
   set modalHost(modalHost: ViewContainerRef) {
-    if (!modalHost) {
-      return;
-    }
+    if (!modalHost) return;
 
     this.#modalService.registerContainer(modalHost);
   }

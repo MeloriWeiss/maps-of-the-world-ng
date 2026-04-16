@@ -5,11 +5,11 @@ import {
   PaginationService,
   SearchInputComponent,
   SvgComponent,
-} from '@wm/common-ui';
+} from '@wm/web/common-ui';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MockService } from '@wm/data-access/mock';
+import { MockService } from '@wm/web/data-access/mock';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { DiscussionCardComponent } from '@wm/common-ui';
+import { DiscussionCardComponent } from '@wm/web/common-ui';
 import { debounceTime, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ForumSidebarComponent } from '../../ui';

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { SvgComponent } from '../svg/svg.component';
-import { Discussion } from '@wm/data-access/forum';
+import { Discussion } from '@wm/web/data-access/forum';
 import { RouterLink } from '@angular/router';
 import { DateDiffPipe } from '../../pipes';
 

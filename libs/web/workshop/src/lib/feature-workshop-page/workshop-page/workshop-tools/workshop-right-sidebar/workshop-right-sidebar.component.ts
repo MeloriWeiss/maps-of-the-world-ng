@@ -4,8 +4,8 @@ import {
   WorkshopShapesService,
 } from '../../../../services';
 import { firstValueFrom } from 'rxjs';
-import { ConfirmationModalComponent, ModalService } from '@wm/common-ui';
-import { ConfirmModalInputs } from '@wm/data-access/shared';
+import { ConfirmationModalComponent, ModalService } from '@wm/web/common-ui';
+import { ConfirmModalInputs } from '@wm/web/data-access/shared';
 
 interface EditingLayer {
   id: string | null;

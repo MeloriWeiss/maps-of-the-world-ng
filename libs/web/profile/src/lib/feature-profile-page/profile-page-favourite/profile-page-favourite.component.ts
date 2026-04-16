@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ErrorComponent } from '@wm/common-ui';
+import { ErrorComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-profile-page-favourite',

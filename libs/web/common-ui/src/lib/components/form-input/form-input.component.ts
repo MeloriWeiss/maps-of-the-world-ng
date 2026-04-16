@@ -12,6 +12,7 @@ import {
   NG_VALUE_ACCESSOR,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'wm-form-input',
@@ -43,6 +44,12 @@ export class FormInputComponent implements ControlValueAccessor {
       }
       this.innerFormControl.enable();
     });
+
+    this.innerFormControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((value) => {
+        this.onChange(value);
+      });
   }
 
   writeValue(value: string | null): void {
@@ -61,9 +68,7 @@ export class FormInputComponent implements ControlValueAccessor {
     this.disabled.set(isDisabled);
   }
 
-  onChange(value: string | null) {
-    console.log(this.type);
-  }
+  onChange(value: string | null) {}
 
   onTouched() {}
 }

@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Mode } from '@wm/data-access/mods';
+import { Mode } from '@wm/web/data-access/mods';
 import { CollapsibleDirective } from '../../directives/index';
 import { ImagesSliderComponent, SvgComponent } from '../index';
 import { CarouselModule, OwlOptions } from 'ngx-owl-carousel-o';

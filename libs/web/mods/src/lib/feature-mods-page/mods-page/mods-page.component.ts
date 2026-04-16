@@ -1,16 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map, switchMap } from 'rxjs';
-import { MockService } from '@wm/data-access/mock';
+import { MockService } from '@wm/web/data-access/mock';
 import { AsyncPipe, Location } from '@angular/common';
 import {
   ErrorComponent,
   ImagesSliderComponent,
   SearchInputComponent,
   SvgComponent,
-} from '@wm/common-ui';
+} from '@wm/web/common-ui';
 import { OwlOptions } from 'ngx-owl-carousel-o';
-import { NavigationHistoryService, CommentsSectionComponent } from '@wm/shared';
+import {
+  NavigationHistoryService,
+  CommentsSectionComponent,
+} from '@wm/web/web-shared';
 
 @Component({
   selector: 'wm-mods-page',

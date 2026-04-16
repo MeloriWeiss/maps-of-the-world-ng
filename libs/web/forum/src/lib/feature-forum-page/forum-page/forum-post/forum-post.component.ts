@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SvgComponent } from '@wm/common-ui';
+import { SvgComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-forum-post',

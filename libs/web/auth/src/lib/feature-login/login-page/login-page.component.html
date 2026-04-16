@@ -5,11 +5,26 @@
     <wm-labeled-form-field-wrapper label="Адрес электронной почты">
       <wm-form-input
         placeholder="Введите адрес электронной почты"
-      ></wm-form-input>
+        formControlName="email"
+      >
+        <div class="control-error-block" errorBlock>
+          <span class="control-error-text">{{
+            loginForm.controls.email.getError(authConfig.email.errorName)
+              ?.message
+          }}</span>
+        </div>
+      </wm-form-input>
     </wm-labeled-form-field-wrapper>
 
     <wm-labeled-form-field-wrapper label="Пароль">
-      <wm-form-input placeholder="Введите пароль"></wm-form-input>
+      <wm-form-input placeholder="Введите пароль" formControlName="password">
+        <div class="control-error-block" errorBlock>
+          <span class="control-error-text">{{
+            loginForm.controls.password.getError(authConfig.password.errorName)
+              ?.message
+          }}</span>
+        </div>
+      </wm-form-input>
     </wm-labeled-form-field-wrapper>
 
     <wm-labeled-checkbox
@@ -20,6 +35,8 @@
   </div>
 
   <p class="login-link">
-    Ещё нет аккаунта?&nbsp;<a [routerLink]="['/signup']">Зарегистрироваться</a>
+    Ещё нет аккаунта?&nbsp;<a [routerLink]="['/register']"
+      >Зарегистрироваться</a
+    >
   </p>
 </form>

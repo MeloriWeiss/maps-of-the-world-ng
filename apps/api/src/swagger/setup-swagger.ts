@@ -6,7 +6,6 @@ export function setupSwagger(app: INestApplication) {
     .setTitle('Maps of the World API')
     .setDescription('API documentation for api project')
     .setVersion('1.0')
-    .addTag('auth')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

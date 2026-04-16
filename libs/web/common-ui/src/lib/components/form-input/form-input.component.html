@@ -3,4 +3,8 @@
   [formControl]="innerFormControl"
   [type]="type()"
   [placeholder]="placeholder()"
+  (blur)="onTouched()"
 />
+<div class="control-error-block__wrapper">
+  <ng-content select="[errorBlock]"></ng-content>
+</div>

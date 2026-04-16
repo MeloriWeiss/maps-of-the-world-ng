@@ -3,12 +3,12 @@ import {
   DeskListComponent,
   SearchInputComponent,
   SvgComponent,
-} from '@wm/common-ui';
+} from '@wm/web/common-ui';
 import { ForumSidebarComponent } from '../../ui';
 import { ForumPostComponent } from './forum-post/forum-post.component';
-import { CommentsSectionComponent } from '@wm/shared';
+import { CommentsSectionComponent } from '@wm/web/web-shared';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MockService } from '@wm/data-access/mock';
+import { MockService } from '@wm/web/data-access/mock';
 import { AsyncPipe } from '@angular/common';
 
 @Component({

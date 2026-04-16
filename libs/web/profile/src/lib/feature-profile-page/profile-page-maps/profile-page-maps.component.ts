@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MapCardComponent } from '@wm/common-ui';
+import { MapCardComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-profile-page-maps',

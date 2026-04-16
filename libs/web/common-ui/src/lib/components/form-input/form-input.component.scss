@@ -1,6 +1,18 @@
 @use 'functions' as *;
 @use 'media' as *;
 
+:host {
+  &.ng-invalid.ng-touched {
+    .control-error-block__wrapper {
+      display: block;
+    }
+
+    .form-input {
+      border-color: var(--error-color);
+    }
+  }
+}
+
 .form-input {
   width: 100%;
   height: rem(32);

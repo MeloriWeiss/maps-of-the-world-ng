@@ -5,9 +5,9 @@ import {
   signal,
 } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
-import { MockService } from '@wm/data-access/mock';
+import { MockService } from '@wm/web/data-access/mock';
 import { ModsFiltersItemComponent } from './mods-filters-item';
-import { SvgComponent } from '@wm/common-ui';
+import { SvgComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-mods-list-sidebar',

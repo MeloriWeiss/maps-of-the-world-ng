@@ -32,6 +32,9 @@
     <nav>
       <ul class="header-nav-list">
         <li>
+          <button (click)="logout()">Выйти</button>
+        </li>
+        <li>
           <a
             [routerLink]="['workshop']"
             routerLinkActive="active"

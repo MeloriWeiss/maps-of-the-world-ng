@@ -1,1 +1,2 @@
-export * from './services/auth.service';
+export * from './services';
+export * from './interfaces';

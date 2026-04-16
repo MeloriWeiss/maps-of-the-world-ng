@@ -1,0 +1,28 @@
+{
+  "name": "database-main",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/database-main/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/api/database-main/jest.config.ts"
+      }
+    },
+    "migrate": {
+      "command": "prisma migrate dev --config=libs/api/database-main/src/lib/prisma.config.ts"
+    },
+    "generate": {
+      "command": "prisma generate --config=libs/api/database-main/src/lib/prisma.config.ts"
+    },
+    "seed": {
+      "command": "prisma db seed --config=libs/api/database-main/src/lib/prisma.config.ts"
+    },
+    "push": {
+      "command": "prisma db push --config=libs/api/database-main/src/lib/prisma.config.ts"
+    }
+  }
+}

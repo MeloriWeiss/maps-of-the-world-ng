@@ -1,11 +1,22 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthApiModule } from '@wm/auth-api';
+import { ApiAuthModule } from '@wm/api/api-auth';
+import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from '@wm/api/users';
+import { DatabaseMainModule } from '@wm/api/database-main';
+import { validateEnv } from '@wm/api/api-shared';
 
 @Module({
-  imports: [AuthApiModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ApiAuthModule,
+    DatabaseMainModule,
+    UsersModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      expandVariables: true,
+      validate: validateEnv,
+    }),
+  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

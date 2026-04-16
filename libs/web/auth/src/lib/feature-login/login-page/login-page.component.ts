@@ -1,18 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AuthService } from '@wm/data-access/auth';
+import { AuthService, LoginData } from '@wm/web/data-access/auth';
 import {
   FormInputComponent,
   LabeledFormFieldWrapperComponent,
-} from '@wm/common-ui';
-import { LabeledCheckboxComponent } from '@wm/common-ui';
+} from '@wm/web/common-ui';
+import { LabeledCheckboxComponent } from '@wm/web/common-ui';
 import { Router, RouterLink } from '@angular/router';
-import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { firstValueFrom, tap } from 'rxjs';
+import { validateEmail, validatePassword } from '../../validators';
+import { authConfig } from '@wm/shared/auth';
 
 @Component({
   selector: 'wm-login-page',
@@ -31,20 +28,35 @@ export class LoginPageComponent {
   #router = inject(Router);
   #authService = inject(AuthService);
 
+  authConfig = authConfig;
+
   loginForm = new FormGroup({
     email: new FormControl<string | null>('', {
-      validators: Validators.required,
+      validators: [validateEmail],
     }),
     password: new FormControl<string | null>('', {
-      validators: Validators.required,
+      validators: [validatePassword],
     }),
   });
 
   login() {
+    this.loginForm.markAsTouched();
+    this.loginForm.updateValueAndValidity();
+
+    if (!this.loginForm.valid) return;
+
+    const formValue = this.loginForm.value;
+
+    const data: LoginData = {
+      email: formValue.email ?? '',
+      password: formValue.password ?? '',
+    };
+
     firstValueFrom(
-      this.#authService.login().pipe(
+      this.#authService.login(data).pipe(
         tap((res) => {
-          if (!res.logged) return;
+          if (!res) return;
+
           this.#router.navigate(['/']).then();
         }),
       ),
