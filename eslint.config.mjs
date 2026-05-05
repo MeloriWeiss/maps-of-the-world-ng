@@ -23,6 +23,19 @@ export default [
           ],
         },
       ],
+      '@nx/workspace-no-http-in-components': 'error',
+      '@nx/workspace-no-direct-fetch': 'error',
+    },
+  },
+  {
+    files: [
+      '**/*.component.ts',
+      '**/*.service.ts',
+      '**/*.directive.ts',
+      '**/*.pipe.ts',
+    ],
+    rules: {
+      '@nx/workspace-no-constructor-injection': 'error',
     },
   },
   {
