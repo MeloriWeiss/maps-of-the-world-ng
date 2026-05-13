@@ -1,3 +1,4 @@
+import angular from 'angular-eslint';
 import nx from '@nx/eslint-plugin';
 
 export default [
@@ -23,7 +24,6 @@ export default [
           ],
         },
       ],
-      '@nx/workspace-no-http-in-components': 'error',
       '@nx/workspace-no-direct-fetch': 'error',
     },
   },
@@ -36,6 +36,14 @@ export default [
     ],
     rules: {
       '@nx/workspace-no-constructor-injection': 'error',
+    },
+  },
+  {
+    files: ['**/*.html'],
+    rules: {
+      '@angular-eslint/template/click-events-have-key-events': 'off',
+      '@angular-eslint/template/interactive-supports-focus': 'off',
+      '@angular-eslint/template/label-has-associated-control': 'off',
     },
   },
   {

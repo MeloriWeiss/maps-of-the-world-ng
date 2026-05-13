@@ -1,52 +1,26 @@
+import { Bounds } from '../interfaces';
 import { NodesTypes } from '../consts';
 
 export abstract class GraphNode {
-  id = `${Date.now()}`;
-  type: NodesTypes = NodesTypes.NODE;
+  readonly id = crypto.randomUUID();
+
+  type = NodesTypes.NODE;
   parent: GraphNode | null = null;
   children: GraphNode[] = [];
-
   visible = true;
-  locked = false;
-  opacity = 1;
+  isDirty = true;
+  zIndex = 0;
 
-  addChild(child: GraphNode): void {
-    if (child.parent) {
-      child.parent.removeChild(child);
-    }
-    child.parent = this;
-    this.children.push(child);
+  abstract getBounds(): Bounds;
+  abstract draw(ctx: CanvasRenderingContext2D): void;
+
+  addChild(node: GraphNode) {
+    node.parent = this;
+    this.children.push(node);
   }
 
-  removeChild(child: GraphNode): void {
-    const idx = this.children.indexOf(child);
-    if (idx >= 0) {
-      this.children.splice(idx, 1);
-      child.parent = null;
-    }
-  }
-
-  traverse(cb: (node: GraphNode) => void): void {
-    cb(this);
-    for (const child of this.children) {
-      child.traverse(cb);
-    }
-  }
-
-  protected abstract drawSelf(ctx: CanvasRenderingContext2D): void;
-
-  draw(ctx: CanvasRenderingContext2D): void {
-    if (!this.visible || this.opacity <= 0) return;
-
-    ctx.save();
-    ctx.globalAlpha *= this.opacity;
-
-    this.drawSelf(ctx);
-
-    for (const child of this.children) {
-      child.draw(ctx);
-    }
-
-    ctx.restore();
+  removeChild(id: string) {
+    const index = this.children.findIndex((n) => n.id === id);
+    if (index > -1) this.children.splice(index, 1);
   }
 }

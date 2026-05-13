@@ -123,7 +123,7 @@ yarn build:api:prod:docker
 
 ## Качество кода
 
-- **ESLint + Prettier** — линтинг и форматирование; кастомные правила в `eslint-plugins` (см. [`eslint-plugins/README.md`](eslint-plugins/README.md)).
+- **ESLint + Prettier** — линтинг и форматирование; кастомные правила в `eslint-rules` (см. [`tools/eslint-rules/README.md`](tools/eslint-rules/README.md)).
 - **Husky + lint-staged** — перед коммитом: форматирование и линтинг изменённых файлов.
 - **Commitlint** — формат коммитов по [Conventional Commits](https://www.conventionalcommits.org/) (в т.ч. русский текст). Подробнее: [COMMIT_CONVENTION.md](COMMIT_CONVENTION.md).
 

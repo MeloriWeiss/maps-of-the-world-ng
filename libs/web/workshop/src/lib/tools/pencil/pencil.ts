@@ -1,18 +1,15 @@
 import { inject } from '@angular/core';
 import { Tool } from '../shared';
-import { WorkshopShapesService } from '../../services';
+import { WorkshopSettingsService, WorkshopShapesService } from '../../services';
 import { Line, LineShape } from '../../shapes';
 import { Point } from '../../interfaces';
 import { ShapesTypes } from '../../consts';
 
 export class PencilTool implements Tool {
-  #workshopShapesService = inject(WorkshopShapesService);
+  #shapesService = inject(WorkshopShapesService);
+  #settingsService = inject(WorkshopSettingsService);
 
   #currentLine: Line | null = null;
-
-  strokeColor = '#000000';
-  lineWidth = 2;
-  opacity = 1;
 
   #lastX = 0;
   #lastY = 0;
@@ -26,23 +23,28 @@ export class PencilTool implements Tool {
     ctx: CanvasRenderingContext2D,
     startPoint: Point,
   ) {
+    const style = this.#settingsService.shapeStyle;
     const worldX = startPoint.x;
     const worldY = startPoint.y;
 
     this.#lastX = worldX;
     this.#lastY = worldY;
 
-    ctx.lineWidth = this.lineWidth;
-    ctx.strokeStyle = this.strokeColor;
-    ctx.globalAlpha = this.opacity;
+    ctx.lineWidth = style.strokeWidth;
+    ctx.strokeStyle = style.strokeColor;
+    ctx.globalAlpha = style.opacity;
     ctx.lineCap = 'round';
 
     this.#currentLine = new LineShape({
       type: ShapesTypes.LINE,
       points: [{ x: worldX, y: worldY }],
-      strokeWidth: this.lineWidth,
-      strokeColor: this.strokeColor,
-      opacity: this.opacity,
+      strokeWidth: style.strokeWidth,
+      strokeColor: style.strokeColor,
+      opacity: style.opacity,
+      shadowColor: style.shadowColor,
+      shadowBlur: style.shadowBlur,
+      shadowOffsetX: style.shadowOffsetX,
+      shadowOffsetY: style.shadowOffsetY,
     });
   }
 
@@ -66,7 +68,7 @@ export class PencilTool implements Tool {
   stopDrawing() {
     if (!this.#currentLine || !this.enabledToCreate()) return;
 
-    this.#workshopShapesService.addShape(this.#currentLine);
+    this.#shapesService.createShape(this.#currentLine);
     this.#currentLine = null;
   }
 

@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { Tool } from '../shared';
 import {
   WorkshopCanvasManagerService,
+  WorkshopSettingsService,
   WorkshopShapesService,
 } from '../../services';
 import { Rectangle, RectangleShape } from '../../shapes';
@@ -9,15 +10,11 @@ import { Point } from '../../interfaces/point.interface';
 import { ShapesTypes } from '../../consts';
 
 export class RectangleTool implements Tool {
-  #workshopShapesService = inject(WorkshopShapesService);
-  #workshopCanvasManagerService = inject(WorkshopCanvasManagerService);
+  #shapesService = inject(WorkshopShapesService);
+  #canvasManagerService = inject(WorkshopCanvasManagerService);
+  #settingsService = inject(WorkshopSettingsService);
 
   #currentRect: Rectangle | null = null;
-
-  strokeColor = '#000000';
-  fillColor = '#BD404030';
-  strokeWidth = 1;
-  opacity = 1;
 
   #startX!: number;
   #startY!: number;
@@ -32,10 +29,11 @@ export class RectangleTool implements Tool {
     ctx: CanvasRenderingContext2D,
     startPoint: Point,
   ) {
-    ctx.lineWidth = this.strokeWidth;
-    ctx.strokeStyle = this.strokeColor;
-    ctx.fillStyle = this.fillColor;
-    ctx.globalAlpha = this.opacity;
+    const style = this.#settingsService.shapeStyle;
+    ctx.lineWidth = style.strokeWidth;
+    ctx.strokeStyle = style.strokeColor;
+    ctx.fillStyle = style.fillColor;
+    ctx.globalAlpha = style.opacity;
 
     this.#startX = startPoint.x;
     this.#startY = startPoint.y;
@@ -46,17 +44,21 @@ export class RectangleTool implements Tool {
       y: startPoint.y,
       width: 0,
       height: 0,
-      fillColor: this.fillColor,
-      strokeColor: this.strokeColor,
-      strokeWidth: this.strokeWidth,
-      opacity: this.opacity,
+      fillColor: style.fillColor,
+      strokeColor: style.strokeColor,
+      strokeWidth: style.strokeWidth,
+      opacity: style.opacity,
+      shadowColor: style.shadowColor,
+      shadowBlur: style.shadowBlur,
+      shadowOffsetX: style.shadowOffsetX,
+      shadowOffsetY: style.shadowOffsetY,
     });
   }
 
   draw(ctx: CanvasRenderingContext2D, newPoint: Point) {
     if (!this.#currentRect) return;
 
-    this.#workshopCanvasManagerService.redraw();
+    this.#canvasManagerService.redraw();
 
     let rectWidth = newPoint.x - this.#startX;
     let rectHeight = newPoint.y - this.#startY;
@@ -74,9 +76,9 @@ export class RectangleTool implements Tool {
     this.#currentRect.width = rectWidth;
     this.#currentRect.height = rectHeight;
 
-    this.#workshopCanvasManagerService.render();
+    this.#canvasManagerService.render();
 
-    ctx.fillStyle = this.fillColor;
+    ctx.fillStyle = this.#settingsService.shapeStyle.fillColor;
 
     ctx.beginPath();
     ctx.fillRect(
@@ -96,7 +98,7 @@ export class RectangleTool implements Tool {
   stopDrawing() {
     if (!this.#currentRect || !this.enabledToCreate()) return;
 
-    this.#workshopShapesService.addShape(this.#currentRect);
+    this.#shapesService.createShape(this.#currentRect);
     this.#currentRect = null;
   }
 

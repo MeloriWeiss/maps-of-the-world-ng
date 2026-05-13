@@ -5,6 +5,7 @@ import { WorkshopSettingsService } from './workshop-settings.service';
 import { WorkshopCoordsService } from './workshop-coords.service';
 import { WorkshopCanvasManagerService } from './workshop-canvas-manager.service';
 import { WorkshopCanvasService } from './workshop-canvas.service';
+import { WorkshopCanvasSizeService } from './workshop-canvas-size.service';
 
 @Injectable()
 export class WorkshopPanningService {
@@ -13,9 +14,7 @@ export class WorkshopPanningService {
   #workshopCoordsService = inject(WorkshopCoordsService);
   #workshopCanvasManagerService = inject(WorkshopCanvasManagerService);
   #workshopCanvasService = inject(WorkshopCanvasService);
-
-  canvasWidth = 0;
-  canvasHeight = 0;
+  #canvasSizeService = inject(WorkshopCanvasSizeService);
 
   isPanning = false;
   panStartX = 0;
@@ -54,41 +53,25 @@ export class WorkshopPanningService {
     return fromEvent<WheelEvent, void>(canvas, 'wheel', (e) => this.onWheel(e));
   }
 
-  listenResizeEvent() {
-    return fromEvent(window, 'resize', () => this.#resizeCanvas());
-  }
-
-  listenCanvasManagementEvents() {
+  listenCanvasPanningEvents() {
     const panningEvents$ = this.listenPanningEvents();
     const zoomEvent$ = this.listenZoomEvent();
-    const resizeEvent$ = this.listenResizeEvent();
 
-    return merge(panningEvents$, zoomEvent$, resizeEvent$);
+    return merge(panningEvents$, zoomEvent$);
   }
 
-  prepareCanvas() {
-    this.#resizeCanvas(false);
+  setup() {
     this.#centerCanvas(false);
     this.#updateViewport(false);
 
     this.redraw();
   }
 
-  #resizeCanvas(redraw = true) {
-    const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
-
-    this.canvasWidth = window.innerWidth - 350;
-    this.canvasHeight = window.innerHeight - 37;
-
-    canvas.width = this.canvasWidth;
-    canvas.height = this.canvasHeight;
-
-    if (redraw) this.redraw();
-  }
-
   #centerCanvas(redraw = true) {
-    this.#workshopCoordsService.cameraX = -this.canvasWidth / 2;
-    this.#workshopCoordsService.cameraY = -this.canvasHeight / 2;
+    this.#workshopCoordsService.cameraX =
+      -this.#canvasSizeService.canvasWidth / 2;
+    this.#workshopCoordsService.cameraY =
+      -this.#canvasSizeService.canvasHeight / 2;
 
     if (redraw) this.redraw();
   }

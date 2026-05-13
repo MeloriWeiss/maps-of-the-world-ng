@@ -23,17 +23,32 @@
 }
 
 .layers__add {
-  width: 22px;
-  height: 22px;
+  height: 24px;
+  padding: 0 8px;
   border-radius: 4px;
   border: none;
   background: #16b7ff;
   color: #fff;
   cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .layers__add:hover {
   background: #0fa1e0;
+}
+
+.layers__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.layers__add--group {
+  background: #7f5af0;
+}
+
+.layers__add--group:hover {
+  background: #6f4de0;
 }
 
 .layers__list {
@@ -125,4 +140,38 @@
   margin-top: 8px;
   opacity: 0.7;
   color: #fff;
+}
+
+.shape-properties {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shape-properties__title {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.shape-properties__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #d3e3ff;
+  font-size: 11px;
+}
+
+.shape-properties__field input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  padding: 4px 6px;
+  box-sizing: border-box;
 }

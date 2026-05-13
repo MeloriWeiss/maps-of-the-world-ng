@@ -1,0 +1,69 @@
+<div class="nodes-panel">
+  @if (!flattenedNodes().length) {
+    <div class="nodes-panel__empty">Нет слоев и групп</div>
+  } @else {
+    @for (item of flattenedNodes(); track item.node.id) {
+      <button
+        class="node-item"
+        [class.node-item--active]="isSelected(item.node)"
+        [style.padding-left.px]="item.depth * 18 + 8"
+        (click)="onNodeClick(item.node)"
+        (contextmenu)="onNodeContextMenu($event, item.node)"
+        draggable="true"
+        (dragstart)="startNodeDrag(item.node.id)"
+        (dragend)="finishNodeDrag()"
+        (dragover)="$event.preventDefault()"
+        (drop)="dropNode(item.node.id, 'after')"
+      >
+        <span class="node-item__expander">
+          @if (item.node.children.length) {
+            <button
+              type="button"
+              class="node-item__icon-btn"
+              (click)="toggleExpand(item.node); $event.stopPropagation()"
+            >
+              {{ isExpanded(item.node.id) ? '▼' : '▶' }}
+            </button>
+          } @else {
+            <span class="node-item__dot">•</span>
+          }
+        </span>
+
+        <span class="node-item__icon">{{ getIcon(item.node) }}</span>
+        <span
+          class="node-item__name"
+          (dragover)="$event.preventDefault()"
+          (drop)="dropNode(item.node.id, 'inside'); $event.stopPropagation()"
+        >
+          {{ getNodeName(item.node) }}
+        </span>
+
+        <button
+          type="button"
+          class="node-item__icon-btn"
+          (click)="toggleVisible(item.node); $event.stopPropagation()"
+          [title]="item.node.visible ? 'Скрыть' : 'Показать'"
+        >
+          {{ item.node.visible ? '👁' : '🙈' }}
+        </button>
+      </button>
+    }
+  }
+</div>
+
+@if (contextMenu(); as menu) {
+  <button
+    class="node-context-menu"
+    [style.left.px]="menu.x"
+    [style.top.px]="menu.y"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      type="button"
+      class="node-context-menu__action"
+      (click)="deleteNode(menu.nodeId)"
+    >
+      Удалить
+    </button>
+  </button>
+}

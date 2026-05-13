@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { WorkshopTools } from '../../../../consts';
-import { WorkshopToolsService } from '../../../../services';
+import { WorkshopTools } from '../../../consts';
+import { WorkshopToolsService } from '../../../services';
 
 @Component({
   selector: 'wm-workshop-left-sidebar',

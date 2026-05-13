@@ -18,6 +18,10 @@ export class RectangleShape extends BaseShapeShape implements Rectangle {
       strokeColor: rect.strokeColor,
       strokeWidth: rect.strokeWidth,
       opacity: rect.opacity,
+      shadowColor: rect.shadowColor,
+      shadowBlur: rect.shadowBlur,
+      shadowOffsetX: rect.shadowOffsetX,
+      shadowOffsetY: rect.shadowOffsetY,
     });
 
     this.width = rect.width;
@@ -30,6 +34,11 @@ export class RectangleShape extends BaseShapeShape implements Rectangle {
   draw(ctx: CanvasRenderingContext2D) {
     ctx.lineWidth = this.strokeWidth;
     ctx.fillStyle = this.fillColor;
+    ctx.globalAlpha = this.opacity;
+    ctx.shadowColor = this.shadowColor ?? 'transparent';
+    ctx.shadowBlur = this.shadowBlur ?? 0;
+    ctx.shadowOffsetX = this.shadowOffsetX ?? 0;
+    ctx.shadowOffsetY = this.shadowOffsetY ?? 0;
 
     if (this.selected) {
       ctx.strokeStyle = '#0199dc';
@@ -40,6 +49,10 @@ export class RectangleShape extends BaseShapeShape implements Rectangle {
     ctx.beginPath();
     ctx.fillRect(this.x, this.y, this.width, this.height);
     ctx.strokeRect(this.x, this.y, this.width, this.height);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
   }
 
   clickOn(point: Point) {

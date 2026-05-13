@@ -1,17 +1,19 @@
 import { GraphNode } from './graph-node';
-import { Shape } from '../shapes';
+import { Bounds } from '../interfaces';
 import { NodesTypes } from '../consts';
+import { Shape } from '../shapes';
 
 export class ShapeNode extends GraphNode {
-  readonly shape: Shape;
-
-  constructor(shape: Shape) {
+  constructor(public shape: Shape) {
     super();
     this.type = NodesTypes.SHAPE;
-    this.shape = shape;
   }
 
-  protected drawSelf(ctx: CanvasRenderingContext2D): void {
+  getBounds(): Bounds {
+    return this.shape.getBounds();
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
     this.shape.draw(ctx);
   }
 }

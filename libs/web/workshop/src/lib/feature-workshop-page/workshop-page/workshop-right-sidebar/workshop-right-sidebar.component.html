@@ -1,0 +1,158 @@
+<div class="layers">
+  <div class="layers__header">
+    <span class="layers__title">Слои</span>
+    <div class="layers__actions">
+      <button
+        type="button"
+        class="layers__add layers__add--group"
+        (click)="toggleMode()"
+        title="Добавить группу"
+      >
+        M
+      </button>
+      <button
+        type="button"
+        class="layers__add layers__add--group"
+        (click)="generateTestData()"
+        title="Сгенерировать фигуры"
+      >
+        Gen
+      </button>
+      <button
+        type="button"
+        class="layers__add"
+        (click)="addLayer()"
+        title="Добавить слой"
+      >
+        + Layer
+      </button>
+      <button
+        type="button"
+        class="layers__add layers__add--group"
+        (click)="addGroup()"
+        title="Добавить группу"
+      >
+        + Group
+      </button>
+    </div>
+  </div>
+
+  @if (activeNodesList()) {
+    <wm-workshop-nodes-panel
+      [nodesRoot]="nodesRoot()"
+    ></wm-workshop-nodes-panel>
+  }
+
+  @if (selectedShape(); as shape) {
+    <div class="shape-properties">
+      <div class="shape-properties__title">Свойства фигуры</div>
+
+      <div class="shape-properties__field">
+        Fill color
+        @if (selectedRectangle; as rectangle) {
+          <input
+            type="color"
+            [ngModel]="rectangle.fillColor"
+            (ngModelChange)="
+              rectangle.fillColor = $event; updateSelectedShape()
+            "
+          />
+        }
+      </div>
+
+      <label class="shape-properties__field">
+        Border color
+        <input
+          type="color"
+          [ngModel]="shape.strokeColor"
+          (ngModelChange)="shape.strokeColor = $event; updateSelectedShape()"
+        />
+      </label>
+
+      <label class="shape-properties__field">
+        Border width
+        <input
+          type="number"
+          min="0"
+          step="1"
+          [ngModel]="shape.strokeWidth"
+          (ngModelChange)="
+            updateShapeFromNumberInput(shape, 'strokeWidth', $event)
+          "
+        />
+      </label>
+
+      <label class="shape-properties__field">
+        Opacity
+        <input
+          type="number"
+          min="0"
+          max="1"
+          step="0.05"
+          [ngModel]="shape.opacity"
+          (ngModelChange)="updateShapeFromNumberInput(shape, 'opacity', $event)"
+        />
+      </label>
+
+      @if (selectedRectangle; as rectangle) {
+        <label class="shape-properties__field">
+          Width
+          <input
+            type="number"
+            min="0"
+            step="1"
+            [ngModel]="rectangle.width"
+            (ngModelChange)="rectangle.width = +$event; updateSelectedShape()"
+          />
+        </label>
+        <label class="shape-properties__field">
+          Height
+          <input
+            type="number"
+            min="0"
+            step="1"
+            [ngModel]="rectangle.height"
+            (ngModelChange)="rectangle.height = +$event; updateSelectedShape()"
+          />
+        </label>
+      }
+
+      <label class="shape-properties__field">
+        Shadow color
+        <input
+          type="color"
+          [ngModel]="shape.shadowColor || '#000000'"
+          (ngModelChange)="shape.shadowColor = $event; updateSelectedShape()"
+        />
+      </label>
+      <label class="shape-properties__field">
+        Shadow blur
+        <input
+          type="number"
+          min="0"
+          step="1"
+          [ngModel]="shape.shadowBlur ?? 0"
+          (ngModelChange)="shape.shadowBlur = +$event; updateSelectedShape()"
+        />
+      </label>
+      <label class="shape-properties__field">
+        Shadow offset X
+        <input
+          type="number"
+          step="1"
+          [ngModel]="shape.shadowOffsetX ?? 0"
+          (ngModelChange)="shape.shadowOffsetX = +$event; updateSelectedShape()"
+        />
+      </label>
+      <label class="shape-properties__field">
+        Shadow offset Y
+        <input
+          type="number"
+          step="1"
+          [ngModel]="shape.shadowOffsetY ?? 0"
+          (ngModelChange)="shape.shadowOffsetY = +$event; updateSelectedShape()"
+        />
+      </label>
+    </div>
+  }
+</div>

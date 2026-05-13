@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { WorkshopShapesStorageService } from '../services';
+import { WorkshopSceneGraphStorageService } from '../services';
 import { Bounds, QuadtreeItem, QuadtreeNode } from '../interfaces';
 
 @Injectable()

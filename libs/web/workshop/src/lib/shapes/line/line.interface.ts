@@ -5,4 +5,4 @@ export interface Line extends Shape {
   points: Point[];
 }
 
-export type LineCreateData = Omit<Line, keyof ShapeActions>;
+export type LineCreateData = Omit<Line, keyof ShapeActions | 'id'>;

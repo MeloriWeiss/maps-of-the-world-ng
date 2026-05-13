@@ -4,4 +4,8 @@ import { ElementRef, Injectable } from '@angular/core';
 export class WorkshopCanvasService {
   canvasRef!: ElementRef<HTMLCanvasElement>;
   ctx!: CanvasRenderingContext2D;
+
+  setup() {
+    this.ctx.lineCap = 'round';
+  }
 }

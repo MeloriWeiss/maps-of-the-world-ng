@@ -12,143 +12,197 @@ export class SelectTool implements Tool {
   #workshopShapesService = inject(WorkshopShapesService);
   #workshopCanvasManagerService = inject(WorkshopCanvasManagerService);
 
-  nodes = this.#workshopShapesService.nodes;
-
   #selectionRect: SelectionRect | null = null;
-
-  #selectedShapes: Shape[] = [];
-  #selection = false;
-
-  // #lastX!: number;
-  // #lastY!: number;
+  #selectedShapes = new Set<Shape>();
+  #isSelecting = false;
+  #isMovingSelection = false;
+  #lastPoint: Point | null = null;
 
   startDrawing(
     e: MouseEvent,
     ctx: CanvasRenderingContext2D,
     startPoint: Point,
   ) {
-    // this.#lastX = startPoint.x;
-    // this.#lastY = startPoint.y;
+    this.#lastPoint = startPoint;
 
-    if (e.shiftKey) {
-      // for (const shape of this.shapes()) {
-      //   if (!this.#workshopShapesService.isShapeVisible(shape)) continue;
-      //   if (shape.selected) continue;
-      //
-      //   const selected = shape.selectByClick(startPoint);
-      //
-      //   if (selected) this.#selectedShapes.push(shape);
-      // }
-      // this.#workshopCanvasManagerService.render();
-      //
-      // return;
-    }
-
-    if (!this.clickOnSelectedShapes(startPoint)) {
-      for (const shape of this.#selectedShapes) {
-        shape.selected = false;
+    const hitShape = this.#pickTopShape(startPoint);
+    if (hitShape) {
+      if (e.shiftKey) {
+        this.#setShapeSelected(hitShape, !hitShape.selected);
+        if (hitShape.selected) {
+          this.#selectedShapes.add(hitShape);
+        } else {
+          this.#selectedShapes.delete(hitShape);
+        }
+        this.#syncSelectedShapes();
+        this.#workshopShapesService.setSelectedShapes(
+          Array.from(this.#selectedShapes),
+        );
+        this.#workshopCanvasManagerService.redraw();
+        return;
       }
-      this.#selectedShapes = [];
+
+      if (!hitShape.selected) {
+        this.#clearSelection();
+        this.#setShapeSelected(hitShape, true);
+        this.#selectedShapes.add(hitShape);
+      } else {
+        this.#syncSelectedShapes();
+      }
+
+      this.#isMovingSelection = true;
+      this.#workshopShapesService.setSelectedShapes(
+        Array.from(this.#selectedShapes),
+      );
+      this.#workshopCanvasManagerService.redraw();
+      return;
     }
 
-    if (this.#selectedShapes.length) return;
+    if (!e.shiftKey) {
+      this.#clearSelection();
+    }
 
-    this.#selectedShapes = [];
-    this.#selection = true;
-
-    // for (const shape of this.shapes()) {
-    //   if (!this.#workshopShapesService.isShapeVisible(shape)) continue;
-    //
-    //   const selected = shape.selectByClick(startPoint);
-    //
-    //   if (selected) this.#selectedShapes.push(shape);
-    // }
-    this.#workshopCanvasManagerService.render();
-
+    this.#isSelecting = true;
     this.#selectionRect = {
       x: startPoint.x,
       y: startPoint.y,
       width: 0,
       height: 0,
     };
+
+    this.#workshopCanvasManagerService.redraw();
   }
 
   draw(ctx: CanvasRenderingContext2D, newPoint: Point) {
-    this.#workshopCanvasManagerService.redraw();
+    if (!this.#lastPoint) return;
 
-    if (this.#selectedShapes.length && !this.#selection) {
-      // for (const shape of this.shapes()) {
-      //   if (!this.#workshopShapesService.isShapeVisible(shape)) continue;
-      //   if (!shape.selected) continue;
-      //
-      //   shape.changePosition({
-      //     x: newPoint.x - this.#lastX,
-      //     y: newPoint.y - this.#lastY,
-      //   });
-      // }
-      this.#workshopCanvasManagerService.render();
+    if (this.#isMovingSelection) {
+      const delta = {
+        x: newPoint.x - this.#lastPoint.x,
+        y: newPoint.y - this.#lastPoint.y,
+      };
+
+      for (const shape of this.#selectedShapes) {
+        shape.changePosition(delta);
+        this.#workshopShapesService.markShapeDirty(shape);
+      }
+
+      this.#lastPoint = newPoint;
+      this.#workshopCanvasManagerService.redraw();
+      return;
     }
 
-    // this.#lastX = newPoint.x;
-    // this.#lastY = newPoint.y;
+    if (!this.#isSelecting || !this.#selectionRect) return;
 
+    this.#selectionRect.width = newPoint.x - this.#selectionRect.x;
+    this.#selectionRect.height = newPoint.y - this.#selectionRect.y;
+
+    this.#applySelectionRect();
+    this.#workshopShapesService.setSelectedShapes(
+      Array.from(this.#selectedShapes),
+    );
+    this.#workshopCanvasManagerService.redraw();
+    this.#drawSelectionRect(ctx, this.#selectionRect);
+  }
+
+  stopDrawing() {
+    this.#workshopShapesService.saveChanges();
+    this.#isSelecting = false;
+    this.#isMovingSelection = false;
+    this.#lastPoint = null;
+    this.#selectionRect = null;
+    this.#workshopShapesService.setSelectedShapes(
+      Array.from(this.#selectedShapes),
+    );
+    this.#workshopCanvasManagerService.redraw();
+  }
+
+  #pickTopShape(point: Point) {
+    const visibleShapes = this.#workshopShapesService.getVisibleShapes();
+
+    for (let i = visibleShapes.length - 1; i >= 0; i--) {
+      if (visibleShapes[i].clickOn(point)) {
+        return visibleShapes[i];
+      }
+    }
+
+    return null;
+  }
+
+  #clearSelection() {
+    this.#workshopShapesService.clearSelection();
+    this.#selectedShapes.clear();
+    this.#workshopShapesService.setSelectedShapes([]);
+  }
+
+  #syncSelectedShapes() {
+    this.#selectedShapes = new Set(
+      this.#workshopShapesService
+        .getVisibleShapes()
+        .filter((shape) => shape.selected),
+    );
+  }
+
+  #applySelectionRect() {
     if (!this.#selectionRect) return;
 
-    const rectX = Math.min(this.#selectionRect.x, newPoint.x);
-    const rectY = Math.min(this.#selectionRect.y, newPoint.y);
+    const rectX = Math.min(
+      this.#selectionRect.x,
+      this.#selectionRect.x + this.#selectionRect.width,
+    );
+    const rectY = Math.min(
+      this.#selectionRect.y,
+      this.#selectionRect.y + this.#selectionRect.height,
+    );
+    const selectionRect: SelectionRect = {
+      x: rectX,
+      y: rectY,
+      width: Math.abs(this.#selectionRect.width),
+      height: Math.abs(this.#selectionRect.height),
+    };
 
-    let rectWidth = newPoint.x - this.#selectionRect.x;
-    let rectHeight = newPoint.y - this.#selectionRect.y;
+    const visibleShapes = this.#workshopShapesService.getVisibleShapes();
+    this.#selectedShapes.clear();
 
-    this.#selectionRect.width = rectWidth;
-    this.#selectionRect.height = rectHeight;
+    for (const shape of visibleShapes) {
+      const wasSelected = !!shape.selected;
+      const selected = shape.selectByDraw(selectionRect);
+      if (wasSelected !== selected) {
+        this.#workshopShapesService.markShapeDirty(shape);
+      }
+      if (selected) {
+        this.#selectedShapes.add(shape);
+      }
+    }
+  }
 
-    this.#workshopCanvasManagerService.render();
+  #setShapeSelected(shape: Shape, selected: boolean) {
+    if (shape.selected === selected) return;
+    shape.selected = selected;
+    this.#workshopShapesService.markShapeDirty(shape);
+  }
 
-    rectWidth = Math.abs(rectWidth);
-    rectHeight = Math.abs(rectHeight);
+  #drawSelectionRect(
+    ctx: CanvasRenderingContext2D,
+    selectionRect: SelectionRect,
+  ) {
+    const rectX = Math.min(
+      selectionRect.x,
+      selectionRect.x + selectionRect.width,
+    );
+    const rectY = Math.min(
+      selectionRect.y,
+      selectionRect.y + selectionRect.height,
+    );
+    const rectWidth = Math.abs(selectionRect.width);
+    const rectHeight = Math.abs(selectionRect.height);
 
     ctx.strokeStyle = '#0199dc';
     ctx.fillStyle = '#16B7FF11';
     ctx.lineWidth = 1;
-
     ctx.setLineDash([4, 2]);
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
     ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
     ctx.setLineDash([]);
-
-    this.#selectedShapes = [];
-
-    // for (const shape of this.shapes()) {
-    //   if (!this.#workshopShapesService.isShapeVisible(shape)) continue;
-    //
-    //   const selected = shape.selectByDraw({
-    //     x: rectX,
-    //     y: rectY,
-    //     width: rectWidth,
-    //     height: rectHeight,
-    //   });
-    //
-    //   if (selected) this.#selectedShapes.push(shape);
-    // }
-  }
-
-  stopDrawing() {
-    this.#selection = false;
-
-    this.#workshopCanvasManagerService.redraw();
-
-    this.#workshopShapesService.saveNodes();
-
-    this.#selectionRect = null;
-  }
-
-  clickOnSelectedShapes(point: Point) {
-    for (const shape of this.#selectedShapes) {
-      if (!shape.selected) continue;
-
-      if (shape.clickOn(point)) return true;
-    }
-    return false;
   }
 }

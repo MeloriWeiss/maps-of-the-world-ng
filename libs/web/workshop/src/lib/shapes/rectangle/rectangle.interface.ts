@@ -7,4 +7,4 @@ export interface Rectangle extends Shape, Point {
   fillColor: string;
 }
 
-export type RectangleCreateData = Omit<Rectangle, keyof ShapeActions>;
+export type RectangleCreateData = Omit<Rectangle, keyof ShapeActions | 'id'>;

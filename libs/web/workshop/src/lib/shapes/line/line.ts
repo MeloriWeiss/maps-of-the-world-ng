@@ -16,6 +16,10 @@ export class LineShape extends BaseShapeShape implements Line {
       strokeColor: line.strokeColor,
       strokeWidth: line.strokeWidth,
       opacity: line.opacity,
+      shadowColor: line.shadowColor,
+      shadowBlur: line.shadowBlur,
+      shadowOffsetX: line.shadowOffsetX,
+      shadowOffsetY: line.shadowOffsetY,
     });
 
     this.points = line.points;
@@ -24,6 +28,10 @@ export class LineShape extends BaseShapeShape implements Line {
   draw(ctx: CanvasRenderingContext2D) {
     ctx.lineWidth = this.strokeWidth;
     ctx.globalAlpha = this.opacity;
+    ctx.shadowColor = this.shadowColor ?? 'transparent';
+    ctx.shadowBlur = this.shadowBlur ?? 0;
+    ctx.shadowOffsetX = this.shadowOffsetX ?? 0;
+    ctx.shadowOffsetY = this.shadowOffsetY ?? 0;
 
     if (this.selected) {
       ctx.strokeStyle = '#0199dc';
@@ -38,6 +46,10 @@ export class LineShape extends BaseShapeShape implements Line {
       ctx.lineTo(this.points[i].x, this.points[i].y);
     }
     ctx.stroke();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
   }
 
   clickOn(point: Point) {

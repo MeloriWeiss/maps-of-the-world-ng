@@ -1,0 +1,41 @@
+<form class="controls__header" [formGroup]="drawSetupForm">
+  <label>
+    Stroke:
+    <input type="color" formControlName="strokeColor" />
+  </label>
+  <label>
+    Fill:
+    <input type="color" formControlName="fillColor" />
+  </label>
+  <label>
+    Line Width:
+    <input type="range" min="1" max="20" formControlName="lineWidth" />
+  </label>
+  <label>
+    Opacity:
+    <input type="range" min="0" max="1" step="0.01" formControlName="opacity" />
+  </label>
+  <label>
+    Shadow:
+    <input type="color" formControlName="shadowColor" />
+  </label>
+  <label>
+    Blur:
+    <input
+      type="range"
+      min="0"
+      max="50"
+      step="1"
+      formControlName="shadowBlur"
+    />
+  </label>
+  <label>
+    Shadow X:
+    <input type="number" step="1" formControlName="shadowOffsetX" />
+  </label>
+  <label>
+    Shadow Y:
+    <input type="number" step="1" formControlName="shadowOffsetY" />
+  </label>
+  <button (click)="clearCanvas()" type="button">Clear</button>
+</form>

@@ -16,7 +16,7 @@ export class WorkshopDrawService {
   ctx = this.#workshopCanvasService.ctx;
 
   strokeColor = '#000000';
-  lineWidth = 2;
+  lineWidth = 1;
   opacity = 1;
 
   isDrawing = false;
