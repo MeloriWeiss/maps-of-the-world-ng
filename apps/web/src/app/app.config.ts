@@ -12,6 +12,7 @@ import {
   withInterceptors,
 } from '@angular/common/http';
 import { authInitializer, authInterceptor } from '@wm/web/auth';
+import { provideApiConfig } from '../provide-utils/provide-api-config';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,5 +21,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
     provideAppInitializer(authInitializer),
     provideAnimations(),
+    provideApiConfig(),
   ],
 };

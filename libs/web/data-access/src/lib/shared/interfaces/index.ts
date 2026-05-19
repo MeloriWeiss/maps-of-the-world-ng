@@ -1,3 +1,4 @@
+import { ApiConfig } from './api-config.interface';
 import { BaseObject } from './base-object.interface';
 import { CommentItem } from './comment-item.interface';
 import { ConfirmModalInputs } from './confirm-modal-inputs.interface';
@@ -10,4 +11,5 @@ export type {
   BaseObject,
   SliderItemInterface,
   CommentItem,
+  ApiConfig,
 };
