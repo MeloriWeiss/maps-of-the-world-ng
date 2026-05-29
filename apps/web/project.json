@@ -53,7 +53,7 @@
           "fileReplacements": [
             {
               "replace": "apps/web/src/environments/environment.ts",
-              "with": "apps/your-app/src/environments/environment.prod.ts"
+              "with": "apps/web/src/environments/environment.prod.ts"
             }
           ],
           "optimization": true,
