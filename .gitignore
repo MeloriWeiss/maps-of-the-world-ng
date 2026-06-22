@@ -48,6 +48,16 @@ Thumbs.db
 # Npm
 package-lock.json
 
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+#!.yarn/cache
+.pnp.*
 
 .nx/cache
 .nx/workspace-data
