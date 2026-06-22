@@ -1,10 +1,28 @@
-<input
-  class="form-input"
-  [formControl]="innerFormControl"
-  [type]="type()"
-  [placeholder]="placeholder()"
-  (blur)="onTouched()"
-/>
+<div class="form-input-wrapper">
+  <input
+    class="form-input"
+    [class.form-input_with-action]="
+      showPasswordToggle() && type() === 'password'
+    "
+    [formControl]="innerFormControl"
+    [type]="resolvedType()"
+    [placeholder]="placeholder()"
+    (blur)="onTouched()"
+  />
+
+  @if (showPasswordToggle() && type() === 'password') {
+    <button
+      class="password-toggle"
+      type="button"
+      [attr.aria-label]="passwordToggleLabel()"
+      [title]="passwordToggleLabel()"
+      [disabled]="disabled()"
+      (click)="togglePasswordVisibility()"
+    >
+      <svg [icon]="passwordToggleIcon()" class="svg18"></svg>
+    </button>
+  }
+</div>
 <div class="control-error-block__wrapper">
   <ng-content select="[errorBlock]"></ng-content>
 </div>

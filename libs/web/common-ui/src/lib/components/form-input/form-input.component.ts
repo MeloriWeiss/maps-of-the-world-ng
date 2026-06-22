@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   forwardRef,
   input,
@@ -13,10 +14,11 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SvgComponent } from '../svg/svg.component';
 
 @Component({
   selector: 'wm-form-input',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, SvgComponent],
   templateUrl: './form-input.component.html',
   styleUrl: './form-input.component.scss',
   providers: [
@@ -32,7 +34,23 @@ export class FormInputComponent implements ControlValueAccessor {
   type = input('text');
   placeholder = input('Введите');
 
+  showPasswordToggle = input(false);
+
   disabled = signal(false);
+  passwordVisible = signal(false);
+  resolvedType = computed(() => {
+    if (this.showPasswordToggle() && this.type() === 'password') {
+      return this.passwordVisible() ? 'text' : 'password';
+    }
+
+    return this.type();
+  });
+  passwordToggleIcon = computed(() =>
+    this.passwordVisible() ? 'eye-off' : 'eye',
+  );
+  passwordToggleLabel = computed(() =>
+    this.passwordVisible() ? 'Hide password' : 'Show password',
+  );
 
   innerFormControl = new FormControl('');
 
@@ -66,6 +84,10 @@ export class FormInputComponent implements ControlValueAccessor {
 
   setDisabledState?(isDisabled: boolean): void {
     this.disabled.set(isDisabled);
+  }
+
+  togglePasswordVisibility() {
+    this.passwordVisible.update((value) => !value);
   }
 
   onChange(value: string | null) {}
