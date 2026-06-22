@@ -49,6 +49,13 @@
 - `workshop` loads `WorkshopPageComponent` directly.
 - `login` and `register` use `AuthLayoutComponent` and `canActivateNonAuth`.
 
+## UI Notes
+
+- Shared input component: `libs/web/common-ui/src/lib/components/form-input`.
+- `wm-form-input` is a ControlValueAccessor and supports `type`, `placeholder`, and optional `[showPasswordToggle]="true"`.
+- Password visibility toggle is implemented inside `wm-form-input` using `eye` / `eye-off` SVG assets from `public/assets/svg`.
+- Auth login/register password fields enable the toggle via `[showPasswordToggle]="true"`.
+
 ## Workshop Notes
 
 - `libs/web/workshop` is a Canvas-based editor.
