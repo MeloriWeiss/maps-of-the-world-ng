@@ -64,7 +64,11 @@ yarn start:api-deps:docker
 yarn db:main:push
 ```
 
+```bash
+yarn db:main:generate
 ```
+
+```bash
 yarn db:main:seed
 ```
 
