@@ -30,4 +30,38 @@
   @include tablet {
     padding: rem(9) rem(14);
   }
+
+  &_with-action {
+    padding-right: rem(38);
+  }
+}
+
+.form-input-wrapper {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: rem(9);
+  display: grid;
+  place-items: center;
+  width: rem(24);
+  height: rem(24);
+  padding: 0;
+  border: 0;
+  color: var(--light-gray-color);
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--dark-color);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
 }
