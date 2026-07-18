@@ -18,6 +18,9 @@
   --light-primary-color: #e9e6e3;
   --blue-link-color: #0015ff;
   --error-color: #da0000;
+  --error-pastel-color: #cb132b;
+  --success-color: #27914d;
+  --info-color: #366bbe;
 
   --semi-dark-font-color: #2d2924;
   --dark-gray-font-color: #414141;
@@ -129,11 +132,6 @@ button {
   background: var(--light-primary-color);
   border-radius: rem(20);
 }
-
-// Применялось для тестов со слайдером
-//.owl-stage {
-//  background-color: tomato;
-//}
 
 .no-scroll {
   overflow: hidden;

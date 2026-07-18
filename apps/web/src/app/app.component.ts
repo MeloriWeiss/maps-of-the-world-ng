@@ -1,11 +1,16 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavigationManagerComponent } from '@wm/web/web-shared';
-import { ModalHostComponent } from '@wm/web/common-ui';
+import { ModalHostComponent, ToastHostComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavigationManagerComponent, ModalHostComponent],
+  imports: [
+    RouterOutlet,
+    NavigationManagerComponent,
+    ModalHostComponent,
+    ToastHostComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -16,6 +16,11 @@ import { DiscussionCardComponent } from './discussion-card/discussion-card.compo
 import { ConfirmationModalComponent } from './confirmation-modal/confirmation-modal.component';
 import { ModalService } from './base-modal/modal.service';
 import { ModalHostComponent } from './modal-host/modal-host.component';
+import { ToastHostComponent } from './toasts/toast-host/toast-host.component';
+import { ToastService } from './toasts/toast.service';
+import { SuccessToastComponent } from './toasts/success-toast/success-toast.component';
+import { InfoToastComponent } from './toasts/info-toast/info-toast.component';
+import { ErrorToastComponent } from './toasts/error-toast/error-toast.component';
 
 export {
   FormInputComponent,
@@ -36,4 +41,9 @@ export {
   ConfirmationModalComponent,
   ModalService,
   ModalHostComponent,
+  ToastHostComponent,
+  ToastService,
+  SuccessToastComponent,
+  InfoToastComponent,
+  ErrorToastComponent,
 };
