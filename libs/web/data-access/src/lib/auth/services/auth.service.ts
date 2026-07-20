@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
 import { UserResponseDto } from '@wm/shared/users';
 import { LoginData, RegisterData } from '../interfaces';
 import { DefaultResponseDto } from '@wm/shared/common';
 import { Router } from '@angular/router';
-import { API_CONFIG } from '../../shared';
+import { API_CONFIG, BYPASS_GLOBAL_ERROR } from '../../shared';
 
 @Injectable({
   providedIn: 'root',
@@ -39,7 +39,11 @@ export class AuthService {
 
   refresh() {
     return this.#http
-      .post<UserResponseDto>(`${this.#apiConfig.baseUrl}auth/refresh`, {})
+      .post<UserResponseDto>(
+        `${this.#apiConfig.baseUrl}auth/refresh`,
+        {},
+        { context: new HttpContext().set(BYPASS_GLOBAL_ERROR, true) },
+      )
       .pipe(
         tap(() => {
           this.isAuthorized$.next(true);
@@ -49,7 +53,11 @@ export class AuthService {
 
   logout() {
     return this.#http
-      .post<DefaultResponseDto>(`${this.#apiConfig.baseUrl}auth/logout`, {})
+      .post<DefaultResponseDto>(
+        `${this.#apiConfig.baseUrl}auth/logout`,
+        {},
+        { context: new HttpContext().set(BYPASS_GLOBAL_ERROR, true) },
+      )
       .pipe(
         tap(() => {
           this.isAuthorized$.next(false);
