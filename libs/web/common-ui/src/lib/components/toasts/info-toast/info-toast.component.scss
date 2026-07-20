@@ -1,0 +1,16 @@
+.toast__close {
+  font-size: 18px;
+  padding: 2px 8px;
+  color: var(--light-color);
+}
+
+.toast-content {
+  padding: 12px 16px;
+  background-color: var(--info-color);
+  color: var(--light-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}

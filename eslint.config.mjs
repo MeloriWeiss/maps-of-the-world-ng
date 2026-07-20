@@ -30,7 +30,6 @@ export default [
   {
     files: [
       '**/*.component.ts',
-      '**/*.service.ts',
       '**/*.directive.ts',
       '**/*.pipe.ts',
     ],

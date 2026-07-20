@@ -3,7 +3,7 @@ import { ApiAuthModule } from '@wm/api/api-auth';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '@wm/api/users';
 import { DatabaseMainModule } from '@wm/api/database-main';
-import { validateEnv } from '@wm/api/api-shared';
+import { ApiLogger, validateEnv } from '@wm/api/api-shared';
 
 @Module({
   imports: [
@@ -17,6 +17,6 @@ import { validateEnv } from '@wm/api/api-shared';
     }),
   ],
   controllers: [],
-  providers: [],
+  providers: [ApiLogger],
 })
 export class AppModule {}

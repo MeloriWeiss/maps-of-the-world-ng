@@ -8,7 +8,7 @@ const ruleTester = new RuleTester({
   },
 } as RuleTesterConfig);
 
-ruleTester.run(RULE_NAME, rule, {
+ruleTester.run(RULE_NAME, rule as any, {
   valid: [`const example = true;`],
   invalid: [],
 });

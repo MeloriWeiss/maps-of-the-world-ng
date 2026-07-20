@@ -1,0 +1,25 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.toast {
+  min-width: 240px;
+  max-width: 480px;
+  border-radius: 8px;
+  color: var(--dark-color);
+  box-shadow: 0 8px 16px var(--dark-primary-transparent-color);
+  font-size: 16px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out;
+}
+
+.toast--open {
+  opacity: 1;
+  transform: translateY(0);
+}
