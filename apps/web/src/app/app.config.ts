@@ -13,12 +13,16 @@ import {
 } from '@angular/common/http';
 import { authInitializer, authInterceptor } from '@wm/web/auth';
 import { provideApiConfig } from '../provide-utils/provide-api-config';
+import { globalHttpErrorInterceptor } from '@wm/web/web-shared';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
+    provideHttpClient(
+      withInterceptors([authInterceptor, globalHttpErrorInterceptor]),
+      withFetch(),
+    ),
     provideAppInitializer(authInitializer),
     provideAnimations(),
     provideApiConfig(),
