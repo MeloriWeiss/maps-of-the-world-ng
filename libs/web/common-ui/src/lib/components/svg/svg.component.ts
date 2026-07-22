@@ -10,8 +10,9 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 })
 export class SvgComponent {
   @Input() icon = '';
+  @Input() dir = '';
 
   get href() {
-    return `/assets/svg/${this.icon}.svg#${this.icon}`;
+    return `/assets/svg/${this.dir + this.icon}.svg#${this.icon}`;
   }
 }

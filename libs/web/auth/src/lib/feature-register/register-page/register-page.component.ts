@@ -56,7 +56,7 @@ export class RegisterPageComponent {
   });
 
   register() {
-    this.registerForm.markAsTouched();
+    this.registerForm.markAllAsTouched();
     this.registerForm.updateValueAndValidity();
 
     if (!this.registerForm.valid) return;

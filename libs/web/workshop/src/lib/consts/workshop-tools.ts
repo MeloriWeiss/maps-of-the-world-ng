@@ -3,4 +3,6 @@ export enum WorkshopTools {
   PENCIL = 'pencil',
   ERASER = 'eraser',
   RECTANGLE = 'rectangle',
+  TEXT = 'text',
+  TEXTURE = 'texture',
 }
