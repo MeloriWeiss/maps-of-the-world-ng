@@ -27,4 +27,18 @@ export class WorkshopSettingsService {
     shadowOffsetX: 0,
     shadowOffsetY: 0,
   };
+
+  textStyle = {
+    fontSize: 13,
+    fontFamily: 'Play, serif',
+    fillColor: '#ffffff',
+    defaultText: 'Текст',
+  };
+
+  textureStyle = {
+    textureColor: '#c4a574',
+    textureScale: 1,
+    textureRotation: 0,
+    strokeWidth: 12,
+  };
 }

@@ -316,7 +316,6 @@ export class WorkshopSceneGraphStorageService {
     this.shapes.clear();
     this.nodes.clear();
     this.nodesRoot.set(new LayerNode({}));
-    console.log('Storage очищен');
   }
 
   generateRandomShapesInMemory(count = 10_000) {

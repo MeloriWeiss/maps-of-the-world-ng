@@ -69,7 +69,9 @@ export class ToastService {
       });
     }
 
-    instance.show();
+    setTimeout(() => {
+      instance.show();
+    });
 
     const closed$ = instance.closed
       ? outputToObservable(instance.closed)

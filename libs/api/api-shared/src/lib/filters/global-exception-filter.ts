@@ -23,7 +23,27 @@ interface ErrorResponse {
   path: string;
 }
 
-@Catch() // ловим вообще всё
+interface PrismaErrorShape {
+  code: unknown;
+  clientVersion?: unknown;
+}
+
+type PrismaError = Error & PrismaErrorShape;
+
+function isPrismaError(exception: unknown): exception is PrismaError {
+  if (!(exception instanceof Error)) return false;
+
+  const candidate = exception as PrismaError;
+
+  if (typeof candidate.code !== 'string') return false;
+
+  return !(
+    candidate.clientVersion !== undefined &&
+    typeof candidate.clientVersion !== 'string'
+  );
+}
+
+@Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   constructor(
     private readonly httpAdapterHost: HttpAdapterHost,
@@ -59,6 +79,34 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   #buildErrorBody(exception: unknown, status: number): HttpErrorBody {
+    if (isPrismaError(exception)) {
+      let error = 'PrismaError';
+      let message = 'Database request error';
+
+      switch (exception.code) {
+        case 'P2002':
+          error = 'UniqueConstraintViolation';
+          message = 'Unique constraint failed';
+          status = HttpStatus.CONFLICT;
+          break;
+        case 'P2025':
+          error = 'RecordNotFound';
+          message = 'Record not found';
+          status = HttpStatus.NOT_FOUND;
+          break;
+        default:
+          error = 'PrismaError';
+          message = 'Prisma client error';
+          break;
+      }
+
+      return {
+        statusCode: status,
+        message,
+        error,
+      };
+    }
+
     if (exception instanceof HttpException) {
       const response = exception.getResponse();
 

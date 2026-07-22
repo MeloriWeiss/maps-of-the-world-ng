@@ -1,5 +1,30 @@
-<button class="btn" (click)="setCurrentTool(WorkshopTools.SELECT)">Sel</button>
-<button class="btn" (click)="setCurrentTool(WorkshopTools.PENCIL)">Pnc</button>
-<button class="btn" (click)="setCurrentTool(WorkshopTools.RECTANGLE)">
-  Rct
+<button
+  class="btn tool-btn"
+  [class.selected]="currentToolName() === WorkshopTools.SELECT"
+  (click)="setCurrentTool(WorkshopTools.SELECT)"
+>
+  <svg icon="mouse" dir="workshop/" class="svg35"></svg>
+</button>
+<button
+  class="btn tool-btn"
+  [class.selected]="currentToolName() === WorkshopTools.PENCIL"
+  (click)="setCurrentTool(WorkshopTools.PENCIL)"
+>
+  <svg icon="brush" dir="workshop/" class="svg35"></svg>
+</button>
+<button
+  class="btn tool-btn"
+  [class.selected]="currentToolName() === WorkshopTools.RECTANGLE"
+  (click)="setCurrentTool(WorkshopTools.RECTANGLE)"
+>
+  <svg icon="texture" dir="workshop/" class="svg35"></svg>
+</button>
+<button class="btn tool-btn" (click)="setCurrentTool(WorkshopTools.RECTANGLE)">
+  <svg icon="text" dir="workshop/" class="svg35"></svg>
+</button>
+<button class="btn tool-btn" (click)="setCurrentTool(WorkshopTools.RECTANGLE)">
+  <svg icon="grid" dir="workshop/" class="svg35"></svg>
+</button>
+<button class="btn tool-btn" (click)="setCurrentTool(WorkshopTools.RECTANGLE)">
+  <svg icon="file" dir="workshop/" class="svg35"></svg>
 </button>

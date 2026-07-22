@@ -55,16 +55,7 @@ export class WorkshopCanvasManagerService {
     );
     ctx.scale(zoom, zoom);
 
-    const t0 = performance.now();
     this.render();
-    const t1 = performance.now();
-
-    console.log(
-      `[FRAME] time=${(t1 - t0).toFixed(2)}ms ` +
-        `total=${this.stats_totalNodesLastFrame} ` +
-        `rendered=${this.stats_renderedNodesLastFrame} ` +
-        `culled=${this.stats_culledNodesLastFrame}`,
-    );
   }
 
   render() {
@@ -256,15 +247,6 @@ export class WorkshopCanvasManagerService {
     const offscreenCtx = layer.offscreenCtx;
 
     if (!offscreenCtx) return;
-
-    // stats
-    const needRedraw = layer.isDirty || layer.offscreenKey !== key;
-    if (needRedraw) {
-      console.log('[LAYER REDRAW]', layer.id);
-    } else {
-      console.log('[LAYER CACHE HIT]', layer.id);
-    }
-    // end stats
 
     if (layer.isDirty || layer.offscreenKey !== key) {
       offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
