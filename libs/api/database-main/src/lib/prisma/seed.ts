@@ -13,13 +13,13 @@ const ADMIN_PASSWORD_HASH =
 async function main() {
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE
-      "UserSession",
-      "ForumComment",
-      "Forum",
-      "MapComment",
-      "Map",
-      "PersonalAccount",
-      "User"
+      "sessions",
+      "forum_comments",
+      "forums",
+      "map_comments",
+      "maps",
+      "accounts",
+      "users"
     RESTART IDENTITY CASCADE;
   `);
 
@@ -35,6 +35,10 @@ async function main() {
       personalAccount: {
         create: {
           nickname: 'Admin',
+          firstName: 'Багратион',
+          lastName: 'Аккордеон',
+          middleName: 'Кондратионович',
+          language: 'pl',
         },
       },
     },
@@ -76,7 +80,7 @@ async function main() {
       isPublished: true,
       likesCount: 2,
       commentsCount: 2,
-      userId: admin.id,
+      accountId: admin.id,
     },
   });
 
