@@ -6,8 +6,10 @@ import {
   MinLength,
 } from 'class-validator';
 import { authConfig } from '@wm/shared/auth';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
+  @ApiProperty()
   @IsDefined({ message: authConfig.email.required.message })
   @IsString()
   @Matches(authConfig.email.correct.pattern, {
@@ -18,6 +20,7 @@ export class LoginDto {
   })
   email!: string;
 
+  @ApiProperty()
   @IsDefined({ message: authConfig.password.required.message })
   @IsString()
   @MinLength(authConfig.password.minLength.value, {
