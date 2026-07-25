@@ -2,6 +2,7 @@ import { Request } from 'express';
 
 export interface RefreshPayload {
   userId: number;
+  accountId: number;
   sessionId: number;
 }
 

@@ -61,6 +61,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    return { userId: payload.sub, sessionId: match.id };
+    return {
+      userId: payload.sub,
+      accountId: payload.accountId,
+      sessionId: match.id,
+    };
   }
 }

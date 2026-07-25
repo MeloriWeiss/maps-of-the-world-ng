@@ -158,11 +158,16 @@ export class AuthController {
     @Req() req: RefreshRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { userId, sessionId } = req.user;
+    const { userId, accountId, sessionId } = req.user;
     const meta = getUserMeta(req);
 
     const { accessToken, refreshToken } =
-      await this.authService.rotateSessionAndTokens(userId, sessionId, meta);
+      await this.authService.rotateSessionAndTokens(
+        userId,
+        accountId,
+        sessionId,
+        meta,
+      );
 
     setAuthCookies(res, { accessToken, refreshToken });
 
