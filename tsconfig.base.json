@@ -20,6 +20,7 @@
       "@wm/api/api-shared": ["libs/api/api-shared/src/index.ts"],
       "@wm/api/database-main": ["libs/api/database-main/src/index.ts"],
       "@wm/api/users": ["libs/api/users/src/index.ts"],
+      "@wm/api/accounts": ["libs/api/accounts/src/index.ts"],
       "@wm/shared/*": ["libs/shared/shared/src/lib/*"],
       "@wm/web/auth": ["libs/web/auth/src/index.ts"],
       "@wm/web/common-ui": ["libs/web/common-ui/src/index.ts"],
