@@ -2,7 +2,7 @@ import { BaseShapeShape } from '../shape';
 import { Rectangle, RectangleCreateData } from './rectangle.interface';
 import { ShapesTypes } from '../../consts';
 import { SelectionRect } from '../../tools';
-import { Point } from '../../interfaces';
+import { Bounds, Point } from '../../interfaces';
 
 export class RectangleShape extends BaseShapeShape implements Rectangle {
   type = ShapesTypes.RECTANGLE;
@@ -115,4 +115,26 @@ export class RectangleShape extends BaseShapeShape implements Rectangle {
       height: this.height,
     };
   }
+
+  transform(from: Bounds, to: Bounds) {
+    const start = transformPoint(this.x, this.y, from, to);
+    const end = transformPoint(
+      this.x + this.width,
+      this.y + this.height,
+      from,
+      to,
+    );
+
+    this.x = start.x;
+    this.y = start.y;
+    this.width = end.x - start.x;
+    this.height = end.y - start.y;
+  }
+}
+
+function transformPoint(x: number, y: number, from: Bounds, to: Bounds) {
+  return {
+    x: to.x + ((x - from.x) / Math.max(from.width, 0.001)) * to.width,
+    y: to.y + ((y - from.y) / Math.max(from.height, 0.001)) * to.height,
+  };
 }

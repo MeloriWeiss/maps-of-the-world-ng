@@ -1,1 +1,27 @@
 <wm-workshop-canvas></wm-workshop-canvas>
+
+<div class="workspace-status">
+  <div class="workspace-status__zoom">
+    <span aria-hidden="true">⌕</span>
+    <input
+      type="range"
+      min="10"
+      max="400"
+      step="5"
+      [ngModel]="zoomPercent()"
+      (ngModelChange)="updateZoom($event)"
+      aria-label="Масштаб"
+    />
+    <output>{{ zoomPercent() }}</output>
+    <button type="button">Во весь экран</button>
+  </div>
+
+  <label class="workspace-status__grid">
+    <input
+      type="checkbox"
+      [checked]="showGrid()"
+      (change)="toggleGrid($event)"
+    />
+    Показать сетку
+  </label>
+</div>

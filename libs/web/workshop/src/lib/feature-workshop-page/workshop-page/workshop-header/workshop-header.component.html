@@ -1,41 +1,49 @@
 <form class="controls__header" [formGroup]="drawSetupForm">
-  <label>
-    Stroke:
-    <input type="color" formControlName="strokeColor" />
-  </label>
-  <label>
-    Fill:
-    <input type="color" formControlName="fillColor" />
-  </label>
-  <label>
-    Line Width:
+  <img
+    class="controls__logo"
+    src="/assets/imgs/new-logo.png"
+    alt="GameMaster Helper"
+  />
+
+  <div class="controls__history">
+    <button type="button" aria-label="Отменить" title="Отменить">↶</button>
+    <button type="button" aria-label="Повторить" title="Повторить">↷</button>
+  </div>
+
+  <span class="controls__divider"></span>
+
+  <label class="controls__setting">
+    <span>Размер: {{ drawSetupForm.controls.lineWidth.value }}</span>
     <input type="range" min="1" max="20" formControlName="lineWidth" />
-  </label>
-  <label>
-    Opacity:
-    <input type="range" min="0" max="1" step="0.01" formControlName="opacity" />
-  </label>
-  <label>
-    Shadow:
-    <input type="color" formControlName="shadowColor" />
-  </label>
-  <label>
-    Blur:
     <input
-      type="range"
-      min="0"
-      max="50"
-      step="1"
-      formControlName="shadowBlur"
+      class="controls__color"
+      type="color"
+      formControlName="strokeColor"
+      title="Цвет линии"
     />
   </label>
-  <label>
-    Shadow X:
-    <input type="number" step="1" formControlName="shadowOffsetX" />
+
+  <label class="controls__setting">
+    <span>
+      Непрозрачность:
+      {{ (drawSetupForm.controls.opacity.value || 0) * 100 | number: '1.0-0' }}
+    </span>
+    <input type="range" min="0" max="1" step="0.01" formControlName="opacity" />
+    <span class="controls__drop">◒</span>
   </label>
-  <label>
-    Shadow Y:
-    <input type="number" step="1" formControlName="shadowOffsetY" />
-  </label>
-  <button (click)="clearCanvas()" type="button">Clear</button>
+
+  <input type="hidden" formControlName="fillColor" />
+  <input type="hidden" formControlName="shadowColor" />
+  <input type="hidden" formControlName="shadowBlur" />
+  <input type="hidden" formControlName="shadowOffsetX" />
+  <input type="hidden" formControlName="shadowOffsetY" />
+
+  <button
+    class="controls__clear"
+    (click)="clearCanvas()"
+    type="button"
+    title="Очистить холст"
+  >
+    Очистить
+  </button>
 </form>

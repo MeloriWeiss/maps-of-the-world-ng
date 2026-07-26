@@ -4,7 +4,7 @@ import {
 } from './texture-stroke.interface';
 import { BaseShapeShape } from '../shape';
 import { ShapesTypes } from '../../consts';
-import { Point } from '../../interfaces';
+import { Bounds, Point } from '../../interfaces';
 import { SelectionRect } from '../../tools';
 
 export class TextureStrokeShape
@@ -123,6 +123,22 @@ export class TextureStrokeShape
     }
 
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  }
+
+  transform(from: Bounds, to: Bounds) {
+    for (const point of this.points) {
+      point.x =
+        to.x + ((point.x - from.x) / Math.max(from.width, 0.001)) * to.width;
+      point.y =
+        to.y + ((point.y - from.y) / Math.max(from.height, 0.001)) * to.height;
+    }
+
+    const scaleX = to.width / Math.max(from.width, 0.001);
+    const scaleY = to.height / Math.max(from.height, 0.001);
+    this.textureScale *= Math.max(
+      0.05,
+      (Math.abs(scaleX) + Math.abs(scaleY)) / 2,
+    );
   }
 
   #createPattern(ctx: CanvasRenderingContext2D) {

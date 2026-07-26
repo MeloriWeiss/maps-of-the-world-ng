@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { fromEvent, merge, switchMap, takeUntil } from 'rxjs';
 import { WorkshopDrawService } from './workshop-draw.service';
 import { WorkshopSettingsService } from './workshop-settings.service';
@@ -21,6 +21,7 @@ export class WorkshopPanningService {
   panStartY = 0;
   cameraStartX = 0;
   cameraStartY = 0;
+  zoomPercent = signal(100);
 
   listenPanningEvents() {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
@@ -107,24 +108,47 @@ export class WorkshopPanningService {
     }
 
     zoom = this.#workshopCoordsService.zoom;
+    this.zoomPercent.set(Math.round(zoom * 100));
 
     const rect =
       this.#workshopDrawService.canvasRef.nativeElement.getBoundingClientRect();
-    const mouseX = rect.left - e.clientX;
-    const mouseY = rect.top - e.clientY;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
-    const worldX = (mouseX - this.#workshopCoordsService.cameraX) / oldZoom;
-    const worldY = (mouseY - this.#workshopCoordsService.cameraY) / oldZoom;
+    const worldX = (mouseX + this.#workshopCoordsService.cameraX) / oldZoom;
+    const worldY = (mouseY + this.#workshopCoordsService.cameraY) / oldZoom;
 
-    this.#workshopCoordsService.cameraX -= (zoom - oldZoom) * worldX;
-    this.#workshopCoordsService.cameraY -= (zoom - oldZoom) * worldY;
+    this.#workshopCoordsService.cameraX += (zoom - oldZoom) * worldX;
+    this.#workshopCoordsService.cameraY += (zoom - oldZoom) * worldY;
 
+    this.#updateViewport();
+  }
+
+  setZoomPercent(percent: number) {
+    const oldZoom = this.#workshopCoordsService.zoom;
+    const nextZoom = Math.min(
+      this.#workshopCoordsService.maxZoom,
+      Math.max(this.#workshopCoordsService.minZoom, percent / 100),
+    );
+    if (nextZoom === oldZoom) return;
+
+    const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
+    const mouseX = canvas.width / 2;
+    const mouseY = canvas.height / 2;
+    const worldX = (mouseX + this.#workshopCoordsService.cameraX) / oldZoom;
+    const worldY = (mouseY + this.#workshopCoordsService.cameraY) / oldZoom;
+
+    this.#workshopCoordsService.zoom = nextZoom;
+    this.#workshopCoordsService.cameraX += (nextZoom - oldZoom) * worldX;
+    this.#workshopCoordsService.cameraY += (nextZoom - oldZoom) * worldY;
+    this.zoomPercent.set(Math.round(nextZoom * 100));
     this.#updateViewport();
   }
 
   onMouseDown(e: MouseEvent) {
     if (e.button !== this.#workshopSettingsService.panningMouseButton) return;
 
+    e.preventDefault();
     this.isPanning = true;
     this.panStartX = e.clientX;
     this.panStartY = e.clientY;

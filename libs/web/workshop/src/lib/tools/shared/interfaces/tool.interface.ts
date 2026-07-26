@@ -10,4 +10,5 @@ export interface Tool {
   stopDrawing: (stopPoint: Point) => void;
   minRequiredParams?: Record<string, unknown>;
   enabledToCreate?: () => boolean;
+  dispose?: VoidFunction;
 }

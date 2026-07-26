@@ -1,7 +1,7 @@
 import { Line, LineCreateData } from './line.interface';
 import { BaseShapeShape } from '../shape';
 import { ShapesTypes } from '../../consts';
-import { Point } from '../../interfaces';
+import { Bounds, Point } from '../../interfaces';
 import { SelectionRect } from '../../tools';
 
 export class LineShape extends BaseShapeShape implements Line {
@@ -152,6 +152,15 @@ export class LineShape extends BaseShapeShape implements Line {
       width: maxX - minX,
       height: maxY - minY,
     };
+  }
+
+  transform(from: Bounds, to: Bounds) {
+    for (const point of this.points) {
+      point.x =
+        to.x + ((point.x - from.x) / Math.max(from.width, 0.001)) * to.width;
+      point.y =
+        to.y + ((point.y - from.y) / Math.max(from.height, 0.001)) * to.height;
+    }
   }
 
   getDistancePointToSegment(

@@ -24,6 +24,7 @@ export interface ShapeActions {
   selectByDraw: (selectionRect: SelectionRect) => boolean;
   changePosition: (point: Point) => void;
   getBounds: () => Bounds;
+  transform: (from: Bounds, to: Bounds) => void;
 }
 
 export interface Shape extends BaseShape, ShapeActions {

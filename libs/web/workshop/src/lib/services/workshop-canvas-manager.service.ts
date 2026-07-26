@@ -17,6 +17,7 @@ export class WorkshopCanvasManagerService {
   #rootNode = this.#workshopSceneGraphStorageService.nodesRoot;
 
   useOffscreen = signal(false);
+  showGrid = signal(true);
 
   #frameScheduled = false;
   #dirtyForRedraw = false;
@@ -64,23 +65,28 @@ export class WorkshopCanvasManagerService {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
     const viewport = this.#workshopCoordsService.worldViewport;
 
-    // canvas background
     ctx.fillStyle = 'lightgray';
-    ctx.fillRect(-1000, -1000, 2000, 2000); // пример фона
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1 / zoom;
-    for (let x = -1000; x <= 1000; x += 100) {
-      ctx.beginPath();
-      ctx.moveTo(x, -1000);
-      ctx.lineTo(x, 1000);
-      ctx.stroke();
+    ctx.fillRect(-1000, -1000, 2000, 2000);
+
+    if (this.showGrid()) {
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 1 / zoom;
+
+      for (let x = -1000; x <= 1000; x += 100) {
+        ctx.beginPath();
+        ctx.moveTo(x, -1000);
+        ctx.lineTo(x, 1000);
+        ctx.stroke();
+      }
+
+      for (let y = -1000; y <= 1000; y += 100) {
+        ctx.beginPath();
+        ctx.moveTo(-1000, y);
+        ctx.lineTo(1000, y);
+        ctx.stroke();
+      }
     }
-    for (let y = -1000; y <= 1000; y += 100) {
-      ctx.beginPath();
-      ctx.moveTo(-1000, y);
-      ctx.lineTo(1000, y);
-      ctx.stroke();
-    }
+
     this.#drawGraph(
       ctx,
       this.#rootNode(),
@@ -89,6 +95,7 @@ export class WorkshopCanvasManagerService {
       canvas.width,
       canvas.height,
     );
+    this.#drawSelection();
   }
 
   requestRedraw() {
@@ -392,5 +399,41 @@ export class WorkshopCanvasManagerService {
       a.y + a.height < b.y ||
       a.y > b.y + b.height
     );
+  }
+
+  #drawSelection() {
+    const bounds = this.#workshopShapesService.getSelectionBounds();
+    if (!bounds) return;
+
+    const ctx = this.#workshopCanvasService.ctx;
+    const zoom = this.#workshopCoordsService.zoom;
+    const handleSize = 8 / zoom;
+    const halfHandle = handleSize / 2;
+    const points = [
+      [bounds.x, bounds.y],
+      [bounds.x + bounds.width / 2, bounds.y],
+      [bounds.x + bounds.width, bounds.y],
+      [bounds.x + bounds.width, bounds.y + bounds.height / 2],
+      [bounds.x + bounds.width, bounds.y + bounds.height],
+      [bounds.x + bounds.width / 2, bounds.y + bounds.height],
+      [bounds.x, bounds.y + bounds.height],
+      [bounds.x, bounds.y + bounds.height / 2],
+    ];
+
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = 'transparent';
+    ctx.strokeStyle = '#0199dc';
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 1 / zoom;
+    ctx.setLineDash([4 / zoom, 3 / zoom]);
+    ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+    ctx.setLineDash([]);
+
+    for (const [x, y] of points) {
+      ctx.fillRect(x - halfHandle, y - halfHandle, handleSize, handleSize);
+      ctx.strokeRect(x - halfHandle, y - halfHandle, handleSize, handleSize);
+    }
+    ctx.restore();
   }
 }
