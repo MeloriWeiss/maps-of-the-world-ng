@@ -1,11 +1,29 @@
 :host {
   display: block;
+  height: 100dvh;
+  overflow: hidden;
   background-color: var(--dark-primary-color);
 }
 
 .workshop__body {
   display: grid;
-  grid-template-columns: 56px 1fr 300px;
+  grid-template-columns: 56px minmax(0, 1fr) minmax(330px, 31.25vw);
+  height: calc(100dvh - 58px);
+  transition: grid-template-columns 0.2s ease;
+
+  &:has(> wm-workshop-left-sidebar.collapsed) {
+    grid-template-columns: 28px minmax(0, 1fr) minmax(330px, 31.25vw);
+  }
+
+  &:has(> wm-workshop-right-sidebar.collapsed) {
+    grid-template-columns: 56px minmax(0, 1fr) 28px;
+  }
+
+  &:has(> wm-workshop-left-sidebar.collapsed):has(
+      > wm-workshop-right-sidebar.collapsed
+    ) {
+    grid-template-columns: 28px minmax(0, 1fr) 28px;
+  }
 }
 
 .workshop__left-sidebar {

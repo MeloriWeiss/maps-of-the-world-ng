@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 import {
   WorkshopCanvasManagerService,
   WorkshopDrawService,
@@ -10,7 +11,7 @@ import { tap } from 'rxjs';
 
 @Component({
   selector: 'wm-workshop-header',
-  imports: [ReactiveFormsModule],
+  imports: [DecimalPipe, ReactiveFormsModule],
   templateUrl: './workshop-header.component.html',
   styleUrl: './workshop-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

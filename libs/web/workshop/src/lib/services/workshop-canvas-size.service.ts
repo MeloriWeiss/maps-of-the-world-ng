@@ -32,7 +32,7 @@ export class WorkshopCanvasSizeService {
     this.canvasWidth =
       window.innerWidth - this.rightSidebarWidth - this.leftSidebarWidth;
 
-    this.canvasHeight = window.innerHeight - this.headerHeight;
+    this.canvasHeight = window.innerHeight - this.headerHeight - 35;
 
     canvas.width = this.canvasWidth;
     canvas.height = this.canvasHeight;

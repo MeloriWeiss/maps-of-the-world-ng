@@ -1,7 +1,7 @@
 import { Text, TextCreateData } from './text.interface';
 import { BaseShapeShape } from '../shape';
 import { ShapesTypes } from '../../consts';
-import { Point } from '../../interfaces';
+import { Bounds, Point } from '../../interfaces';
 import { SelectionRect } from '../../tools';
 
 export class TextShape extends BaseShapeShape implements Text {
@@ -94,5 +94,19 @@ export class TextShape extends BaseShapeShape implements Text {
       width,
       height,
     };
+  }
+
+  transform(from: Bounds, to: Bounds) {
+    const scaleX = to.width / Math.max(from.width, 0.001);
+    const scaleY = to.height / Math.max(from.height, 0.001);
+    this.x = to.x + (this.x - from.x) * scaleX;
+    this.y = to.y + (this.y - from.y) * scaleY;
+    const fontScale =
+      Math.abs(scaleY - 1) < 0.001
+        ? Math.abs(scaleX)
+        : Math.abs(scaleX - 1) < 0.001
+          ? Math.abs(scaleY)
+          : Math.sqrt(Math.abs(scaleX * scaleY));
+    this.fontSize = Math.max(1, this.fontSize * fontScale);
   }
 }

@@ -1,6 +1,8 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  HostBinding,
   inject,
   signal,
 } from '@angular/core';
@@ -10,6 +12,7 @@ import { Rectangle, Shape } from '../../../shapes';
 import { WorkshopNodesPanelComponent } from './workshop-nodes-panel/workshop-nodes-panel.component';
 import {
   WorkshopCanvasManagerService,
+  WorkshopCanvasSizeService,
   WorkshopSceneGraphService,
   WorkshopSceneGraphStorageService,
   WorkshopShapesService,
@@ -26,12 +29,22 @@ export class WorkshopRightSidebarComponent {
   #sceneGraphService = inject(WorkshopSceneGraphService);
   #shapesService = inject(WorkshopShapesService);
   #canvasManager = inject(WorkshopCanvasManagerService);
+  #canvasSizeService = inject(WorkshopCanvasSizeService);
+  #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
 
   nodesRoot = this.#sceneGraphStorageService.nodesRoot;
   activeNodeId = this.#sceneGraphStorageService.activeNodeId;
   selectedShape = this.#shapesService.selectedShape;
+  selectedShapes = this.#shapesService.selectedShapes;
+  ShapesTypes = ShapesTypes;
 
   activeNodesList = signal(true);
+  collapsed = signal(false);
+
+  @HostBinding('class.collapsed')
+  get isCollapsed() {
+    return this.collapsed();
+  }
 
   get selectedRectangle(): Rectangle | null {
     const shape = this.selectedShape();
@@ -43,6 +56,16 @@ export class WorkshopRightSidebarComponent {
     this.#sceneGraphService.addLayerNode({});
   }
 
+  toggleSidebar() {
+    this.collapsed.update((value) => !value);
+
+    setTimeout(() => {
+      this.#canvasSizeService.rightSidebarWidth =
+        this.#elementRef.nativeElement.getBoundingClientRect().width;
+      this.#canvasSizeService.resizeCanvas();
+    }, 220);
+  }
+
   addGroup() {
     this.#sceneGraphService.addGroupNode();
   }
@@ -52,6 +75,45 @@ export class WorkshopRightSidebarComponent {
     if (!shape) return;
 
     this.#shapesService.markShapeDirty(shape);
+    this.#shapesService.saveChanges();
+    this.#canvasManager.requestRedraw();
+  }
+
+  updateSelectedShapesProperty(
+    key:
+      | 'strokeColor'
+      | 'strokeWidth'
+      | 'opacity'
+      | 'shadowColor'
+      | 'shadowBlur'
+      | 'shadowOffsetX'
+      | 'shadowOffsetY',
+    value: string | number,
+  ) {
+    const parsedValue =
+      typeof value === 'number' || key.endsWith('Color')
+        ? value
+        : Number(value);
+    if (typeof parsedValue === 'number' && Number.isNaN(parsedValue)) return;
+
+    for (const shape of this.selectedShapes()) {
+      Object.assign(shape, { [key]: parsedValue });
+      this.#shapesService.markShapeDirty(shape);
+    }
+    this.#shapesService.saveChanges();
+    this.#canvasManager.requestRedraw();
+  }
+
+  updateSelectedShapesFill(value: string) {
+    for (const shape of this.selectedShapes()) {
+      if ('fillColor' in shape) {
+        Object.assign(shape, { fillColor: value });
+      }
+      if ('textureColor' in shape) {
+        Object.assign(shape, { textureColor: value });
+      }
+      this.#shapesService.markShapeDirty(shape);
+    }
     this.#shapesService.saveChanges();
     this.#canvasManager.requestRedraw();
   }

@@ -2,20 +2,26 @@ import { inject } from '@angular/core';
 import { Tool } from '../shared';
 import {
   WorkshopCanvasManagerService,
+  WorkshopCoordsService,
   WorkshopShapesService,
 } from '../../services';
 import { SelectionRect } from './selection-rect.interface';
-import { Point } from '../../interfaces';
+import { Bounds, Point } from '../../interfaces';
 import { Shape } from '../../shapes';
+
+type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
 export class SelectTool implements Tool {
   #workshopShapesService = inject(WorkshopShapesService);
   #workshopCanvasManagerService = inject(WorkshopCanvasManagerService);
+  #workshopCoordsService = inject(WorkshopCoordsService);
 
   #selectionRect: SelectionRect | null = null;
   #selectedShapes = new Set<Shape>();
   #isSelecting = false;
   #isMovingSelection = false;
+  #resizeHandle: ResizeHandle | null = null;
+  #resizeBounds: Bounds | null = null;
   #lastPoint: Point | null = null;
 
   startDrawing(
@@ -23,7 +29,17 @@ export class SelectTool implements Tool {
     ctx: CanvasRenderingContext2D,
     startPoint: Point,
   ) {
+    this.#syncSelectedShapes();
     this.#lastPoint = startPoint;
+
+    const resizeHandle = this.#pickResizeHandle(startPoint);
+    if (resizeHandle) {
+      this.#resizeHandle = resizeHandle;
+      this.#resizeBounds = this.#workshopShapesService.getSelectionBounds(
+        Array.from(this.#selectedShapes),
+      );
+      return;
+    }
 
     const hitShape = this.#pickTopShape(startPoint);
     if (hitShape) {
@@ -76,6 +92,22 @@ export class SelectTool implements Tool {
   draw(ctx: CanvasRenderingContext2D, newPoint: Point) {
     if (!this.#lastPoint) return;
 
+    if (this.#resizeHandle && this.#resizeBounds) {
+      const nextBounds = this.#resizeSelectionBounds(
+        this.#resizeBounds,
+        newPoint,
+        this.#resizeHandle,
+      );
+      this.#workshopShapesService.transformSelectedShapes(
+        this.#resizeBounds,
+        nextBounds,
+      );
+      this.#resizeBounds = nextBounds;
+      this.#lastPoint = newPoint;
+      this.#workshopCanvasManagerService.redraw();
+      return;
+    }
+
     if (this.#isMovingSelection) {
       const delta = {
         x: newPoint.x - this.#lastPoint.x,
@@ -109,6 +141,8 @@ export class SelectTool implements Tool {
     this.#workshopShapesService.saveChanges();
     this.#isSelecting = false;
     this.#isMovingSelection = false;
+    this.#resizeHandle = null;
+    this.#resizeBounds = null;
     this.#lastPoint = null;
     this.#selectionRect = null;
     this.#workshopShapesService.setSelectedShapes(
@@ -204,5 +238,56 @@ export class SelectTool implements Tool {
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
     ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
     ctx.setLineDash([]);
+  }
+
+  #pickResizeHandle(point: Point): ResizeHandle | null {
+    const bounds = this.#workshopShapesService.getSelectionBounds(
+      Array.from(this.#selectedShapes),
+    );
+    if (!bounds) return null;
+
+    const tolerance = 7 / this.#workshopCoordsService.zoom;
+    const handles: Array<[ResizeHandle, number, number]> = [
+      ['nw', bounds.x, bounds.y],
+      ['n', bounds.x + bounds.width / 2, bounds.y],
+      ['ne', bounds.x + bounds.width, bounds.y],
+      ['e', bounds.x + bounds.width, bounds.y + bounds.height / 2],
+      ['se', bounds.x + bounds.width, bounds.y + bounds.height],
+      ['s', bounds.x + bounds.width / 2, bounds.y + bounds.height],
+      ['sw', bounds.x, bounds.y + bounds.height],
+      ['w', bounds.x, bounds.y + bounds.height / 2],
+    ];
+
+    return (
+      handles.find(
+        ([, x, y]) =>
+          Math.abs(point.x - x) <= tolerance &&
+          Math.abs(point.y - y) <= tolerance,
+      )?.[0] ?? null
+    );
+  }
+
+  #resizeSelectionBounds(
+    bounds: Bounds,
+    point: Point,
+    handle: ResizeHandle,
+  ): Bounds {
+    let left = bounds.x;
+    let top = bounds.y;
+    let right = bounds.x + bounds.width;
+    let bottom = bounds.y + bounds.height;
+    const minSize = 2 / this.#workshopCoordsService.zoom;
+
+    if (handle.includes('w')) left = Math.min(point.x, right - minSize);
+    if (handle.includes('e')) right = Math.max(point.x, left + minSize);
+    if (handle.includes('n')) top = Math.min(point.y, bottom - minSize);
+    if (handle.includes('s')) bottom = Math.max(point.y, top + minSize);
+
+    return {
+      x: left,
+      y: top,
+      width: right - left,
+      height: bottom - top,
+    };
   }
 }

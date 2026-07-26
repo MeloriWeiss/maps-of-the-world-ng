@@ -3,6 +3,7 @@ import { Shape } from '../shapes';
 import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
 import { WorkshopSceneGraphService } from './workshop-scene-graph.service';
 import { ShapeNode } from '../nodes';
+import { Bounds } from '../interfaces';
 
 @Injectable()
 export class WorkshopShapesService {
@@ -38,6 +39,30 @@ export class WorkshopShapesService {
     this.selectedShapes.set(shapes);
   }
 
+  getSelectionBounds(shapes = this.selectedShapes()): Bounds | null {
+    if (!shapes.length) return null;
+
+    const bounds = shapes.map((shape) => shape.getBounds());
+    const minX = Math.min(...bounds.map((item) => item.x));
+    const minY = Math.min(...bounds.map((item) => item.y));
+    const maxX = Math.max(...bounds.map((item) => item.x + item.width));
+    const maxY = Math.max(...bounds.map((item) => item.y + item.height));
+
+    return {
+      x: minX,
+      y: minY,
+      width: Math.max(maxX - minX, 0.001),
+      height: Math.max(maxY - minY, 0.001),
+    };
+  }
+
+  transformSelectedShapes(from: Bounds, to: Bounds) {
+    for (const shape of this.selectedShapes()) {
+      shape.transform(from, to);
+      this.markShapeDirty(shape);
+    }
+  }
+
   updateShape(shape: Shape, patch: Partial<Shape>) {
     Object.assign(shape, patch);
     this.#sceneGraphService.markShapeDirty(shape);
@@ -63,5 +88,6 @@ export class WorkshopShapesService {
     for (const nodeId of selectedNodeIds) {
       this.#sceneGraphService.removeNode(nodeId);
     }
+    this.selectedShapes.set([]);
   }
 }
