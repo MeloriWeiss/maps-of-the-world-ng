@@ -34,6 +34,6 @@ export class JwtAccessStrategy extends PassportStrategy(
 
     if (!accessToken) throw new UnauthorizedException('Missing access token');
 
-    return { userId: payload.sub };
+    return { userId: payload.sub, profileId: payload.accountId };
   }
 }

@@ -6,8 +6,10 @@ import {
   MinLength,
 } from 'class-validator';
 import { authConfig } from '@wm/shared/auth';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
+  @ApiProperty()
   @IsDefined({ message: authConfig.email.required.message })
   @IsString()
   @Matches(authConfig.email.correct.pattern, {
@@ -18,6 +20,7 @@ export class RegisterDto {
   })
   email!: string;
 
+  @ApiProperty()
   @IsDefined({ message: authConfig.username.required.message })
   @IsString()
   @MinLength(authConfig.username.minLength.value, {
@@ -28,6 +31,7 @@ export class RegisterDto {
   })
   username!: string;
 
+  @ApiProperty()
   @IsDefined({ message: authConfig.password.required.message })
   @IsString()
   @Matches(authConfig.password.hasUppercase.pattern, {

@@ -34,11 +34,23 @@ export class AuthService {
         email: dto.email,
         username: dto.username,
         passwordHash,
+        personalAccount: {
+          create: {
+            nickname: dto.email.split('@')[0],
+          },
+        },
+      },
+      include: {
+        personalAccount: true,
       },
     });
 
     const { accessToken, refreshToken } =
-      await this.createSessionAndIssueTokens(user.id, meta);
+      await this.createSessionAndIssueTokens(
+        user.id,
+        user.personalAccount!.id,
+        meta,
+      );
 
     return { user, accessToken, refreshToken };
   }
@@ -46,6 +58,9 @@ export class AuthService {
   async login(dto: { email: string; password: string }, meta?: UserMeta) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: {
+        personalAccount: true,
+      },
     });
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
@@ -62,8 +77,21 @@ export class AuthService {
       where: { userId: user.id, expiresAt: { lt: new Date() } },
     });
 
+    if (!user.personalAccount) {
+      user.personalAccount = await this.prisma.personalAccount.create({
+        data: {
+          userId: user.id,
+          nickname: user.email.split('@')[0],
+        },
+      });
+    }
+
     const { accessToken, refreshToken } =
-      await this.createSessionAndIssueTokens(user.id, meta);
+      await this.createSessionAndIssueTokens(
+        user.id,
+        user.personalAccount.id,
+        meta,
+      );
 
     return { user, accessToken, refreshToken };
   }
@@ -101,8 +129,15 @@ export class AuthService {
     };
   }
 
-  async createSessionAndIssueTokens(userId: number, meta?: UserMeta) {
-    const { accessToken, refreshToken } = await this.signTokens(userId);
+  async createSessionAndIssueTokens(
+    userId: number,
+    accountId: number,
+    meta?: UserMeta,
+  ) {
+    const { accessToken, refreshToken } = await this.signTokens(
+      userId,
+      accountId,
+    );
 
     const tokenHash = await bcrypt.hash(refreshToken, 10);
     const expiresAt = new Date(Date.now() + jwtConfig.refreshToken.expiresIn);
@@ -124,10 +159,14 @@ export class AuthService {
 
   async rotateSessionAndTokens(
     userId: number,
+    accountId: number,
     sessionId: number,
     meta?: UserMeta,
   ) {
-    const { accessToken, refreshToken } = await this.signTokens(userId);
+    const { accessToken, refreshToken } = await this.signTokens(
+      userId,
+      accountId,
+    );
 
     const tokenHash = await bcrypt.hash(refreshToken, 10);
     const now = Date.now();
@@ -149,8 +188,8 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async signTokens(userId: number) {
-    const payload: JwtTokenPayload = { sub: userId };
+  async signTokens(userId: number, accountId: number) {
+    const payload: JwtTokenPayload = { sub: userId, accountId: accountId };
 
     const accessToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_ACCESS_SECRET'),

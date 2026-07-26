@@ -10,17 +10,13 @@ datasource db {
 model User {
   id           Int    @id @default(autoincrement())
   email        String @unique
-  username     String
-  passwordHash String
-
-  // relations
-  maps          Map[]
-  mapComments   MapComment[]
-  forums        Forum[]
-  forumComments ForumComment[]
+  username     String @unique
+  passwordHash String @map("password_hash")
 
   personalAccount PersonalAccount? @relation("UserPersonalAccount")
   sessions        UserSession[]
+
+  @@map("users")
 }
 
 model Map {
@@ -28,71 +24,118 @@ model Map {
   name          String
   body          String
   description   String?
-  isPublished   Boolean
-  likesCount    Int?
-  commentsCount Int?
-  userId        Int
+  isPublished   Boolean @default(false) @map("is_published")
+  likesCount    Int     @default(0) @map("likes_count")
+  commentsCount Int     @default(0) @map("comments_count")
+  accountId     Int     @map("account_id")
 
   // relations
-  user     User         @relation(fields: [userId], references: [id])
-  comments MapComment[]
+  authorAccount PersonalAccount @relation(fields: [accountId], references: [id])
+  comments      MapComment[]
+
+  @@map("maps")
 }
 
 model MapComment {
-  id        Int      @id @default(autoincrement())
-  comment   String
-  createdAt DateTime @default(now())
-  mapId     Int
-  authorId  Int
+  id       Int    @id @default(autoincrement())
+  comment  String
+  mapId    Int    @map("map_id")
+  authorId Int    @map("author_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
-  map    Map  @relation(fields: [mapId], references: [id])
-  author User @relation(fields: [authorId], references: [id])
+  map           Map             @relation(fields: [mapId], references: [id])
+  authorAccount PersonalAccount @relation(fields: [authorId], references: [id])
+
+  @@map("map_comments")
 }
 
 model Forum {
-  id        Int      @id @default(autoincrement())
-  title     String
-  post      String
-  createdAt DateTime @default(now())
-  authorId  Int
+  id       Int    @id @default(autoincrement())
+  title    String
+  post     String
+  authorId Int    @map("author_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
-  author   User           @relation(fields: [authorId], references: [id])
-  comments ForumComment[]
+  authorAccount PersonalAccount @relation(fields: [authorId], references: [id])
+  comments      ForumComment[]
+
+  @@map("forums")
 }
 
 model ForumComment {
-  id        Int      @id @default(autoincrement())
-  comment   String
-  createdAt DateTime @default(now())
-  forumId   Int
-  authorId  Int
+  id       Int    @id @default(autoincrement())
+  comment  String
+  forumId  Int    @map("forum_id")
+  authorId Int    @map("author_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
-  forum  Forum @relation(fields: [forumId], references: [id])
-  author User  @relation(fields: [authorId], references: [id])
+  forum         Forum           @relation(fields: [forumId], references: [id])
+  authorAccount PersonalAccount @relation(fields: [authorId], references: [id])
+
+  @@map("forum_comments")
 }
 
 model PersonalAccount {
-  id       Int     @id @default(autoincrement())
-  nickname String?
+  id Int @id @default(autoincrement())
+
+  nickname String
+
+  firstName  String? @map("first_name")
+  lastName   String? @map("last_name")
+  middleName String? @map("middle_name")
+
+  phoneNumber String? @map("phone_number")
+  birthDate   String? @map("birth_date")
+  bio         String?
+
+  avatarUrl String? @map("avatar_url")
+
+  language String?
+  theme    AppTheme @default(DEFAULT)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
-  userId Int  @unique
-  user   User @relation("UserPersonalAccount", fields: [userId], references: [id])
+  userId Int  @unique @map("user_id")
+  user   User @relation("UserPersonalAccount", fields: [userId], references: [id], onDelete: Cascade)
+
+  maps          Map[]
+  mapComments   MapComment[]
+  forums        Forum[]
+  forumComments ForumComment[]
+
+  @@map("accounts")
 }
 
 model UserSession {
   id         Int      @id @default(autoincrement())
-  tokenHash  String
-  userAgent  String?
+  tokenHash  String   @map("token_hash")
+  userAgent  String?  @map("user_agent")
   ip         String?
-  createdAt  DateTime @default(now())
-  lastUsedAt DateTime @default(now())
-  expiresAt  DateTime
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+  expiresAt  DateTime @map("expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
 
   // relations
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId Int
+  userId Int  @map("user_id")
+
+  @@map("sessions")
+}
+
+enum AppTheme {
+  DEFAULT @map("default")
+  LIGHT   @map("light")
+  DARK    @map("dark")
 }
