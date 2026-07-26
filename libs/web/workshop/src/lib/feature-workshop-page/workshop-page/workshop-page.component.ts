@@ -20,6 +20,8 @@ import {
   WorkshopCanvasSizeService,
   WorkshopPanningService,
   WorkshopCanvasSetupFacade,
+  WorkshopWorldGeneratorService,
+  WorkshopMapPersistenceService,
 } from '../../services';
 import { WorkshopSceneGraphStorageService } from '../../services';
 import { WorkshopWorkspaceComponent } from './workshop-workspace/workshop-workspace.component';
@@ -54,6 +56,8 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
     WorkshopCanvasSizeService,
     WorkshopPanningService,
     WorkshopCanvasSetupFacade,
+    WorkshopWorldGeneratorService,
+    WorkshopMapPersistenceService,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

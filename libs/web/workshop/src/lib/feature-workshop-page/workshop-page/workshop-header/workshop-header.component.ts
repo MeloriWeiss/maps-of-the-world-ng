@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import {
   WorkshopCanvasManagerService,
   WorkshopDrawService,
   WorkshopSettingsService,
+  WorkshopWorldGeneratorService,
+  WorkshopMapPersistenceService,
 } from '../../../services';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { tap } from 'rxjs';
@@ -20,6 +27,11 @@ export class WorkshopHeaderComponent {
   #workshopDrawService = inject(WorkshopDrawService);
   #workshopCanvasManagerService = inject(WorkshopCanvasManagerService);
   #workshopSettingsService = inject(WorkshopSettingsService);
+  #worldGenerator = inject(WorkshopWorldGeneratorService);
+  persistence = inject(WorkshopMapPersistenceService);
+
+  generationStatus = signal('');
+  seed = signal('middle-earth');
 
   drawSetupForm = new FormGroup({
     strokeColor: new FormControl(this.#workshopDrawService.strokeColor),
@@ -96,5 +108,22 @@ export class WorkshopHeaderComponent {
 
   clearCanvas() {
     this.#workshopCanvasManagerService.clearCanvas();
+  }
+
+  generateWorld() {
+    const result = this.#worldGenerator.generate(
+      this.seed().trim() || undefined,
+    );
+    this.generationStatus.set(
+      `Seed ${result.seed}: ${result.objects.toLocaleString('ru-RU')} объектов`,
+    );
+  }
+
+  saveMap() {
+    void this.persistence.save();
+  }
+
+  loadMap() {
+    void this.persistence.load();
   }
 }

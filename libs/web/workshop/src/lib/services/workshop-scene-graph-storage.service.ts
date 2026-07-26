@@ -43,6 +43,9 @@ interface SerializedBaseShape {
   shadowBlur?: number;
   shadowOffsetX?: number;
   shadowOffsetY?: number;
+  minZoom?: number;
+  maxZoom?: number;
+  mapObjectType?: string;
 }
 
 interface SerializedLineShape extends SerializedBaseShape {
@@ -60,6 +63,12 @@ interface SerializedRectangleShape extends SerializedBaseShape {
 }
 
 type SerializedShape = SerializedLineShape | SerializedRectangleShape;
+
+interface WorkshopSnapshot {
+  version: 1;
+  shapes: SerializedShape[];
+  nodes: SerializedNode;
+}
 
 @Injectable()
 export class WorkshopSceneGraphStorageService {
@@ -114,6 +123,33 @@ export class WorkshopSceneGraphStorageService {
 
     localStorage.setItem(this.#shapesStorageKey, JSON.stringify(shapes));
     localStorage.setItem(this.#nodesStorageKey, JSON.stringify(nodes));
+  }
+
+  exportSnapshot(): string {
+    const snapshot: WorkshopSnapshot = {
+      version: 1,
+      shapes: Array.from(this.shapes.values()).map((shape) =>
+        this.#serializeShape(shape),
+      ),
+      nodes: this.#serializeNode(this.nodesRoot()),
+    };
+    return JSON.stringify(snapshot);
+  }
+
+  importSnapshot(raw: string) {
+    const snapshot = JSON.parse(raw) as WorkshopSnapshot;
+    if (snapshot.version !== 1 || !snapshot.nodes || !snapshot.shapes) {
+      throw new Error('Unsupported map format');
+    }
+
+    this.shapes = this.#deserializeShapes(snapshot.shapes);
+    const root = this.#deserializeNode(snapshot.nodes);
+    this.nodes.clear();
+    this.#registerNodeRecursive(root);
+    this.nodesRoot.set(root);
+    this.activeNodeId.set(root.id);
+    this.graphVersion.update((version) => version + 1);
+    this.saveToStorage();
   }
 
   #serializeNode(node: GraphNode): SerializedNode {
@@ -203,6 +239,11 @@ export class WorkshopSceneGraphStorageService {
       shadowBlur: shape.shadowBlur,
       shadowOffsetX: shape.shadowOffsetX,
       shadowOffsetY: shape.shadowOffsetY,
+      minZoom: shape.minZoom,
+      maxZoom: Number.isFinite(shape.maxZoom ?? Infinity)
+        ? shape.maxZoom
+        : undefined,
+      mapObjectType: shape.mapObjectType,
     };
 
     switch (shape.type) {
@@ -278,6 +319,9 @@ export class WorkshopSceneGraphStorageService {
       restoredShape.shadowBlur = shape.shadowBlur;
       restoredShape.shadowOffsetX = shape.shadowOffsetX;
       restoredShape.shadowOffsetY = shape.shadowOffsetY;
+      restoredShape.minZoom = shape.minZoom ?? 0;
+      restoredShape.maxZoom = shape.maxZoom ?? Number.POSITIVE_INFINITY;
+      restoredShape.mapObjectType = shape.mapObjectType;
       shapesMap.set(restoredShape.id, restoredShape);
     }
 

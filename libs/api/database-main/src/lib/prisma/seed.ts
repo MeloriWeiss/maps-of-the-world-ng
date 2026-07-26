@@ -1,5 +1,6 @@
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import * as bcrypt from 'bcrypt';
 
 const adapter = new PrismaPg({
   connectionString: process.env['MAIN_DATABASE_URL'],
@@ -7,10 +8,9 @@ const adapter = new PrismaPg({
 
 export const prisma = new PrismaClient({ adapter });
 
-const ADMIN_PASSWORD_HASH =
-  '$2b$10$5h7mR8U9xYzZ8QW1uE3O0OllZ6sP9m3Q8F9d7H6kL5jG4fH3d2Cq'; // admin123, 10 циклов
-
 async function main() {
+  const passwordHash = await bcrypt.hash('admin123', 10);
+
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE
       "sessions",
@@ -31,7 +31,7 @@ async function main() {
     create: {
       email: 'admin@example.com',
       username: 'admin',
-      passwordHash: ADMIN_PASSWORD_HASH,
+      passwordHash,
       personalAccount: {
         create: {
           nickname: 'Admin',
@@ -55,7 +55,7 @@ async function main() {
     create: {
       email: 'user@example.com',
       username: 'user',
-      passwordHash: ADMIN_PASSWORD_HASH,
+      passwordHash,
       personalAccount: {
         create: {
           nickname: 'RegularUser',

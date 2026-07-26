@@ -47,6 +47,64 @@
   background: rgb(255 255 255 / 45%);
 }
 
+.controls__generator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  input {
+    width: 112px;
+    padding: 6px 8px;
+    color: #f4f1ea;
+    background: #37332e;
+    border: 1px solid rgb(255 255 255 / 22%);
+    border-radius: 4px;
+  }
+
+  button {
+    padding: 6px 10px;
+    color: #fff;
+    background: #88704d;
+    border-radius: 4px;
+  }
+}
+
+.controls__status {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  z-index: 20;
+  padding: 5px 8px;
+  color: #332d25;
+  background: #f3ead6;
+  border-radius: 4px;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 25%);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.controls__persistence {
+  position: relative;
+  display: flex;
+  gap: 5px;
+
+  button {
+    padding: 6px 8px;
+    color: #ece8df;
+    border: 1px solid rgb(255 255 255 / 24%);
+    border-radius: 4px;
+
+    &:hover:not(:disabled) {
+      background: rgb(255 255 255 / 10%);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+    }
+  }
+}
+
 .controls__setting {
   display: flex;
   align-items: center;

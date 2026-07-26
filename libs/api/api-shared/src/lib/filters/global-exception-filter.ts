@@ -64,18 +64,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const body = this.#buildErrorBody(exception, status);
+    const responseStatus = body.statusCode;
 
     const payload: ErrorResponse = {
-      statusCode: status,
+      statusCode: responseStatus,
       message: body.message,
       error: body.error,
       timestamp: new Date().toISOString(),
       path: request.url,
     };
 
-    this.#logException(request, exception, status, payload);
+    this.#logException(request, exception, responseStatus, payload);
 
-    httpAdapter.reply(response, payload, status);
+    httpAdapter.reply(response, payload, responseStatus);
   }
 
   #buildErrorBody(exception: unknown, status: number): HttpErrorBody {
@@ -93,6 +94,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           error = 'RecordNotFound';
           message = 'Record not found';
           status = HttpStatus.NOT_FOUND;
+          break;
+        case 'P2003':
+          error = 'ForeignKeyConstraintViolation';
+          message = 'Related record constraint failed';
+          status = HttpStatus.CONFLICT;
+          break;
+        case 'P1000':
+        case 'P1001':
+          error = 'DatabaseUnavailable';
+          message = 'Database is temporarily unavailable';
+          status = HttpStatus.SERVICE_UNAVAILABLE;
           break;
         default:
           error = 'PrismaError';
@@ -129,7 +141,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof Error) {
       return {
         statusCode: status,
-        message: exception.message,
+        message: 'Internal server error',
         error: 'Internal Server Error',
       };
     }

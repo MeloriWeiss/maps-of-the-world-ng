@@ -1,183 +1,104 @@
-/*
-  Warnings:
+-- Preserve the legacy schema and its data while moving to snake_case.
+-- Relations that used to point at users are converted to account ids first.
+UPDATE "Map" AS map
+SET "userId" = account.id
+FROM "PersonalAccount" AS account
+WHERE account."userId" = map."userId";
 
-  - You are about to drop the `Forum` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `ForumComment` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Map` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `MapComment` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `PersonalAccount` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `UserSession` table. If the table is not empty, all the data it contains will be lost.
+UPDATE "MapComment" AS comment
+SET "authorId" = account.id
+FROM "PersonalAccount" AS account
+WHERE account."userId" = comment."authorId";
 
-*/
--- DropForeignKey
+UPDATE "Forum" AS forum
+SET "authorId" = account.id
+FROM "PersonalAccount" AS account
+WHERE account."userId" = forum."authorId";
+
+UPDATE "ForumComment" AS comment
+SET "authorId" = account.id
+FROM "PersonalAccount" AS account
+WHERE account."userId" = comment."authorId";
+
+ALTER TABLE "Map" DROP CONSTRAINT "Map_userId_fkey";
+ALTER TABLE "MapComment" DROP CONSTRAINT "MapComment_authorId_fkey";
 ALTER TABLE "Forum" DROP CONSTRAINT "Forum_authorId_fkey";
-
--- DropForeignKey
 ALTER TABLE "ForumComment" DROP CONSTRAINT "ForumComment_authorId_fkey";
 
--- DropForeignKey
-ALTER TABLE "ForumComment" DROP CONSTRAINT "ForumComment_forumId_fkey";
+ALTER TABLE "User" RENAME TO "users";
+ALTER TABLE "PersonalAccount" RENAME TO "accounts";
+ALTER TABLE "UserSession" RENAME TO "sessions";
+ALTER TABLE "Map" RENAME TO "maps";
+ALTER TABLE "MapComment" RENAME TO "map_comments";
+ALTER TABLE "Forum" RENAME TO "forums";
+ALTER TABLE "ForumComment" RENAME TO "forum_comments";
 
--- DropForeignKey
-ALTER TABLE "Map" DROP CONSTRAINT "Map_userId_fkey";
+ALTER TABLE "users" RENAME COLUMN "passwordHash" TO "password_hash";
 
--- DropForeignKey
-ALTER TABLE "MapComment" DROP CONSTRAINT "MapComment_authorId_fkey";
-
--- DropForeignKey
-ALTER TABLE "MapComment" DROP CONSTRAINT "MapComment_mapId_fkey";
-
--- DropForeignKey
-ALTER TABLE "PersonalAccount" DROP CONSTRAINT "PersonalAccount_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "UserSession" DROP CONSTRAINT "UserSession_userId_fkey";
-
--- DropTable
-DROP TABLE "Forum";
-
--- DropTable
-DROP TABLE "ForumComment";
-
--- DropTable
-DROP TABLE "Map";
-
--- DropTable
-DROP TABLE "MapComment";
-
--- DropTable
-DROP TABLE "PersonalAccount";
-
--- DropTable
-DROP TABLE "User";
-
--- DropTable
-DROP TABLE "UserSession";
-
--- CreateTable
-CREATE TABLE "users" (
-    "id" SERIAL NOT NULL,
-    "email" TEXT NOT NULL,
-    "username" TEXT NOT NULL,
-    "password_hash" TEXT NOT NULL,
-
-    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+ALTER TABLE "accounts" RENAME COLUMN "userId" TO "user_id";
+ALTER TABLE "accounts" ADD COLUMN "first_name" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "last_name" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "middle_name" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "phone_number" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "birth_date" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "bio" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "avatar_url" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "language" TEXT;
+ALTER TABLE "accounts" ADD COLUMN "theme" TEXT DEFAULT 'default';
+ALTER TABLE "accounts" ADD COLUMN "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "accounts" ADD COLUMN "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+UPDATE "accounts"
+SET "nickname" = COALESCE(
+  "nickname",
+  (SELECT split_part("email", '@', 1) FROM "users" WHERE "users"."id" = "accounts"."user_id"),
+  'user-' || "id"
 );
+ALTER TABLE "accounts" ALTER COLUMN "nickname" SET NOT NULL;
 
--- CreateTable
-CREATE TABLE "maps" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "body" TEXT NOT NULL,
-    "description" TEXT,
-    "is_published" BOOLEAN NOT NULL DEFAULT false,
-    "likes_count" INTEGER NOT NULL DEFAULT 0,
-    "comments_count" INTEGER NOT NULL DEFAULT 0,
-    "account_id" INTEGER NOT NULL,
+ALTER TABLE "sessions" RENAME COLUMN "tokenHash" TO "token_hash";
+ALTER TABLE "sessions" RENAME COLUMN "userAgent" TO "user_agent";
+ALTER TABLE "sessions" RENAME COLUMN "createdAt" TO "created_at";
+ALTER TABLE "sessions" RENAME COLUMN "lastUsedAt" TO "last_used_at";
+ALTER TABLE "sessions" RENAME COLUMN "expiresAt" TO "expires_at";
+ALTER TABLE "sessions" RENAME COLUMN "userId" TO "user_id";
 
-    CONSTRAINT "maps_pkey" PRIMARY KEY ("id")
-);
+ALTER TABLE "maps" RENAME COLUMN "isPublished" TO "is_published";
+ALTER TABLE "maps" RENAME COLUMN "likesCount" TO "likes_count";
+ALTER TABLE "maps" RENAME COLUMN "commentsCount" TO "comments_count";
+ALTER TABLE "maps" RENAME COLUMN "userId" TO "account_id";
+UPDATE "maps" SET "likes_count" = 0 WHERE "likes_count" IS NULL;
+UPDATE "maps" SET "comments_count" = 0 WHERE "comments_count" IS NULL;
+ALTER TABLE "maps" ALTER COLUMN "is_published" SET DEFAULT false;
+ALTER TABLE "maps" ALTER COLUMN "likes_count" SET DEFAULT 0;
+ALTER TABLE "maps" ALTER COLUMN "likes_count" SET NOT NULL;
+ALTER TABLE "maps" ALTER COLUMN "comments_count" SET DEFAULT 0;
+ALTER TABLE "maps" ALTER COLUMN "comments_count" SET NOT NULL;
 
--- CreateTable
-CREATE TABLE "map_comments" (
-    "id" SERIAL NOT NULL,
-    "comment" TEXT NOT NULL,
-    "map_id" INTEGER NOT NULL,
-    "author_id" INTEGER NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
+ALTER TABLE "map_comments" RENAME COLUMN "mapId" TO "map_id";
+ALTER TABLE "map_comments" RENAME COLUMN "authorId" TO "author_id";
+ALTER TABLE "map_comments" RENAME COLUMN "createdAt" TO "created_at";
+ALTER TABLE "map_comments" ADD COLUMN "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
-    CONSTRAINT "map_comments_pkey" PRIMARY KEY ("id")
-);
+ALTER TABLE "forums" RENAME COLUMN "authorId" TO "author_id";
+ALTER TABLE "forums" RENAME COLUMN "createdAt" TO "created_at";
+ALTER TABLE "forums" ADD COLUMN "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
--- CreateTable
-CREATE TABLE "forums" (
-    "id" SERIAL NOT NULL,
-    "title" TEXT NOT NULL,
-    "post" TEXT NOT NULL,
-    "author_id" INTEGER NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
+ALTER TABLE "forum_comments" RENAME COLUMN "forumId" TO "forum_id";
+ALTER TABLE "forum_comments" RENAME COLUMN "authorId" TO "author_id";
+ALTER TABLE "forum_comments" RENAME COLUMN "createdAt" TO "created_at";
+ALTER TABLE "forum_comments" ADD COLUMN "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
-    CONSTRAINT "forums_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "forum_comments" (
-    "id" SERIAL NOT NULL,
-    "comment" TEXT NOT NULL,
-    "forum_id" INTEGER NOT NULL,
-    "author_id" INTEGER NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "forum_comments_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "accounts" (
-    "id" SERIAL NOT NULL,
-    "nickname" TEXT NOT NULL,
-    "first_name" TEXT,
-    "last_name" TEXT,
-    "middle_name" TEXT,
-    "phone_number" TEXT,
-    "birth_date" TIMESTAMP(3),
-    "bio" TEXT,
-    "avatar_url" TEXT,
-    "language" TEXT,
-    "theme" TEXT DEFAULT 'default',
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "user_id" INTEGER NOT NULL,
-
-    CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "sessions" (
-    "id" SERIAL NOT NULL,
-    "token_hash" TEXT NOT NULL,
-    "user_agent" TEXT,
-    "ip" TEXT,
-    "last_used_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expires_at" TIMESTAMP(3) NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "user_id" INTEGER NOT NULL,
-
-    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
 CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
--- CreateIndex
-CREATE UNIQUE INDEX "accounts_user_id_key" ON "accounts"("user_id");
-
--- AddForeignKey
-ALTER TABLE "maps" ADD CONSTRAINT "maps_account_id_fkey" FOREIGN KEY ("account_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "map_comments" ADD CONSTRAINT "map_comments_map_id_fkey" FOREIGN KEY ("map_id") REFERENCES "maps"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "map_comments" ADD CONSTRAINT "map_comments_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "forums" ADD CONSTRAINT "forums_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "forum_comments" ADD CONSTRAINT "forum_comments_forum_id_fkey" FOREIGN KEY ("forum_id") REFERENCES "forums"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "forum_comments" ADD CONSTRAINT "forum_comments_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "maps"
+  ADD CONSTRAINT "maps_account_id_fkey"
+  FOREIGN KEY ("account_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "map_comments"
+  ADD CONSTRAINT "map_comments_author_id_fkey"
+  FOREIGN KEY ("author_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "forums"
+  ADD CONSTRAINT "forums_author_id_fkey"
+  FOREIGN KEY ("author_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "forum_comments"
+  ADD CONSTRAINT "forum_comments_author_id_fkey"
+  FOREIGN KEY ("author_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

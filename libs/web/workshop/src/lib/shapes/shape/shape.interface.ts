@@ -13,6 +13,9 @@ export interface BaseShape {
   shadowOffsetY?: number;
   selected?: boolean;
   layerId?: string;
+  minZoom?: number;
+  maxZoom?: number;
+  mapObjectType?: string;
 }
 
 export type CreateBaseShape = Omit<BaseShape, 'id'>;
