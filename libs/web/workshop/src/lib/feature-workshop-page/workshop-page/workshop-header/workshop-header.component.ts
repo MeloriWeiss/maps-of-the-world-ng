@@ -107,7 +107,7 @@ export class WorkshopHeaderComponent {
   }
 
   clearCanvas() {
-    this.#workshopCanvasManagerService.clearCanvas();
+    this.#workshopCanvasManagerService.clearUserContent();
   }
 
   generateWorld() {

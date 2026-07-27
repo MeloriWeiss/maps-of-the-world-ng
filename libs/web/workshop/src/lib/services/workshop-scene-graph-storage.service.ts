@@ -359,7 +359,12 @@ export class WorkshopSceneGraphStorageService {
     localStorage.removeItem(this.#nodesStorageKey);
     this.shapes.clear();
     this.nodes.clear();
-    this.nodesRoot.set(new LayerNode({}));
+
+    const rootNode = new LayerNode({});
+    this.nodes.set(rootNode.id, rootNode);
+    this.nodesRoot.set(rootNode);
+    this.activeNodeId.set(rootNode.id);
+    this.graphVersion.update((version) => version + 1);
   }
 
   generateRandomShapesInMemory(count = 10_000) {

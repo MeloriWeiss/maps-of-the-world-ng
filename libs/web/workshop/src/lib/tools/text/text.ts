@@ -10,9 +10,7 @@ export class TextTool implements Tool {
   #settingsService = inject(WorkshopSettingsService);
 
   startDrawing(
-    _e: MouseEvent,
-    _ctx: CanvasRenderingContext2D,
-    startPoint: Point,
+    ...[, , startPoint]: [MouseEvent, CanvasRenderingContext2D, Point]
   ) {
     const style = this.#settingsService.textStyle;
     const shapeStyle = this.#settingsService.shapeStyle;
@@ -37,11 +35,11 @@ export class TextTool implements Tool {
     this.#shapesService.createShape(textShape);
   }
 
-  draw(_ctx: CanvasRenderingContext2D, _newPoint: Point) {
-    console.log('drawing text');
+  draw() {
+    return;
   }
 
-  stopDrawing(_stopPoint: Point) {
-    console.log('stop drawing text');
+  stopDrawing() {
+    return;
   }
 }

@@ -38,6 +38,12 @@ export class WorkshopCanvasManagerService {
     );
   }
 
+  clearUserContent() {
+    this.#workshopShapesService.clearSelection();
+    this.#workshopSceneGraphStorageService.clearStorage();
+    this.redraw();
+  }
+
   redraw() {
     // сброс статистики
     this.stats_renderedNodesLastFrame = 0;

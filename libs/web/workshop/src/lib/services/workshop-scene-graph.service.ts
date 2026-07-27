@@ -40,9 +40,9 @@ export class WorkshopSceneGraphService {
   }
 
   moveToLayer(shapeId: string, newLayerId: string) {
-    const shapeNode = this.findNodeById(shapeId) as ShapeNode;
+    const shapeNode = this.#findNodeById(shapeId) as ShapeNode;
     const oldLayer = shapeNode.parent as LayerNode;
-    const newLayer = this.findNodeById(newLayerId) as LayerNode;
+    const newLayer = this.#findNodeById(newLayerId) as LayerNode;
 
     oldLayer?.removeChild(shapeId);
     newLayer?.addChild(shapeNode);
@@ -50,7 +50,7 @@ export class WorkshopSceneGraphService {
     this.root.update((r) => r);
   }
 
-  private findNodeById(id: string): GraphNode | null {
+  #findNodeById(id: string): GraphNode | null {
     function search(node: GraphNode): GraphNode | null {
       if (node.id === id) return node;
 
@@ -65,7 +65,7 @@ export class WorkshopSceneGraphService {
   }
 
   addLayerNode(
-    layerData: any,
+    layerData: unknown,
     options: {
       parentId?: string;
       index?: number;

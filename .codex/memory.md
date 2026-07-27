@@ -72,7 +72,9 @@
   - Central canvas workspace with a 35px bottom status/zoom bar.
   - Approximately 400px right sidebar split into Objects and Layers panes.
 - Both the left tool rail and right sidebar are collapsible. Their components expose a `collapsed` host class; `workshop-page.component.scss` adjusts the grid with `:has(...)`.
-- After a sidebar transition, its component measures the new width and calls `WorkshopCanvasSizeService.resizeCanvas()`. Preserve this recalculation when changing sidebar dimensions.
+- After a sidebar transition, its component measures the new width and calls `WorkshopCanvasSizeService.resizeCanvas()`. The size service updates `WorkshopCoordsService.worldViewport` with the existing camera/zoom before redrawing, which prevents blank canvas strips after a sidebar closes. Preserve this recalculation when changing sidebar dimensions.
+- Experimental changes to sidebar animation/layout were reverted after they disturbed canvas proportions and zoom. Do not rework sidebar transitions without verifying both opening and closing at the current camera position.
+- The Layers pane uses a custom thin dark scrollbar defined in `workshop-right-sidebar.component.scss`.
 - Tool enum: `select`, `pencil`, `eraser`, `rectangle`, `text`, `texture`.
 - Tool switching is managed by `WorkshopToolsService`. Tools are created from factories in an Angular injection context; the previous tool may release resources through optional `Tool.dispose()`.
 - The left sidebar is at `feature-workshop-page/workshop-page/workshop-left-sidebar`.
@@ -118,8 +120,10 @@
   - Continents appear at world scale, geography at regional scale, houses closer in, and furniture above roughly 210%.
   - Viewport culling remains active.
   - The canvas background now covers the current world viewport and the grid step adapts to zoom instead of being limited to a fixed 2000x2000 area.
-- The header uses the editor mockup styling. Undo/redo buttons are currently visual only; clear canvas and drawing controls remain connected.
+- The header uses the editor mockup styling. Undo/redo buttons are currently visual only; drawing controls remain connected.
+- The header `Очистить` action removes user-created scene content through `WorkshopCanvasManagerService.clearUserContent()`, creates a fresh active root layer, and redraws. The editor background and grid are renderer-owned and remain visible after clearing.
 - The bottom full-screen button is currently visual only.
+- A reusable mini-menu/context-menu module was discussed but explicitly postponed. No common mini-menu service, host, or trigger directive has been added; the existing workshop context menus remain local implementations.
 
 ## Commands
 
@@ -138,8 +142,8 @@
 - PowerShell displayed `README.md` and some Russian strings as mojibake during inspection; be careful with file encoding.
 - The working tree is not clean. Existing user changes include `.husky/post-merge`, the tool factory/disposal work in `WorkshopToolsService`, and optional `Tool.dispose()`. Preserve them.
 - Workshop changes are currently uncommitted and span layout, sidebars, context settings, zoom/panning, selection transforms, shapes, and settings services. Preserve them as one ongoing body of user work.
-- `workshop:lint` succeeds with 11 pre-existing warnings (unused values in quadtree/eraser/text code and one explicit `any` in the scene graph).
-- `yarn nx build web --configuration=development` succeeds after the latest sidebar/zoom/context-panel changes.
+- `yarn nx lint workshop` currently succeeds without lint errors or warnings.
+- `yarn nx build web --configuration=development` succeeds after the latest viewport-resize, custom scrollbar, and clear-content changes.
 - `yarn nx build web --configuration=development` and `yarn build:api` succeed after the procedural-generation and map-persistence prototype.
 - The authenticated map API was smoke-tested end-to-end: login, create, read, and update succeeded; the temporary test map was removed.
 - `git diff --check` succeeds; Git only reports expected LF-to-CRLF conversion warnings on Windows.

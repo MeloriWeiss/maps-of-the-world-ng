@@ -2,8 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { ShapesTypes } from '../consts';
 import { LayerNode, ShapeNode } from '../nodes';
 import { LineShape, RectangleShape, Shape } from '../shapes';
-import { WorkshopCanvasManagerService } from './workshop-canvas-manager.service';
 import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
+import { WorkshopPanningService } from './workshop-panning.service';
 
 export interface GeneratedWorldSummary {
   seed: string;
@@ -13,7 +13,7 @@ export interface GeneratedWorldSummary {
 @Injectable()
 export class WorkshopWorldGeneratorService {
   #storage = inject(WorkshopSceneGraphStorageService);
-  #canvasManager = inject(WorkshopCanvasManagerService);
+  #panning = inject(WorkshopPanningService);
 
   generate(seed = crypto.randomUUID().slice(0, 8)): GeneratedWorldSummary {
     const random = mulberry32(hashSeed(seed));
@@ -34,7 +34,7 @@ export class WorkshopWorldGeneratorService {
     );
 
     for (let index = 0; index < 14; index++) {
-      this.#addRectangle(terrain, 'continent', 0, 0.75, {
+      this.#addRectangle(terrain, 'continent', 0, Infinity, {
         x: between(random, -24_000, 18_000),
         y: between(random, -16_000, 12_000),
         width: between(random, 4_000, 11_000),
@@ -52,7 +52,7 @@ export class WorkshopWorldGeneratorService {
         x: x + pointIndex * between(random, 120, 320),
         y: y + Math.sin(pointIndex * 1.2) * between(random, 100, 450),
       }));
-      this.#addLine(geography, points, 'river', 0.2, 2.5, {
+      this.#addLine(geography, points, 'river', 0.2, Infinity, {
         strokeColor: '#4b8ca8',
         strokeWidth: between(random, 18, 55),
       });
@@ -116,7 +116,14 @@ export class WorkshopWorldGeneratorService {
     this.#storage.activeNodeId.set(settlements.id);
     this.#storage.graphVersion.update((version) => version + 1);
     this.#storage.saveToStorage();
-    this.#canvasManager.requestRedraw();
+    const worldBounds = {
+      x: -25_000,
+      y: -17_000,
+      width: 54_000,
+      height: 34_000,
+    };
+    this.#panning.setWorldBounds(worldBounds);
+    this.#panning.fitBounds(worldBounds);
     return { seed, objects: this.#storage.shapes.size };
   }
 

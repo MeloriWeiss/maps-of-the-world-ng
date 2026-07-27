@@ -63,6 +63,7 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
 })
 export class WorkshopPageComponent implements AfterViewInit {
   #canvasSizeService = inject(WorkshopCanvasSizeService);
+  #panningService = inject(WorkshopPanningService);
 
   header = viewChild.required(WorkshopHeaderComponent, { read: ElementRef });
   leftSidebar = viewChild.required(WorkshopLeftSidebarComponent, {
@@ -86,5 +87,9 @@ export class WorkshopPageComponent implements AfterViewInit {
     ).getBoundingClientRect().width;
 
     this.#canvasSizeService.resizeCanvas();
+
+    requestAnimationFrame(() => {
+      this.#panningService.fitContent();
+    });
   }
 }

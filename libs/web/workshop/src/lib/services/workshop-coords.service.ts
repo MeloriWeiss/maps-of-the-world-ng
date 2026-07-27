@@ -10,7 +10,7 @@ export class WorkshopCoordsService {
 
   worldViewport: Bounds = { x: 0, y: 0, width: 0, height: 0 };
 
-  minZoom = 0.1;
+  minZoom = 0.01;
   maxZoom = 10;
 
   getWorldCoords(

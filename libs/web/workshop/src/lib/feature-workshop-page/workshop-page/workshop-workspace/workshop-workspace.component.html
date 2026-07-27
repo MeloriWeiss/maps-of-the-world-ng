@@ -5,15 +5,15 @@
     <span aria-hidden="true">⌕</span>
     <input
       type="range"
-      min="10"
-      max="400"
-      step="5"
-      [ngModel]="zoomPercent()"
-      (ngModelChange)="updateZoom($event)"
+      min="0"
+      max="100"
+      step="0.5"
+      [ngModel]="zoomSliderPosition()"
+      (ngModelChange)="updateZoomSlider($event)"
       aria-label="Масштаб"
     />
-    <output>{{ zoomPercent() }}</output>
-    <button type="button">Во весь экран</button>
+    <output>{{ zoomPercent() }}%</output>
+    <button type="button" (click)="fitWorld()">Весь мир</button>
   </div>
 
   <label class="workspace-status__grid">

@@ -1,20 +1,14 @@
 import { Tool } from '../shared';
-import { Point } from '../../interfaces/point.interface';
-
 export class EraserTool implements Tool {
-  startDrawing(
-    e: MouseEvent,
-    ctx: CanvasRenderingContext2D,
-    startPoint: Point,
-  ) {
-    console.log('eraser start');
+  startDrawing() {
+    return;
   }
 
-  draw(ctx: CanvasRenderingContext2D, newPoint: Point) {
-    console.log('eraser');
+  draw() {
+    return;
   }
 
   stopDrawing() {
-    console.log('eraser stop');
+    return;
   }
 }
