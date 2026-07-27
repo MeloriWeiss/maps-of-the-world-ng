@@ -17,8 +17,8 @@
   - Serve: `yarn start:api`.
   - Build: `yarn build:api` or `yarn build:api:prod`.
   - API global prefix: `/api`.
-  - Swagger setup exists in `apps/api/src/swagger/setup-swagger.ts`.
-  - `setupPipes(app)` exists but is currently commented in `apps/api/src/main.ts`.
+  - Swagger setup exists in the API setup layer.
+  - Global validation pipes and exception filters are enabled through `setupApp(app)`.
 
 ## Libraries
 
@@ -38,8 +38,15 @@
 
 - Prisma schema is at `libs/api/database-main/src/lib/prisma/schema.prisma`.
 - Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapComment`, `Forum`, `ForumComment`.
-- Backend endpoints found so far are mainly auth and users; map/forum backend endpoints appear not yet implemented.
+- Backend endpoints cover auth, users, accounts, and owned-map persistence; forum endpoints are not implemented yet.
 - Auth uses access/refresh JWT cookies, refresh rotation, session storage, logout, logout-all, and sessions listing.
+- `libs/api/maps` now implements authenticated map persistence:
+  - `GET /api/maps` lists the current account's maps.
+  - `GET /api/maps/:id` loads one owned map.
+  - `POST /api/maps` creates a map.
+  - `PUT /api/maps/:id` updates an owned map.
+  - Workshop snapshots are stored in the existing `Map.body` string column.
+- API JSON request bodies accept up to 10 MB to accommodate workshop snapshots.
 
 ## Angular Routing
 
@@ -65,7 +72,9 @@
   - Central canvas workspace with a 35px bottom status/zoom bar.
   - Approximately 400px right sidebar split into Objects and Layers panes.
 - Both the left tool rail and right sidebar are collapsible. Their components expose a `collapsed` host class; `workshop-page.component.scss` adjusts the grid with `:has(...)`.
-- After a sidebar transition, its component measures the new width and calls `WorkshopCanvasSizeService.resizeCanvas()`. Preserve this recalculation when changing sidebar dimensions.
+- After a sidebar transition, its component measures the new width and calls `WorkshopCanvasSizeService.resizeCanvas()`. The size service updates `WorkshopCoordsService.worldViewport` with the existing camera/zoom before redrawing, which prevents blank canvas strips after a sidebar closes. Preserve this recalculation when changing sidebar dimensions.
+- Experimental changes to sidebar animation/layout were reverted after they disturbed canvas proportions and zoom. Do not rework sidebar transitions without verifying both opening and closing at the current camera position.
+- The Layers pane uses a custom thin dark scrollbar defined in `workshop-right-sidebar.component.scss`.
 - Tool enum: `select`, `pencil`, `eraser`, `rectangle`, `text`, `texture`.
 - Tool switching is managed by `WorkshopToolsService`. Tools are created from factories in an Angular injection context; the previous tool may release resources through optional `Tool.dispose()`.
 - The left sidebar is at `feature-workshop-page/workshop-page/workshop-left-sidebar`.
@@ -95,8 +104,26 @@
   - Slider range is currently 10%-400%, while the coordinate service supports 10%-1000%.
 - It has shapes, scene graph nodes (`GraphNode`, `LayerNode`, `GroupNode`, `ShapeNode`), layers, quadtree, panning, coords, draw/settings/services, and sidebars.
 - Scene graph auto-save currently stores through `WorkshopSceneGraphStorageService`; inspect storage before changing persistence.
-- The header uses the editor mockup styling. Undo/redo buttons are currently visual only; clear canvas and drawing controls remain connected.
+- `WorkshopSceneGraphStorageService` now supports versioned `exportSnapshot()` and `importSnapshot()` in addition to localStorage auto-save.
+- The workshop header has a prototype generation/persistence toolbar:
+  - Seed input and `Сгенерировать` invoke `WorkshopWorldGeneratorService`.
+  - `Сохранить` and `Загрузить` use `WorkshopMapPersistenceService` and `/api/maps`.
+  - The current backend map id is remembered in localStorage under `workshop-map-id`.
+- Procedural world prototype:
+  - A seed produces a deterministic editable world.
+  - Generated object kinds currently include continents, rivers, mountains, houses, tables, wardrobes, beds, and chairs.
+  - Generated objects are ordinary line/rectangle shapes, so existing selection, resize, move, and property editing continue to work.
+  - The generator creates separate terrain, geography, settlement, and interior layers.
+- Level of detail:
+  - Shapes have optional `minZoom`, `maxZoom`, and `mapObjectType` metadata.
+  - Rendering and selection both respect the current zoom range.
+  - Continents appear at world scale, geography at regional scale, houses closer in, and furniture above roughly 210%.
+  - Viewport culling remains active.
+  - The canvas background now covers the current world viewport and the grid step adapts to zoom instead of being limited to a fixed 2000x2000 area.
+- The header uses the editor mockup styling. Undo/redo buttons are currently visual only; drawing controls remain connected.
+- The header `Очистить` action removes user-created scene content through `WorkshopCanvasManagerService.clearUserContent()`, creates a fresh active root layer, and redraws. The editor background and grid are renderer-owned and remain visible after clearing.
 - The bottom full-screen button is currently visual only.
+- A reusable mini-menu/context-menu module was discussed but explicitly postponed. No common mini-menu service, host, or trigger directive has been added; the existing workshop context menus remain local implementations.
 
 ## Commands
 
@@ -115,7 +142,21 @@
 - PowerShell displayed `README.md` and some Russian strings as mojibake during inspection; be careful with file encoding.
 - The working tree is not clean. Existing user changes include `.husky/post-merge`, the tool factory/disposal work in `WorkshopToolsService`, and optional `Tool.dispose()`. Preserve them.
 - Workshop changes are currently uncommitted and span layout, sidebars, context settings, zoom/panning, selection transforms, shapes, and settings services. Preserve them as one ongoing body of user work.
-- `workshop:lint` succeeds with 11 pre-existing warnings (unused values in quadtree/eraser/text code and one explicit `any` in the scene graph).
-- `yarn nx build web --configuration=development` succeeds after the latest sidebar/zoom/context-panel changes.
+- `yarn nx lint workshop` currently succeeds without lint errors or warnings.
+- `yarn nx build web --configuration=development` succeeds after the latest viewport-resize, custom scrollbar, and clear-content changes.
+- `yarn nx build web --configuration=development` and `yarn build:api` succeed after the procedural-generation and map-persistence prototype.
+- The authenticated map API was smoke-tested end-to-end: login, create, read, and update succeeded; the temporary test map was removed.
 - `git diff --check` succeeds; Git only reports expected LF-to-CRLF conversion warnings on Windows.
 - Prefer existing Nx project patterns and standalone Angular conventions.
+
+## Backend Repair Notes (2026-07-27)
+
+- The local PostgreSQL database originally contained legacy PascalCase tables while Prisma expected snake_case tables. This caused login to fail with a Prisma error and HTTP 500.
+- The migration chain is now registered and applied locally. The refactor migration preserves legacy data by renaming/converting tables and foreign keys instead of dropping them.
+- The database schema reports up to date with six migrations.
+- The invalid historical seed bcrypt placeholder was replaced. Demo credentials are `admin@example.com` / `admin123`.
+- Login validation intentionally does not enforce registration password-strength rules; invalid credentials return 401.
+- `GlobalExceptionFilter` now sends the status calculated for Prisma errors, maps common database failures, and does not expose unexpected internal error messages.
+- API bootstrap failures are caught and logged.
+- `apps/api/project.json` regenerates the Prisma client before API builds.
+- A backend process may already occupy port 3000 during development; use another `MAIN_API_PORT` for isolated smoke tests rather than stopping an unknown user process.

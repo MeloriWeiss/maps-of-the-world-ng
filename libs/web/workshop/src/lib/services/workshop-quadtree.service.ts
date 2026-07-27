@@ -1,5 +1,4 @@
-import { inject, Injectable } from '@angular/core';
-import { WorkshopSceneGraphStorageService } from '../services';
+import { Injectable } from '@angular/core';
 import { Bounds, QuadtreeItem, QuadtreeNode } from '../interfaces';
 
 @Injectable()
@@ -31,7 +30,7 @@ export class WorkshopQuadtreeService {
 
   insert(item: QuadtreeItem) {
     this.expandToFit(item.bounds);
-    this._insert(this.root, item);
+    this.#insert(this.root, item);
   }
 
   expandToFit(itemBounds: Bounds) {
@@ -58,7 +57,7 @@ export class WorkshopQuadtreeService {
     }
   }
 
-  private _insert(node: QuadtreeNode, item: QuadtreeItem) {
+  #insert(node: QuadtreeNode, item: QuadtreeItem) {
     if (!this.intersects(node.bounds, item.bounds)) return;
 
     // Если достигли maxDepth — дальше НЕ делимся, просто копим здесь
@@ -75,29 +74,29 @@ export class WorkshopQuadtreeService {
 
     // Иначе — subdivide (если ещё не делали) и раскидать всё по детям
     if (node.nodes.length === 0) {
-      this._subdivide(node);
+      this.#subdivide(node);
 
       // ВАЖНО: старые items тоже спускаем в детей
       const oldItems = node.items;
       node.items = [];
       for (const old of oldItems) {
         for (const child of node.nodes) {
-          this._insert(child, old);
+          this.#insert(child, old);
         }
       }
     }
 
     // Вставляем текущий item в детей
     for (const child of node.nodes) {
-      this._insert(child, item);
+      this.#insert(child, item);
     }
   }
 
   retrieve(queryBounds: Bounds): QuadtreeItem[] {
-    return this._retrieve(this.root, queryBounds);
+    return this.#retrieve(this.root, queryBounds);
   }
 
-  private _retrieve(node: QuadtreeNode, queryBounds: Bounds): QuadtreeItem[] {
+  #retrieve(node: QuadtreeNode, queryBounds: Bounds): QuadtreeItem[] {
     const result: QuadtreeItem[] = [];
 
     if (!this.intersects(node.bounds, queryBounds)) return result;
@@ -111,13 +110,13 @@ export class WorkshopQuadtreeService {
 
     // Рекурсия в дочерние
     node.nodes.forEach((child) => {
-      result.push(...this._retrieve(child, queryBounds));
+      result.push(...this.#retrieve(child, queryBounds));
     });
 
     return result;
   }
 
-  private _subdivide(node: QuadtreeNode) {
+  #subdivide(node: QuadtreeNode) {
     const { x, y, width, height } = node.bounds;
     const w = width / 2;
     const h = height / 2;

@@ -2,11 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { WorkshopCanvasService } from './workshop-canvas.service';
 import { WorkshopCanvasManagerService } from './workshop-canvas-manager.service';
 import { debounceTime, fromEvent, tap } from 'rxjs';
+import { WorkshopCoordsService } from './workshop-coords.service';
 
 @Injectable()
 export class WorkshopCanvasSizeService {
   #canvasService = inject(WorkshopCanvasService);
   #canvasManagerService = inject(WorkshopCanvasManagerService);
+  #coordsService = inject(WorkshopCoordsService);
 
   canvasWidth = 0;
   canvasHeight = 0;
@@ -36,6 +38,14 @@ export class WorkshopCanvasSizeService {
 
     canvas.width = this.canvasWidth;
     canvas.height = this.canvasHeight;
+
+    this.#coordsService.updateViewport(
+      this.#coordsService.cameraX,
+      this.#coordsService.cameraY,
+      this.#coordsService.zoom,
+      canvas.width,
+      canvas.height,
+    );
 
     if (redraw) this.#canvasManagerService.redraw();
   }

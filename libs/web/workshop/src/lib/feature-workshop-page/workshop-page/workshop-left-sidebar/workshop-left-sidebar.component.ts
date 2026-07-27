@@ -136,19 +136,19 @@ export class WorkshopLeftSidebarComponent {
     this.workshopSettingsService.updateToolStyle(tool, {
       strokeWidth: Number(value),
     });
-    this.applyStyleIfCurrent(tool);
+    this.#applyStyleIfCurrent(tool);
   }
 
   updateStrokeColor(tool: WorkshopTools, value: string): void {
     this.workshopSettingsService.updateToolStyle(tool, {
       strokeColor: value,
     });
-    this.applyStyleIfCurrent(tool);
+    this.#applyStyleIfCurrent(tool);
   }
 
   updateFillColor(tool: WorkshopTools, value: string): void {
     this.workshopSettingsService.updateToolStyle(tool, { fillColor: value });
-    this.applyStyleIfCurrent(tool);
+    this.#applyStyleIfCurrent(tool);
   }
 
   updateOpacity(value: number): void {
@@ -163,7 +163,7 @@ export class WorkshopLeftSidebarComponent {
     this.workshopSettingsService.textureStyle.textureRotation = Number(value);
   }
 
-  private applyStyleIfCurrent(tool: WorkshopTools): void {
+  #applyStyleIfCurrent(tool: WorkshopTools): void {
     if (this.currentToolName() === tool) {
       this.workshopSettingsService.applyToolStyle(tool);
     }

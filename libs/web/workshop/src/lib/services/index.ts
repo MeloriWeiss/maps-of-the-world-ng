@@ -10,6 +10,8 @@ import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage
 import { WorkshopQuadtreeService } from './workshop-quadtree.service';
 import { WorkshopShapesService } from './workshop-shapes.service';
 import { WorkshopCanvasSizeService } from './workshop-canvas-size.service';
+import { WorkshopWorldGeneratorService } from './workshop-world-generator.service';
+import { WorkshopMapPersistenceService } from './workshop-map-persistence.service';
 
 export {
   WorkshopDrawService,
@@ -24,6 +26,8 @@ export {
   WorkshopQuadtreeService,
   WorkshopShapesService,
   WorkshopCanvasSizeService,
+  WorkshopWorldGeneratorService,
+  WorkshopMapPersistenceService,
 };
 
 export * from './facades';

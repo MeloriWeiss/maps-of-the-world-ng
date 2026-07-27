@@ -20,6 +20,8 @@ import {
   WorkshopCanvasSizeService,
   WorkshopPanningService,
   WorkshopCanvasSetupFacade,
+  WorkshopWorldGeneratorService,
+  WorkshopMapPersistenceService,
 } from '../../services';
 import { WorkshopSceneGraphStorageService } from '../../services';
 import { WorkshopWorkspaceComponent } from './workshop-workspace/workshop-workspace.component';
@@ -54,11 +56,14 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
     WorkshopCanvasSizeService,
     WorkshopPanningService,
     WorkshopCanvasSetupFacade,
+    WorkshopWorldGeneratorService,
+    WorkshopMapPersistenceService,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkshopPageComponent implements AfterViewInit {
   #canvasSizeService = inject(WorkshopCanvasSizeService);
+  #panningService = inject(WorkshopPanningService);
 
   header = viewChild.required(WorkshopHeaderComponent, { read: ElementRef });
   leftSidebar = viewChild.required(WorkshopLeftSidebarComponent, {
@@ -82,5 +87,9 @@ export class WorkshopPageComponent implements AfterViewInit {
     ).getBoundingClientRect().width;
 
     this.#canvasSizeService.resizeCanvas();
+
+    requestAnimationFrame(() => {
+      this.#panningService.fitContent();
+    });
   }
 }

@@ -12,6 +12,9 @@ export class BaseShapeShape implements BaseShape {
   shadowOffsetY = 0;
   selected = false;
   layerId?: string;
+  minZoom = 0;
+  maxZoom = Number.POSITIVE_INFINITY;
+  mapObjectType?: string;
 
   constructor(params: CreateBaseShape) {
     this.strokeColor = params.strokeColor;

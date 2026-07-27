@@ -229,6 +229,36 @@
   border-right: 1px solid #8c8880;
 }
 
+.layer-pane,
+.layers__list {
+  scrollbar-color: #77736d #36332e;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #36332e;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    min-height: 32px;
+    background: #77736d;
+    border: 2px solid #36332e;
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #96918a;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: #36332e;
+  }
+}
+
 .pane-title,
 .layers__header {
   display: flex;

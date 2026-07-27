@@ -1,10 +1,4 @@
-import {
-  IsDefined,
-  IsString,
-  Matches,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsDefined, IsString, MaxLength, Matches } from 'class-validator';
 import { authConfig } from '@wm/shared/auth';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -23,12 +17,6 @@ export class LoginDto {
   @ApiProperty()
   @IsDefined({ message: authConfig.password.required.message })
   @IsString()
-  @MinLength(authConfig.password.minLength.value, {
-    message: authConfig.password.minLength.message,
-  })
-  @Matches(authConfig.password.hasUppercase.pattern, {
-    message: authConfig.password.hasUppercase.message,
-  })
   @MaxLength(authConfig.password.maxLength.value, {
     message: authConfig.password.maxLength.message,
   })

@@ -17,9 +17,14 @@ export class WorkshopWorkspaceComponent {
 
   showGrid = this.#canvasManager.showGrid;
   zoomPercent = this.#panningService.zoomPercent;
+  zoomSliderPosition = this.#panningService.zoomSliderPosition;
 
-  updateZoom(value: number) {
-    this.#panningService.setZoomPercent(Number(value));
+  updateZoomSlider(value: number) {
+    this.#panningService.setZoomSliderPosition(Number(value));
+  }
+
+  fitWorld() {
+    this.#panningService.fitWorld();
   }
 
   toggleGrid(event: Event) {

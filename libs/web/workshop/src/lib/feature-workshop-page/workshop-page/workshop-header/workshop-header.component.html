@@ -12,6 +12,32 @@
 
   <span class="controls__divider"></span>
 
+  <div class="controls__generator">
+    <input
+      type="text"
+      aria-label="Seed мира"
+      title="Одинаковый seed создаёт одинаковый мир"
+      [value]="seed()"
+      (input)="seed.set($any($event.target).value)"
+    />
+    <button type="button" (click)="generateWorld()">Сгенерировать</button>
+    @if (generationStatus()) {
+      <span class="controls__status">{{ generationStatus() }}</span>
+    }
+  </div>
+
+  <div class="controls__persistence">
+    <button type="button" [disabled]="persistence.busy()" (click)="saveMap()">
+      Сохранить
+    </button>
+    <button type="button" [disabled]="persistence.busy()" (click)="loadMap()">
+      Загрузить
+    </button>
+    @if (persistence.status()) {
+      <span class="controls__status">{{ persistence.status() }}</span>
+    }
+  </div>
+
   <label class="controls__setting">
     <span>Размер: {{ drawSetupForm.controls.lineWidth.value }}</span>
     <input type="range" min="1" max="20" formControlName="lineWidth" />

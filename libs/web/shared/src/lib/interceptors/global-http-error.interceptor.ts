@@ -12,16 +12,8 @@ export const globalHttpErrorInterceptor: HttpInterceptorFn = (req, next) => {
       const bypassGlobal = req.context.get(BYPASS_GLOBAL_ERROR);
 
       if (!bypassGlobal) {
-        let message: string;
-
-        if (error.status >= 500) {
-          message = `Error 500. Internal Server Error`;
-        } else {
-          const backendMessage = error.error.message ?? error.message;
-          const statusCode = error.error.statusCode ?? error.status;
-
-          message = `Error ${statusCode}. ${backendMessage}`;
-        }
+        const message = error.error.message ?? error.message;
+        // const statusCode = error.error.statusCode ?? error.status;
 
         toastService.show(ErrorToastComponent, { message: message });
       }

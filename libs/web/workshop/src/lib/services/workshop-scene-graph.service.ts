@@ -5,10 +5,12 @@ import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage
 import { GraphNode, GroupNode, LayerNode, ShapeNode } from '../nodes';
 import { Bounds } from '../interfaces';
 import { NodesTypes } from '../consts';
+import { WorkshopCoordsService } from './workshop-coords.service';
 
 @Injectable()
 export class WorkshopSceneGraphService {
   #shapesStorageService = inject(WorkshopSceneGraphStorageService);
+  #coords = inject(WorkshopCoordsService);
 
   root = this.#shapesStorageService.nodesRoot;
 
@@ -38,9 +40,9 @@ export class WorkshopSceneGraphService {
   }
 
   moveToLayer(shapeId: string, newLayerId: string) {
-    const shapeNode = this.findNodeById(shapeId) as ShapeNode;
+    const shapeNode = this.#findNodeById(shapeId) as ShapeNode;
     const oldLayer = shapeNode.parent as LayerNode;
-    const newLayer = this.findNodeById(newLayerId) as LayerNode;
+    const newLayer = this.#findNodeById(newLayerId) as LayerNode;
 
     oldLayer?.removeChild(shapeId);
     newLayer?.addChild(shapeNode);
@@ -48,7 +50,7 @@ export class WorkshopSceneGraphService {
     this.root.update((r) => r);
   }
 
-  private findNodeById(id: string): GraphNode | null {
+  #findNodeById(id: string): GraphNode | null {
     function search(node: GraphNode): GraphNode | null {
       if (node.id === id) return node;
 
@@ -63,7 +65,7 @@ export class WorkshopSceneGraphService {
   }
 
   addLayerNode(
-    layerData: any,
+    layerData: unknown,
     options: {
       parentId?: string;
       index?: number;
@@ -269,6 +271,13 @@ export class WorkshopSceneGraphService {
 
     if (node.type === NodesTypes.SHAPE) {
       const shapeNode = node as ShapeNode;
+      if (
+        this.#coords.zoom < (shapeNode.shape.minZoom ?? 0) ||
+        this.#coords.zoom >
+          (shapeNode.shape.maxZoom ?? Number.POSITIVE_INFINITY)
+      ) {
+        return;
+      }
       target.push(shapeNode.shape);
       return;
     }
@@ -289,6 +298,13 @@ export class WorkshopSceneGraphService {
 
     if (node.type === NodesTypes.SHAPE) {
       const shapeNode = node as ShapeNode;
+      if (
+        this.#coords.zoom < (shapeNode.shape.minZoom ?? 0) ||
+        this.#coords.zoom >
+          (shapeNode.shape.maxZoom ?? Number.POSITIVE_INFINITY)
+      ) {
+        return;
+      }
       if (this.#intersects(shapeNode.shape.getBounds(), viewport)) {
         target.push(shapeNode.shape);
       }

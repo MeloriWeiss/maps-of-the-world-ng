@@ -6,6 +6,8 @@ import { WorkshopCoordsService } from './workshop-coords.service';
 import { WorkshopCanvasManagerService } from './workshop-canvas-manager.service';
 import { WorkshopCanvasService } from './workshop-canvas.service';
 import { WorkshopCanvasSizeService } from './workshop-canvas-size.service';
+import { Bounds } from '../interfaces';
+import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
 
 @Injectable()
 export class WorkshopPanningService {
@@ -15,6 +17,7 @@ export class WorkshopPanningService {
   #workshopCanvasManagerService = inject(WorkshopCanvasManagerService);
   #workshopCanvasService = inject(WorkshopCanvasService);
   #canvasSizeService = inject(WorkshopCanvasSizeService);
+  #sceneStorage = inject(WorkshopSceneGraphStorageService);
 
   isPanning = false;
   panStartX = 0;
@@ -22,6 +25,13 @@ export class WorkshopPanningService {
   cameraStartX = 0;
   cameraStartY = 0;
   zoomPercent = signal(100);
+  zoomSliderPosition = signal(this.#zoomToSlider(1));
+  worldBounds: Bounds = {
+    x: -25_000,
+    y: -17_000,
+    width: 54_000,
+    height: 34_000,
+  };
 
   listenPanningEvents() {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
@@ -62,10 +72,10 @@ export class WorkshopPanningService {
   }
 
   setup() {
-    this.#centerCanvas(false);
-    this.#updateViewport(false);
-
-    this.redraw();
+    if (!this.fitContent()) {
+      this.#centerCanvas(false);
+      this.#updateViewport();
+    }
   }
 
   #centerCanvas(redraw = true) {
@@ -109,6 +119,7 @@ export class WorkshopPanningService {
 
     zoom = this.#workshopCoordsService.zoom;
     this.zoomPercent.set(Math.round(zoom * 100));
+    this.zoomSliderPosition.set(this.#zoomToSlider(zoom));
 
     const rect =
       this.#workshopDrawService.canvasRef.nativeElement.getBoundingClientRect();
@@ -142,6 +153,84 @@ export class WorkshopPanningService {
     this.#workshopCoordsService.cameraX += (nextZoom - oldZoom) * worldX;
     this.#workshopCoordsService.cameraY += (nextZoom - oldZoom) * worldY;
     this.zoomPercent.set(Math.round(nextZoom * 100));
+    this.zoomSliderPosition.set(this.#zoomToSlider(nextZoom));
+    this.#updateViewport();
+  }
+
+  setZoomSliderPosition(position: number) {
+    const min = this.#workshopCoordsService.minZoom;
+    const max = this.#workshopCoordsService.maxZoom;
+    const normalized = Math.min(100, Math.max(0, position)) / 100;
+    this.setZoomPercent(min * Math.pow(max / min, normalized) * 100);
+  }
+
+  setWorldBounds(bounds: Bounds) {
+    this.worldBounds = bounds;
+  }
+
+  fitWorld() {
+    this.fitBounds(this.worldBounds);
+  }
+
+  fitContent() {
+    const shapes = Array.from(this.#sceneStorage.shapes.values());
+    if (shapes.length === 0) return false;
+
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    for (const shape of shapes) {
+      const bounds = shape.getBounds();
+      if (
+        !Number.isFinite(bounds.x) ||
+        !Number.isFinite(bounds.y) ||
+        !Number.isFinite(bounds.width) ||
+        !Number.isFinite(bounds.height)
+      ) {
+        continue;
+      }
+      minX = Math.min(minX, bounds.x);
+      minY = Math.min(minY, bounds.y);
+      maxX = Math.max(maxX, bounds.x + bounds.width);
+      maxY = Math.max(maxY, bounds.y + bounds.height);
+    }
+
+    if (![minX, minY, maxX, maxY].every(Number.isFinite)) return false;
+
+    const bounds = {
+      x: minX,
+      y: minY,
+      width: Math.max(1, maxX - minX),
+      height: Math.max(1, maxY - minY),
+    };
+    this.setWorldBounds(bounds);
+    this.fitBounds(bounds);
+    return true;
+  }
+
+  fitBounds(bounds: Bounds, padding = 0.9) {
+    const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+
+    const nextZoom = Math.min(
+      this.#workshopCoordsService.maxZoom,
+      Math.max(
+        this.#workshopCoordsService.minZoom,
+        Math.min(canvas.width / bounds.width, canvas.height / bounds.height) *
+          padding,
+      ),
+    );
+    const centerX = bounds.x + bounds.width / 2;
+    const centerY = bounds.y + bounds.height / 2;
+
+    this.#workshopCoordsService.zoom = nextZoom;
+    this.#workshopCoordsService.cameraX = centerX * nextZoom - canvas.width / 2;
+    this.#workshopCoordsService.cameraY =
+      centerY * nextZoom - canvas.height / 2;
+    this.zoomPercent.set(Math.round(nextZoom * 100));
+    this.zoomSliderPosition.set(this.#zoomToSlider(nextZoom));
     this.#updateViewport();
   }
 
@@ -173,5 +262,11 @@ export class WorkshopPanningService {
 
   redraw() {
     this.#workshopCanvasManagerService.redraw();
+  }
+
+  #zoomToSlider(zoom: number) {
+    const min = this.#workshopCoordsService.minZoom;
+    const max = this.#workshopCoordsService.maxZoom;
+    return (Math.log(zoom / min) / Math.log(max / min)) * 100;
   }
 }

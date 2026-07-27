@@ -25,7 +25,7 @@ export class AuthService {
     });
 
     if (existingUser)
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('Пользователь с такой почтой уже существует');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
@@ -63,7 +63,7 @@ export class AuthService {
       },
     });
 
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('Введены неверные данные');
 
     const isPasswordValid = await bcrypt.compare(
       dto.password,
@@ -71,7 +71,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid)
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Введены неверные данные');
 
     await this.prisma.userSession.deleteMany({
       where: { userId: user.id, expiresAt: { lt: new Date() } },

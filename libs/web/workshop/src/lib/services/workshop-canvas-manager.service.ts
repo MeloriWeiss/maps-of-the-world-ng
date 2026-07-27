@@ -38,6 +38,12 @@ export class WorkshopCanvasManagerService {
     );
   }
 
+  clearUserContent() {
+    this.#workshopShapesService.clearSelection();
+    this.#workshopSceneGraphStorageService.clearStorage();
+    this.redraw();
+  }
+
   redraw() {
     // сброс статистики
     this.stats_renderedNodesLastFrame = 0;
@@ -65,24 +71,30 @@ export class WorkshopCanvasManagerService {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
     const viewport = this.#workshopCoordsService.worldViewport;
 
-    ctx.fillStyle = 'lightgray';
-    ctx.fillRect(-1000, -1000, 2000, 2000);
+    ctx.fillStyle = '#d8d3c8';
+    ctx.fillRect(viewport.x, viewport.y, viewport.width, viewport.height);
 
     if (this.showGrid()) {
-      ctx.strokeStyle = 'black';
+      const gridSize = this.#gridSizeForZoom(zoom);
+      const startX = Math.floor(viewport.x / gridSize) * gridSize;
+      const endX = viewport.x + viewport.width;
+      const startY = Math.floor(viewport.y / gridSize) * gridSize;
+      const endY = viewport.y + viewport.height;
+
+      ctx.strokeStyle = 'rgba(75, 69, 61, 0.28)';
       ctx.lineWidth = 1 / zoom;
 
-      for (let x = -1000; x <= 1000; x += 100) {
+      for (let x = startX; x <= endX; x += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(x, -1000);
-        ctx.lineTo(x, 1000);
+        ctx.moveTo(x, viewport.y);
+        ctx.lineTo(x, endY);
         ctx.stroke();
       }
 
-      for (let y = -1000; y <= 1000; y += 100) {
+      for (let y = startY; y <= endY; y += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(-1000, y);
-        ctx.lineTo(1000, y);
+        ctx.moveTo(viewport.x, y);
+        ctx.lineTo(endX, y);
         ctx.stroke();
       }
     }
@@ -328,6 +340,18 @@ export class WorkshopCanvasManagerService {
     node: GraphNode,
     viewport: Bounds,
   ) {
+    if (node.type === NodesTypes.SHAPE) {
+      const shape = (node as ShapeNode).shape;
+      if (
+        this.#workshopCoordsService.zoom < (shape.minZoom ?? 0) ||
+        this.#workshopCoordsService.zoom >
+          (shape.maxZoom ?? Number.POSITIVE_INFINITY)
+      ) {
+        this.stats_culledNodesLastFrame++;
+        return;
+      }
+    }
+
     if (this.useOffscreen()) {
       if (!node.visible) return;
 
@@ -399,6 +423,13 @@ export class WorkshopCanvasManagerService {
       a.y + a.height < b.y ||
       a.y > b.y + b.height
     );
+  }
+
+  #gridSizeForZoom(zoom: number) {
+    if (zoom < 0.2) return 2000;
+    if (zoom < 0.6) return 500;
+    if (zoom < 1.5) return 100;
+    return 25;
   }
 
   #drawSelection() {
