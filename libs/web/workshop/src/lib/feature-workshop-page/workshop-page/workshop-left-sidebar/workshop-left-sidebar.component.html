@@ -15,7 +15,7 @@
       [class.selected]="currentToolName() === tool.name"
       [attr.aria-label]="tool.label"
       [title]="tool.label"
-      (click)="setCurrentTool(tool.name)"
+      (click)="setCurrentTool(tool, $event)"
       (contextmenu)="openContextMenu($event, tool)"
     >
       <svg [icon]="tool.icon" dir="workshop/" class="svg35"></svg>
@@ -104,7 +104,55 @@
       </label>
 
       @if (menu.tool === WorkshopTools.TEXTURE) {
-        <div class="texture-preview" aria-label="Предпросмотр текстуры"></div>
+        <div class="texture-library">
+          <label
+            class="texture-library__upload"
+            [class.disabled]="textureUploading()"
+            title="Загрузить текстуру"
+          >
+            <span>{{ textureUploading() ? '…' : '+' }}</span>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              [disabled]="textureUploading()"
+              (change)="uploadTexture($event)"
+            />
+          </label>
+
+          @for (texture of textures(); track texture.id) {
+            <button
+              class="texture-library__item"
+              type="button"
+              [class.selected]="
+                workshopSettingsService.textureStyle.textureId === texture.id
+              "
+              [title]="texture.name"
+              (click)="selectTexture(texture)"
+            >
+              <img [src]="texture.imageUrl" [alt]="texture.name" />
+            </button>
+          }
+        </div>
+
+        @if (texturesLoading()) {
+          <p class="texture-library__status">Загрузка библиотеки…</p>
+        } @else if (!textures().length) {
+          <p class="texture-library__status">
+            Загрузите первую текстуру в формате PNG, JPEG или WebP
+          </p>
+        }
+
+        @if (textureError()) {
+          <p class="texture-library__error">{{ textureError() }}</p>
+        }
+
+        @if (workshopSettingsService.textureStyle.textureUrl; as textureUrl) {
+          <div
+            class="texture-preview"
+            aria-label="Предпросмотр текстуры"
+            [style.background-image]="'url(' + textureUrl + ')'"
+          ></div>
+        }
 
         <label class="tool-context-menu__field">
           <span>

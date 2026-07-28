@@ -22,6 +22,7 @@ import {
   WorkshopCanvasSetupFacade,
   WorkshopWorldGeneratorService,
   WorkshopMapPersistenceService,
+  WorkshopTexturesService,
 } from '../../services';
 import { WorkshopSceneGraphStorageService } from '../../services';
 import { WorkshopWorkspaceComponent } from './workshop-workspace/workshop-workspace.component';
@@ -58,6 +59,7 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
     WorkshopCanvasSetupFacade,
     WorkshopWorldGeneratorService,
     WorkshopMapPersistenceService,
+    WorkshopTexturesService,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

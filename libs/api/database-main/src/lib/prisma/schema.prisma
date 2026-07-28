@@ -36,6 +36,23 @@ model Map {
   @@map("maps")
 }
 
+model Texture {
+  id        String   @id @default(uuid())
+  name      String
+  objectKey String   @unique @map("object_key")
+  mimeType  String   @map("mime_type")
+  size      Int
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  accountId Int             @map("account_id")
+  owner     PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, createdAt])
+  @@map("textures")
+}
+
 model MapComment {
   id       Int    @id @default(autoincrement())
   comment  String
@@ -113,6 +130,7 @@ model PersonalAccount {
   mapComments   MapComment[]
   forums        Forum[]
   forumComments ForumComment[]
+  textures      Texture[]
 
   @@map("accounts")
 }

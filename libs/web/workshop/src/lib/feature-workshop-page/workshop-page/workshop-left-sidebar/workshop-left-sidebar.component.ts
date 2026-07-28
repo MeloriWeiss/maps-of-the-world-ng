@@ -12,6 +12,8 @@ import {
   WorkshopSettingsService,
   WorkshopCanvasSizeService,
   WorkshopToolsService,
+  WorkshopTexture,
+  WorkshopTexturesService,
 } from '../../../services';
 import { SvgComponent } from '@wm/web/common-ui';
 import { FormsModule } from '@angular/forms';
@@ -41,9 +43,14 @@ export class WorkshopLeftSidebarComponent {
   #workshopToolsService = inject(WorkshopToolsService);
   #canvasSizeService = inject(WorkshopCanvasSizeService);
   #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  #texturesService = inject(WorkshopTexturesService);
   workshopSettingsService = inject(WorkshopSettingsService);
 
   currentToolName = this.#workshopToolsService.currentToolName;
+  textures = this.#texturesService.textures;
+  texturesLoading = this.#texturesService.loading;
+  textureUploading = this.#texturesService.uploading;
+  textureError = this.#texturesService.error;
   WorkshopTools = WorkshopTools;
   contextMenu: ContextMenuState | null = null;
   collapsed = signal(false);
@@ -92,8 +99,13 @@ export class WorkshopLeftSidebarComponent {
     },
   ];
 
-  setCurrentTool(newTool: WorkshopTools) {
-    this.#workshopToolsService.setCurrentTool(newTool);
+  setCurrentTool(tool: ToolButton, event: MouseEvent): void {
+    this.#workshopToolsService.setCurrentTool(tool.name);
+    if (tool.name === WorkshopTools.TEXTURE) {
+      this.openContextMenu(event, tool);
+      this.#texturesService.load();
+      return;
+    }
     this.closeContextMenu();
   }
 
@@ -120,8 +132,8 @@ export class WorkshopLeftSidebarComponent {
 
     const target = event.currentTarget as HTMLElement;
     const targetRect = target.getBoundingClientRect();
-    const menuWidth = 202;
-    const menuHeight = 440;
+    const menuWidth = tool.name === WorkshopTools.TEXTURE ? 286 : 202;
+    const menuHeight = tool.name === WorkshopTools.TEXTURE ? 590 : 440;
     this.contextMenu = {
       tool: tool.name,
       x: Math.min(targetRect.right + 5, window.innerWidth - menuWidth - 8),
@@ -161,6 +173,31 @@ export class WorkshopLeftSidebarComponent {
 
   updateTextureRotation(value: number): void {
     this.workshopSettingsService.textureStyle.textureRotation = Number(value);
+  }
+
+  selectTexture(texture: WorkshopTexture): void {
+    this.workshopSettingsService.textureStyle.textureId = texture.id;
+    this.workshopSettingsService.textureStyle.textureUrl = texture.imageUrl;
+  }
+
+  uploadTexture(event: Event): void {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    this.#texturesService.upload(file).subscribe({
+      next: (response) => {
+        const texture = this.#texturesService.add(response);
+        this.selectTexture(texture);
+      },
+      error: () =>
+        this.#texturesService.error.set(
+          'Не удалось загрузить текстуру. Используйте PNG, JPEG или WebP до 5 МБ',
+        ),
+    });
   }
 
   #applyStyleIfCurrent(tool: WorkshopTools): void {

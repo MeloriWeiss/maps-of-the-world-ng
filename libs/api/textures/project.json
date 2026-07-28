@@ -1,0 +1,8 @@
+{
+  "name": "textures",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/textures/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {}
+}

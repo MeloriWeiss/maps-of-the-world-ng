@@ -3,6 +3,7 @@ import { WorkshopCoordsService } from './workshop-coords.service';
 import { WorkshopDrawService } from './workshop-draw.service';
 import { WorkshopPanningService } from './workshop-panning.service';
 import { WorkshopSettingsService } from './workshop-settings.service';
+import { WorkshopTexturesService } from './workshop-textures.service';
 import { WorkshopSceneGraphService } from './workshop-scene-graph.service';
 import { WorkshopCanvasManagerService } from './workshop-canvas-manager.service';
 import { WorkshopCanvasService } from './workshop-canvas.service';
@@ -16,6 +17,7 @@ import { WorkshopMapPersistenceService } from './workshop-map-persistence.servic
 export {
   WorkshopDrawService,
   WorkshopSettingsService,
+  WorkshopTexturesService,
   WorkshopPanningService,
   WorkshopCoordsService,
   WorkshopToolsService,
@@ -31,3 +33,4 @@ export {
 };
 
 export * from './facades';
+export type { WorkshopTexture } from './workshop-textures.service';

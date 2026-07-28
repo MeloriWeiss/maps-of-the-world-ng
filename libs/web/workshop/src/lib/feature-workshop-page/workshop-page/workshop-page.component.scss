@@ -2,7 +2,6 @@
   display: block;
   height: 100dvh;
   overflow: hidden;
-  background-color: var(--dark-primary-color);
 }
 
 .workshop__body {
@@ -27,6 +26,8 @@
 }
 
 .workshop__left-sidebar {
+  background-color: var(--dark-primary-color);
   position: relative;
+  z-index: 3;
   overflow: visible;
 }

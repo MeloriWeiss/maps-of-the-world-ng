@@ -32,6 +32,8 @@ export class TextureTool implements Tool {
     this.#currentStroke = new TextureStrokeShape({
       type: ShapesTypes.TEXTURE,
       points: [{ x: startPoint.x, y: startPoint.y }],
+      textureId: texture.textureId,
+      textureUrl: texture.textureUrl,
       textureScale: texture.textureScale,
       textureRotation: texture.textureRotation,
       textureColor: texture.textureColor,
