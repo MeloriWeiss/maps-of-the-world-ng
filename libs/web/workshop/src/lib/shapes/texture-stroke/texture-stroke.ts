@@ -22,6 +22,7 @@ export class TextureStrokeShape
 
   #selectThreshold = 6;
   #textureImage: HTMLImageElement | null = null;
+  #textureReady: Promise<void>;
 
   constructor(data: TextureStrokeCreateData) {
     super(
@@ -44,7 +45,11 @@ export class TextureStrokeShape
     this.textureScale = data.textureScale;
     this.textureRotation = data.textureRotation;
     this.textureColor = data.textureColor;
-    this.#loadTexture();
+    this.#textureReady = this.#loadTexture();
+  }
+
+  override whenReady(): Promise<void> {
+    return this.#textureReady;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -167,12 +172,17 @@ export class TextureStrokeShape
     return pattern;
   }
 
-  #loadTexture(): void {
-    if (!this.textureUrl) return;
+  #loadTexture(): Promise<void> {
+    if (!this.textureUrl) return Promise.resolve();
 
     const image = new Image();
-    image.src = this.textureUrl;
     this.#textureImage = image;
+
+    return new Promise((resolve) => {
+      image.addEventListener('load', () => resolve(), { once: true });
+      image.addEventListener('error', () => resolve(), { once: true });
+      image.src = this.textureUrl ?? '';
+    });
   }
 
   #distanceToSegment(

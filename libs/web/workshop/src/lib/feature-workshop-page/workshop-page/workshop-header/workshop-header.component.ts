@@ -15,10 +15,11 @@ import {
 } from '../../../services';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { tap } from 'rxjs';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'wm-workshop-header',
-  imports: [DecimalPipe, ReactiveFormsModule],
+  imports: [DecimalPipe, ReactiveFormsModule, RouterLink],
   templateUrl: './workshop-header.component.html',
   styleUrl: './workshop-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

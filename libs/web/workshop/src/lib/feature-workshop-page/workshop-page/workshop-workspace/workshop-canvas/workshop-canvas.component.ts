@@ -7,13 +7,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   WorkshopCanvasService,
   WorkshopCanvasSetupFacade,
-  WorkshopSceneGraphService,
 } from '../../../../services';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'wm-workshop-canvas',
@@ -24,14 +21,9 @@ import { firstValueFrom } from 'rxjs';
 })
 export class WorkshopCanvasComponent implements AfterViewInit {
   #workshopCanvasService = inject(WorkshopCanvasService);
-  #workshopShapesService = inject(WorkshopSceneGraphService);
   #canvasSetupFacade = inject(WorkshopCanvasSetupFacade);
 
   canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
-
-  constructor() {
-    this.startHandleSceneGraph();
-  }
 
   ngAfterViewInit() {
     const canvasRef = this.canvasRef();
@@ -45,13 +37,5 @@ export class WorkshopCanvasComponent implements AfterViewInit {
     this.#workshopCanvasService.ctx = canvasContext;
 
     this.#canvasSetupFacade.setupCanvas();
-  }
-
-  startHandleSceneGraph() {
-    firstValueFrom(this.#workshopShapesService.getNodes()).then();
-
-    this.#workshopShapesService.nodesSaves$
-      .pipe(takeUntilDestroyed())
-      .subscribe();
   }
 }

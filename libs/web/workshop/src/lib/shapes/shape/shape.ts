@@ -27,4 +27,8 @@ export class BaseShapeShape implements BaseShape {
     this.shadowOffsetX = params.shadowOffsetX ?? 0;
     this.shadowOffsetY = params.shadowOffsetY ?? 0;
   }
+
+  whenReady(): Promise<void> {
+    return Promise.resolve();
+  }
 }

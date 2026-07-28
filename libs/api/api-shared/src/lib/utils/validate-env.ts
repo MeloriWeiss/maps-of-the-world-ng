@@ -64,6 +64,38 @@ export const validateEnv = (config: Record<string, unknown>) => {
       'NODE_ENV is required (environment mode: "development", "production", or "test")',
     );
 
+  const objectStorageVariables = [
+    'OBJECT_STORAGE_ENDPOINT',
+    'OBJECT_STORAGE_REGION',
+    'OBJECT_STORAGE_BUCKET',
+    'OBJECT_STORAGE_ACCESS_KEY',
+    'OBJECT_STORAGE_SECRET_KEY',
+    'OBJECT_STORAGE_FORCE_PATH_STYLE',
+  ];
+
+  for (const variable of objectStorageVariables) {
+    if (!config[variable]) {
+      errors.push(`${variable} is required (S3-compatible object storage)`);
+    }
+  }
+
+  if (
+    config['OBJECT_STORAGE_FORCE_PATH_STYLE'] &&
+    !['true', 'false'].includes(
+      String(config['OBJECT_STORAGE_FORCE_PATH_STYLE']),
+    )
+  ) {
+    errors.push('OBJECT_STORAGE_FORCE_PATH_STYLE must be "true" or "false"');
+  }
+
+  if (config['OBJECT_STORAGE_ENDPOINT']) {
+    try {
+      new URL(String(config['OBJECT_STORAGE_ENDPOINT']));
+    } catch {
+      errors.push('OBJECT_STORAGE_ENDPOINT must be a valid absolute URL');
+    }
+  }
+
   if (errors.length) {
     throw new Error(
       `Missing required environment variables in .env file:\n\n${errors.join('\n')}\n\n` +

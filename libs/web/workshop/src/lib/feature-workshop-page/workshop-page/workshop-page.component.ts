@@ -66,6 +66,11 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
 export class WorkshopPageComponent implements AfterViewInit {
   #canvasSizeService = inject(WorkshopCanvasSizeService);
   #panningService = inject(WorkshopPanningService);
+  #canvasManagerService = inject(WorkshopCanvasManagerService);
+  #canvasSetupFacade = inject(WorkshopCanvasSetupFacade);
+
+  isReady = this.#canvasSetupFacade.isReady;
+  loadingMessage = this.#canvasSetupFacade.loadingMessage;
 
   header = viewChild.required(WorkshopHeaderComponent, { read: ElementRef });
   leftSidebar = viewChild.required(WorkshopLeftSidebarComponent, {
@@ -75,7 +80,9 @@ export class WorkshopPageComponent implements AfterViewInit {
     read: ElementRef,
   });
 
-  ngAfterViewInit() {
+  async ngAfterViewInit() {
+    await this.#canvasSetupFacade.waitUntilCanvasSetup();
+
     this.#canvasSizeService.headerHeight = (
       this.header().nativeElement as HTMLElement
     ).getBoundingClientRect().height;
@@ -89,9 +96,20 @@ export class WorkshopPageComponent implements AfterViewInit {
     ).getBoundingClientRect().width;
 
     this.#canvasSizeService.resizeCanvas();
+    await this.#canvasSetupFacade.waitUntilMapReady();
 
-    requestAnimationFrame(() => {
-      this.#panningService.fitContent();
+    await this.#renderInitialFrame();
+    this.#canvasSetupFacade.finishInitialization();
+  }
+
+  #renderInitialFrame(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        this.#panningService.fitContent();
+        this.#canvasManagerService.redraw();
+
+        requestAnimationFrame(() => resolve());
+      });
     });
   }
 }

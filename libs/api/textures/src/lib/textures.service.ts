@@ -1,24 +1,31 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaMainService } from '@wm/api/database-main';
 import { UploadedTextureFile } from './texture-file.interface';
-import { TextureStorageService } from './texture-storage.service';
+import { OBJECT_STORAGE, ObjectStorage } from './object-storage.interface';
 
 const ALLOWED_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 
 @Injectable()
 export class TexturesService {
+  #prisma: PrismaMainService;
+  #storage: ObjectStorage;
+
   constructor(
-    private readonly prisma: PrismaMainService,
-    private readonly storage: TextureStorageService,
-  ) {}
+    @Inject(PrismaMainService) prisma: PrismaMainService,
+    @Inject(OBJECT_STORAGE) storage: ObjectStorage,
+  ) {
+    this.#prisma = prisma;
+    this.#storage = storage;
+  }
 
   list(accountId: number) {
-    return this.prisma.texture.findMany({
+    return this.#prisma.texture.findMany({
       where: { accountId },
       orderBy: { createdAt: 'desc' },
       select: {
@@ -45,36 +52,45 @@ export class TexturesService {
 
     const extension = this.#extension(file.mimetype);
     const objectKey = `${accountId}-${randomUUID()}.${extension}`;
-    await this.storage.put(objectKey, file.buffer, file.mimetype);
-
-    return this.prisma.texture.create({
-      data: {
-        name,
-        objectKey,
-        mimeType: file.mimetype,
-        size: file.size,
-        accountId,
-      },
-      select: {
-        id: true,
-        name: true,
-        mimeType: true,
-        size: true,
-        width: true,
-        height: true,
-      },
+    await this.#storage.put({
+      key: objectKey,
+      body: file.buffer,
+      contentType: file.mimetype,
     });
+
+    try {
+      return await this.#prisma.texture.create({
+        data: {
+          name,
+          objectKey,
+          mimeType: file.mimetype,
+          size: file.size,
+          accountId,
+        },
+        select: {
+          id: true,
+          name: true,
+          mimeType: true,
+          size: true,
+          width: true,
+          height: true,
+        },
+      });
+    } catch (error) {
+      await this.#storage.delete(objectKey).catch(() => undefined);
+      throw error;
+    }
   }
 
   async getFile(id: string) {
-    const texture = await this.prisma.texture.findUnique({
+    const texture = await this.#prisma.texture.findUnique({
       where: { id },
       select: { objectKey: true, mimeType: true },
     });
     if (!texture) throw new NotFoundException('Texture not found');
 
     return {
-      body: await this.storage.get(texture.objectKey),
+      body: await this.#storage.get(texture.objectKey),
       mimeType: texture.mimeType,
     };
   }

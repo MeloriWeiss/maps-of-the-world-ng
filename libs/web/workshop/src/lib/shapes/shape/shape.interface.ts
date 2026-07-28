@@ -23,6 +23,7 @@ export type CreateBaseShape = Omit<BaseShape, 'id'>;
 
 export interface ShapeActions {
   draw: (ctx: CanvasRenderingContext2D) => void;
+  whenReady: () => Promise<void>;
   clickOn: (point: Point) => boolean;
   selectByClick: (point: Point) => boolean;
   selectByDraw: (selectionRect: SelectionRect) => boolean;

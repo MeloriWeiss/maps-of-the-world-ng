@@ -1,7 +1,162 @@
 :host {
+  position: relative;
   display: block;
   height: 100dvh;
   overflow: hidden;
+}
+
+.workshop-loader {
+  position: absolute;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  color: var(--light-color);
+  background: radial-gradient(
+    circle at 50% 45%,
+    var(--dark-primary-color),
+    var(--dark-primary-bright-color) 42%,
+    var(--dark-color) 130%
+  );
+
+  &__map {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    margin-bottom: 30px;
+  }
+
+  &__orbit {
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--light-transparent-color);
+    border-top-color: var(--light-color);
+    border-radius: 50%;
+    animation: loader-orbit 1.8s linear infinite;
+
+    &--inner {
+      inset: 14px;
+      border-color: var(--light-transparent-color);
+      border-bottom-color: var(--primary-color);
+      animation-direction: reverse;
+      animation-duration: 1.2s;
+    }
+  }
+
+  &__marker {
+    position: absolute;
+    top: 35px;
+    left: 43px;
+    width: 26px;
+    height: 34px;
+    border: 7px solid var(--light-color);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    animation: loader-marker 1.4s ease-in-out infinite;
+
+    &::after {
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      content: '';
+    }
+  }
+
+  &__pulse {
+    position: absolute;
+    bottom: 20px;
+    left: 42px;
+    width: 28px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--dark-color);
+    opacity: 0.35;
+    animation: loader-pulse 1.4s ease-in-out infinite;
+  }
+
+  &__title {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  &__status {
+    min-width: 220px;
+    margin: 0 0 22px;
+    color: var(--light-transparent-font-color);
+    text-align: center;
+  }
+
+  &__progress {
+    width: 220px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 3px;
+    background-color: var(--light-transparent-color);
+
+    span {
+      display: block;
+      width: 45%;
+      height: 100%;
+      border-radius: inherit;
+      background-color: var(--light-color);
+      animation: loader-progress 1.35s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes loader-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loader-marker {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-45deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+}
+
+@keyframes loader-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.15;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes loader-progress {
+  from {
+    transform: translateX(-110%);
+  }
+
+  to {
+    transform: translateX(245%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workshop-loader {
+    &__orbit,
+    &__marker,
+    &__pulse,
+    &__progress span {
+      animation-duration: 4s;
+    }
+  }
 }
 
 .workshop__body {

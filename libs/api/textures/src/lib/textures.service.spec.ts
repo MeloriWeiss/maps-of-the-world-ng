@@ -1,0 +1,36 @@
+import { Test } from '@nestjs/testing';
+import { PrismaMainService } from '@wm/api/database-main';
+import { FakeObjectStorage } from '../testing/fake-object-storage';
+import { OBJECT_STORAGE } from './object-storage.interface';
+import { TexturesService } from './textures.service';
+
+describe('TexturesService', () => {
+  it('removes the uploaded object when metadata persistence fails', async () => {
+    const storage = new FakeObjectStorage();
+    const prisma = {
+      texture: {
+        create: jest.fn().mockRejectedValue(new Error('Database unavailable')),
+      },
+    };
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        TexturesService,
+        { provide: PrismaMainService, useValue: prisma },
+        { provide: OBJECT_STORAGE, useValue: storage },
+      ],
+    }).compile();
+    const service = moduleRef.get(TexturesService);
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+    await expect(
+      service.upload(1, 'texture', {
+        originalname: 'texture.png',
+        mimetype: 'image/png',
+        size: png.length,
+        buffer: png,
+      }),
+    ).rejects.toThrow('Database unavailable');
+
+    expect(storage.objects.size).toBe(0);
+  });
+});
