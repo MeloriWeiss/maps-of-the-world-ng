@@ -1,12 +1,20 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+
 .nodes-panel {
-  overflow: auto;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
   background: #17181c;
   border-radius: 6px;
   font-size: 12px;
   padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+}
+
+.nodes-panel__virtual-list {
+  height: 100%;
 }
 
 .nodes-panel__empty {
@@ -18,6 +26,7 @@
   display: flex;
   align-items: center;
   min-height: 28px;
+  width: 100%;
   cursor: grab;
   padding: 0 6px;
   border-radius: 5px;
@@ -64,6 +73,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: #eaf3ff;
+}
+
+.node-item__name-input {
+  min-width: 0;
+  height: 22px;
+  flex: 1;
+  padding: 0 4px;
+  color: #fff;
+  background: #25272d;
+  border: 1px solid #16b7ff;
+  border-radius: 3px;
+  outline: none;
 }
 
 .node-item__icon-btn {

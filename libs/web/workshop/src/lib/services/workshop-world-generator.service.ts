@@ -17,11 +17,11 @@ export class WorkshopWorldGeneratorService {
 
   generate(seed = crypto.randomUUID().slice(0, 8)): GeneratedWorldSummary {
     const random = mulberry32(hashSeed(seed));
-    const root = new LayerNode({ name: 'Generated world' });
-    const terrain = new LayerNode({ name: 'Continents and water' });
-    const geography = new LayerNode({ name: 'Rivers and mountains' });
-    const settlements = new LayerNode({ name: 'Settlements' });
-    const interiors = new LayerNode({ name: 'Interiors' });
+    const root = new LayerNode({ name: 'Сгенерированный мир' });
+    const terrain = new LayerNode({ name: 'Континенты' });
+    const geography = new LayerNode({ name: 'Реки и горы' });
+    const settlements = new LayerNode({ name: 'Дома' });
+    const interiors = new LayerNode({ name: 'Мебель' });
 
     root.addChild(terrain);
     root.addChild(geography);
@@ -175,6 +175,7 @@ export class WorkshopWorldGeneratorService {
     maxZoom: number,
   ) {
     shape.layerId = layer.id;
+    shape.name = generatedShapeName(type);
     shape.minZoom = minZoom;
     shape.maxZoom = maxZoom;
     shape.mapObjectType = type;
@@ -183,6 +184,20 @@ export class WorkshopWorldGeneratorService {
     this.#storage.shapes.set(shape.id, shape);
     this.#storage.nodes.set(node.id, node);
   }
+}
+
+function generatedShapeName(type: string): string {
+  const names: Record<string, string> = {
+    continent: 'Континент',
+    river: 'Река',
+    mountain: 'Гора',
+    house: 'Дом',
+    table: 'Стол',
+    wardrobe: 'Шкаф',
+    bed: 'Кровать',
+    chair: 'Стул',
+  };
+  return names[type] ?? 'Фигура';
 }
 
 function hashSeed(seed: string) {

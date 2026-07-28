@@ -12,15 +12,19 @@ export class LineShape extends BaseShapeShape implements Line {
   #selectThreshold = 4;
 
   constructor(line: LineCreateData) {
-    super({
-      strokeColor: line.strokeColor,
-      strokeWidth: line.strokeWidth,
-      opacity: line.opacity,
-      shadowColor: line.shadowColor,
-      shadowBlur: line.shadowBlur,
-      shadowOffsetX: line.shadowOffsetX,
-      shadowOffsetY: line.shadowOffsetY,
-    });
+    super(
+      {
+        name: line.name,
+        strokeColor: line.strokeColor,
+        strokeWidth: line.strokeWidth,
+        opacity: line.opacity,
+        shadowColor: line.shadowColor,
+        shadowBlur: line.shadowBlur,
+        shadowOffsetX: line.shadowOffsetX,
+        shadowOffsetY: line.shadowOffsetY,
+      },
+      'Линия',
+    );
 
     this.points = line.points;
   }

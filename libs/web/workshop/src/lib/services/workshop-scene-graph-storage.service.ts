@@ -41,6 +41,7 @@ type SerializedNode =
 
 interface SerializedBaseShape {
   id: string;
+  name?: string;
   type: ShapesTypes;
   strokeColor: string;
   opacity: number;
@@ -250,6 +251,7 @@ export class WorkshopSceneGraphStorageService {
   #serializeShape(shape: Shape): SerializedShape {
     const baseShape = {
       id: shape.id,
+      name: shape.name,
       type: shape.type,
       strokeColor: shape.strokeColor,
       opacity: shape.opacity,
@@ -368,6 +370,7 @@ export class WorkshopSceneGraphStorageService {
 
       this.#setReadonlyId(restoredShape, shape.id);
       restoredShape.selected = shape.selected;
+      restoredShape.name = shape.name;
       restoredShape.layerId = shape.layerId;
       restoredShape.shadowColor = shape.shadowColor;
       restoredShape.shadowBlur = shape.shadowBlur;

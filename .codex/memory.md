@@ -37,7 +37,7 @@
 ## Domain
 
 - Prisma schema is at `libs/api/database-main/src/lib/prisma/schema.prisma`.
-- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapComment`, `Forum`, `ForumComment`.
+- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapComment`, `Forum`, `ForumComment`, and `Texture`.
 - Backend endpoints cover auth, users, accounts, and owned-map persistence; forum endpoints are not implemented yet.
 - Auth uses access/refresh JWT cookies, refresh rotation, session storage, logout, logout-all, and sessions listing.
 - `libs/api/maps` now implements authenticated map persistence:
@@ -47,6 +47,15 @@
   - `PUT /api/maps/:id` updates an owned map.
   - Workshop snapshots are stored in the existing `Map.body` string column.
 - API JSON request bodies accept up to 10 MB to accommodate workshop snapshots.
+- `libs/api/textures` implements authenticated user texture management:
+  - `GET /api/textures` lists textures owned by the current account.
+  - `POST /api/textures` accepts multipart PNG/JPEG/WebP uploads up to 5 MB and validates their file signatures.
+  - `GET /api/textures/:id/file` serves an image by its opaque UUID.
+  - PostgreSQL stores texture metadata and ownership; binary image contents are stored outside PostgreSQL.
+  - Cloudflare R2 is the selected production object storage. The implementation uses its S3-compatible signed API without an additional SDK dependency.
+  - When R2 variables are absent, development uses `.data/textures`; `.data` is gitignored.
+  - Required optional R2 variables are documented in `.env.example`.
+  - `TexturesModule` must import both `DatabaseMainModule` and `ApiAuthModule`; importing them only in root `AppModule` does not expose their providers in the feature module.
 
 ## Angular Routing
 
@@ -75,6 +84,17 @@
 - After a sidebar transition, its component measures the new width and calls `WorkshopCanvasSizeService.resizeCanvas()`. The size service updates `WorkshopCoordsService.worldViewport` with the existing camera/zoom before redrawing, which prevents blank canvas strips after a sidebar closes. Preserve this recalculation when changing sidebar dimensions.
 - Experimental changes to sidebar animation/layout were reverted after they disturbed canvas proportions and zoom. Do not rework sidebar transitions without verifying both opening and closing at the current camera position.
 - The Layers pane uses a custom thin dark scrollbar defined in `workshop-right-sidebar.component.scss`.
+- The layer tree uses reusable `VirtualListComponent` from `libs/web/common-ui`.
+  - It accepts arbitrary items, a projected row template, fixed row height, and overscan.
+  - It renders only the visible range while a spacer preserves the full scroll height.
+  - Keep rows at a fixed height unless the virtual-list API is extended to support measured variable heights.
+- Layers and other tree nodes with children are collapsed by default. Expanding a node exposes its descendants.
+- Generated layers carry names in `LayerNode.layerData.name`; the panel displays this value and falls back to the technical id only for unnamed legacy layers.
+- Generated layer names are currently `Континенты`, `Реки и горы`, `Дома`, and `Мебель`.
+- Shapes have an optional persistent `name` serialized into workshop snapshots.
+  - Generated objects receive semantic names such as `Континент`, `Река`, `Гора`, `Дом`, `Стол`, `Шкаф`, `Кровать`, and `Стул`.
+  - Default names for manually created shapes belong to their concrete classes and are passed to `BaseShapeShape`; do not restore a central type switch in `WorkshopShapesService`.
+  - A shape can be renamed inline from the layer tree by double-clicking its name. Enter/blur saves and Escape cancels.
 - Tool enum: `select`, `pencil`, `eraser`, `rectangle`, `text`, `texture`.
 - Tool switching is managed by `WorkshopToolsService`. Tools are created from factories in an Angular injection context; the previous tool may release resources through optional `Tool.dispose()`.
 - The left sidebar is at `feature-workshop-page/workshop-page/workshop-left-sidebar`.
@@ -83,6 +103,8 @@
   - The panel follows the editor mockup and edits line width, opacity, stroke color, and fill color.
   - Texture additionally exposes functional texture scale and rotation controls plus a preview.
   - It closes on an outside click, tool selection, close button, or `Escape`, and is kept inside the viewport.
+  - The left sidebar remains 56px wide. Its tool button may extend to 64px on hover, but the icon stays centered in the original 56px grid column.
+  - `.workshop__left-sidebar` uses `overflow: visible` and a z-index above the workspace so the hover extension is drawn over the canvas without changing sidebar width.
 - Per-tool drawing profiles are stored in `WorkshopSettingsService.toolStyles`.
   - `WorkshopToolsService.setCurrentTool()` applies the selected profile.
   - Editing an inactive tool only updates its stored profile; editing the active tool also applies it immediately.
@@ -105,6 +127,9 @@
 - It has shapes, scene graph nodes (`GraphNode`, `LayerNode`, `GroupNode`, `ShapeNode`), layers, quadtree, panning, coords, draw/settings/services, and sidebars.
 - Scene graph auto-save currently stores through `WorkshopSceneGraphStorageService`; inspect storage before changing persistence.
 - `WorkshopSceneGraphStorageService` now supports versioned `exportSnapshot()` and `importSnapshot()` in addition to localStorage auto-save.
+- Texture strokes are part of scene-graph serialization and persist texture id/URL, scale, rotation, color, and points.
+- `TextureStrokeShape` uses the uploaded image as a repeating `CanvasPattern`; texture scale affects the pattern transform independently from stroke width.
+- Rendering is layer-buffered: the current `WorkshopCanvasManagerService.#renderLayer()` draws layer children into an offscreen canvas and then composites it onto the main canvas even in the branch used when `useOffscreen` is false. The flag changes buffering behavior rather than simply enabling/disabling all offscreen rendering.
 - The workshop header has a prototype generation/persistence toolbar:
   - Seed input and `Сгенерировать` invoke `WorkshopWorldGeneratorService`.
   - `Сохранить` and `Загрузить` use `WorkshopMapPersistenceService` and `/api/maps`.
@@ -131,7 +156,8 @@
 - Start web: `yarn start:web`.
 - Start API: `yarn start:api`.
 - Start API dependencies: `yarn start:api-deps:docker`.
-- Prisma push: `yarn db:main:push`.
+- Create/apply a development migration: `yarn db:main:migrate`.
+- Generate Prisma client: `yarn db:main:generate`.
 - Prisma seed: `yarn db:main:seed`.
 - Lint all: `yarn lint`.
 - Test all: `yarn test`.
@@ -148,12 +174,18 @@
 - The authenticated map API was smoke-tested end-to-end: login, create, read, and update succeeded; the temporary test map was removed.
 - `git diff --check` succeeds; Git only reports expected LF-to-CRLF conversion warnings on Windows.
 - Prefer existing Nx project patterns and standalone Angular conventions.
+- Before implementing a feature, identify which entity owns the state and behavior.
+- Prefer encapsulation and polymorphism over central switches or mappings that must change whenever a new subtype is introduced.
+- Services should coordinate entities rather than know every concrete entity type.
+- Create reusable UI abstractions when the current problem and likely future uses share a clear stable contract; avoid abstractions without a concrete reuse case.
+- Keep fixes narrowly scoped. Do not change adjacent layout or behavior unless it is necessary for the requested result.
 
 ## Backend Repair Notes (2026-07-27)
 
 - The local PostgreSQL database originally contained legacy PascalCase tables while Prisma expected snake_case tables. This caused login to fail with a Prisma error and HTTP 500.
 - The migration chain is now registered and applied locally. The refactor migration preserves legacy data by renaming/converting tables and foreign keys instead of dropping them.
-- The database schema reports up to date with six migrations.
+- The database schema reports up to date with seven migrations, including `20260728150000_add_textures`.
+- The local database previously matched the Prisma schema but had no `_prisma_migrations` table because it had been created outside the migration chain. The six pre-texture migrations were safely baselined after `prisma migrate diff` confirmed that the only schema delta was `textures`; the texture migration was then deployed.
 - The invalid historical seed bcrypt placeholder was replaced. Demo credentials are `admin@example.com` / `admin123`.
 - Login validation intentionally does not enforce registration password-strength rules; invalid credentials return 401.
 - `GlobalExceptionFilter` now sends the status calculated for Prisma errors, maps common database failures, and does not expose unexpected internal error messages.

@@ -4,6 +4,7 @@ import { Point, Bounds } from '../../interfaces';
 
 export interface BaseShape {
   id: string;
+  name?: string;
   strokeColor: string;
   opacity: number;
   strokeWidth: number;

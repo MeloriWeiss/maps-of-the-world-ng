@@ -15,15 +15,19 @@ export class TextShape extends BaseShapeShape implements Text {
   fillColor: string;
 
   constructor(data: TextCreateData) {
-    super({
-      strokeColor: data.strokeColor,
-      strokeWidth: data.strokeWidth,
-      opacity: data.opacity,
-      shadowColor: data.shadowColor,
-      shadowBlur: data.shadowBlur,
-      shadowOffsetX: data.shadowOffsetX,
-      shadowOffsetY: data.shadowOffsetY,
-    });
+    super(
+      {
+        name: data.name,
+        strokeColor: data.strokeColor,
+        strokeWidth: data.strokeWidth,
+        opacity: data.opacity,
+        shadowColor: data.shadowColor,
+        shadowBlur: data.shadowBlur,
+        shadowOffsetX: data.shadowOffsetX,
+        shadowOffsetY: data.shadowOffsetY,
+      },
+      'Текст',
+    );
 
     this.text = data.text;
     this.x = data.x;

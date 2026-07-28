@@ -1,0 +1,17 @@
+<div class="virtual-list__spacer" [style.height.px]="totalHeight()"></div>
+
+<div
+  class="virtual-list__items"
+  [style.transform]="'translateY(' + offset() + 'px)'"
+>
+  @for (entry of visibleItems(); track entry.index) {
+    <div class="virtual-list__item" [style.height.px]="itemHeight()">
+      <ng-container
+        *ngTemplateOutlet="
+          itemTemplate;
+          context: { $implicit: entry.item, index: entry.index }
+        "
+      ></ng-container>
+    </div>
+  }
+</div>

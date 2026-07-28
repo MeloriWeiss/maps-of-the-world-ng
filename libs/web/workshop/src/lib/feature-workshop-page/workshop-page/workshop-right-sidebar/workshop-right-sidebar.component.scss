@@ -259,6 +259,17 @@
   }
 }
 
+.layer-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  wm-workshop-nodes-panel {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
 .pane-title,
 .layers__header {
   display: flex;

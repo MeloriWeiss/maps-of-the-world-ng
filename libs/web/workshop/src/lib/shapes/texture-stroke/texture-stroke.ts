@@ -24,15 +24,19 @@ export class TextureStrokeShape
   #textureImage: HTMLImageElement | null = null;
 
   constructor(data: TextureStrokeCreateData) {
-    super({
-      strokeColor: data.strokeColor,
-      strokeWidth: data.strokeWidth,
-      opacity: data.opacity,
-      shadowColor: data.shadowColor,
-      shadowBlur: data.shadowBlur,
-      shadowOffsetX: data.shadowOffsetX,
-      shadowOffsetY: data.shadowOffsetY,
-    });
+    super(
+      {
+        name: data.name,
+        strokeColor: data.strokeColor,
+        strokeWidth: data.strokeWidth,
+        opacity: data.opacity,
+        shadowColor: data.shadowColor,
+        shadowBlur: data.shadowBlur,
+        shadowOffsetX: data.shadowOffsetX,
+        shadowOffsetY: data.shadowOffsetY,
+      },
+      'Текстура',
+    );
 
     this.points = data.points;
     this.textureId = data.textureId;

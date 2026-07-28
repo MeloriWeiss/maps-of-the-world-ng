@@ -21,6 +21,7 @@ import { ToastService } from './toasts/toast.service';
 import { SuccessToastComponent } from './toasts/success-toast/success-toast.component';
 import { InfoToastComponent } from './toasts/info-toast/info-toast.component';
 import { ErrorToastComponent } from './toasts/error-toast/error-toast.component';
+import { VirtualListComponent } from './virtual-list/virtual-list.component';
 
 export {
   FormInputComponent,
@@ -46,4 +47,7 @@ export {
   SuccessToastComponent,
   InfoToastComponent,
   ErrorToastComponent,
+  VirtualListComponent,
 };
+
+export type { VirtualListItemContext } from './virtual-list/virtual-list.component';

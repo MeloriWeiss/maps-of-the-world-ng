@@ -3,6 +3,7 @@ import { BaseShape, CreateBaseShape } from './shape.interface';
 export class BaseShapeShape implements BaseShape {
   readonly id = crypto.randomUUID();
 
+  name?: string;
   strokeColor = '#000';
   opacity = 1;
   strokeWidth = 1;
@@ -16,7 +17,8 @@ export class BaseShapeShape implements BaseShape {
   maxZoom = Number.POSITIVE_INFINITY;
   mapObjectType?: string;
 
-  constructor(params: CreateBaseShape) {
+  constructor(params: CreateBaseShape, defaultName = 'Фигура') {
+    this.name = params.name ?? defaultName;
     this.strokeColor = params.strokeColor;
     this.opacity = params.opacity;
     this.strokeWidth = params.strokeWidth;
