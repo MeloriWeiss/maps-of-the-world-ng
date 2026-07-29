@@ -32,7 +32,7 @@ export class TexturePacksService {
     this.#textures = textures;
   }
 
-  async list(accountId: number) {
+  async listMine(accountId: number) {
     const packs = await this.#prisma.texturePack.findMany({
       where: { accountId },
       orderBy: { updatedAt: 'desc' },
@@ -40,18 +40,65 @@ export class TexturePacksService {
         id: true,
         name: true,
         description: true,
+        isPublished: true,
+        publishedAt: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { textures: true } },
         textures: {
           orderBy: { createdAt: 'desc' },
-          take: 4,
+          take: 8,
           select: textureSelect,
         },
       },
     });
     return packs.map(({ textures, ...pack }) => ({
       ...pack,
+      previewTextures: textures,
+    }));
+  }
+
+  async listPublished(authorUserId?: number) {
+    if (authorUserId !== undefined && !Number.isInteger(authorUserId)) {
+      throw new BadRequestException('Invalid author identifier');
+    }
+    const packs = await this.#prisma.texturePack.findMany({
+      where: {
+        isPublished: true,
+        ...(authorUserId === undefined
+          ? {}
+          : { owner: { userId: authorUserId } }),
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        isPublished: true,
+        publishedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        owner: {
+          select: {
+            nickname: true,
+            userId: true,
+          },
+        },
+        _count: { select: { textures: true } },
+        textures: {
+          orderBy: { createdAt: 'desc' },
+          take: 8,
+          select: textureSelect,
+        },
+      },
+    });
+    return packs.map(({ textures, owner, ...pack }) => ({
+      ...pack,
+      author: {
+        id: owner.userId,
+        nickname: owner.nickname,
+      },
       previewTextures: textures,
     }));
   }
@@ -63,6 +110,8 @@ export class TexturePacksService {
         id: true,
         name: true,
         description: true,
+        isPublished: true,
+        publishedAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -112,6 +161,40 @@ export class TexturePacksService {
         description: true,
         createdAt: true,
         updatedAt: true,
+        isPublished: true,
+        publishedAt: true,
+      },
+    });
+  }
+
+  async updatePublication(
+    accountId: number,
+    packId: string,
+    isPublished: boolean,
+  ) {
+    const pack = await this.#prisma.texturePack.findFirst({
+      where: { id: packId, accountId },
+      select: {
+        id: true,
+        _count: { select: { textures: true } },
+      },
+    });
+    if (!pack) throw new NotFoundException('Texture pack not found');
+    if (isPublished && pack._count.textures === 0) {
+      throw new BadRequestException(
+        'An empty texture pack cannot be published',
+      );
+    }
+    return this.#prisma.texturePack.update({
+      where: { id: packId },
+      data: {
+        isPublished,
+        publishedAt: isPublished ? new Date() : null,
+      },
+      select: {
+        id: true,
+        isPublished: true,
+        publishedAt: true,
       },
     });
   }

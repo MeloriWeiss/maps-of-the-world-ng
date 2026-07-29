@@ -7,13 +7,20 @@ import {
 } from '@nestjs/common';
 import { ThemeEnum } from '@wm/shared/common';
 import { UpdateAccountDto } from '../dto';
+import { AvatarsService } from './avatars.service';
 
 @Injectable()
 export class AccountsService {
-  constructor(private readonly prisma: PrismaMainService) {}
+  #prisma: PrismaMainService;
+  #avatars: AvatarsService;
+
+  constructor(prisma: PrismaMainService, avatars: AvatarsService) {
+    this.#prisma = prisma;
+    this.#avatars = avatars;
+  }
 
   async getAccount(profileId: number): Promise<AccountResponseDto> {
-    const account = await this.prisma.personalAccount.findUnique({
+    const account = await this.#prisma.personalAccount.findUnique({
       where: {
         id: profileId,
       },
@@ -32,7 +39,9 @@ export class AccountsService {
       phoneNumber: account.phoneNumber,
       birthDate: account.birthDate ?? null,
       bio: account.bio,
-      avatarUrl: account.avatarUrl,
+      avatarUrl: account.avatarUrl
+        ? this.#avatars.publicUrl(account.userId, account.avatarUrl)
+        : null,
       language: account.language,
       theme: account.theme as unknown as ThemeEnum,
       createdAt: account.createdAt.toISOString(),
@@ -42,11 +51,43 @@ export class AccountsService {
     return result;
   }
 
+  async getMyProfileSummary(accountId: number) {
+    const account = await this.#prisma.personalAccount.findUnique({
+      where: { id: accountId },
+      select: {
+        id: true,
+        nickname: true,
+        avatarUrl: true,
+        userId: true,
+        bio: true,
+        createdAt: true,
+      },
+    });
+    if (!account) throw new NotFoundException('Account not found');
+    return this.#getProfileSummary(account);
+  }
+
+  async getPublicProfileSummary(userId: number) {
+    const account = await this.#prisma.personalAccount.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        nickname: true,
+        avatarUrl: true,
+        userId: true,
+        bio: true,
+        createdAt: true,
+      },
+    });
+    if (!account) throw new NotFoundException('Account not found');
+    return this.#getProfileSummary(account);
+  }
+
   async updateAccount(accountId: number, dto: UpdateAccountDto) {
     if (!dto || Object.keys(dto).length === 0)
       throw new BadRequestException('Request body cannot be empty');
 
-    return await this.prisma.personalAccount.update({
+    return await this.#prisma.personalAccount.update({
       where: { id: accountId },
       data: {
         nickname: dto.nickname,
@@ -56,10 +97,54 @@ export class AccountsService {
         phoneNumber: dto.phoneNumber,
         birthDate: dto.birthDate,
         bio: dto.bio,
-        avatarUrl: dto.avatarUrl,
         language: dto.language,
         theme: dto.theme ? (dto.theme as unknown as AppTheme) : undefined,
       },
     });
+  }
+
+  async #getProfileSummary(account: {
+    id: number;
+    nickname: string;
+    avatarUrl: string | null;
+    userId: number;
+    bio: string | null;
+    createdAt: Date;
+  }) {
+    const [
+      mapLikes,
+      texturePackLikes,
+      publishedMapsCount,
+      publishedTexturePacksCount,
+    ] = await Promise.all([
+      this.#prisma.map.aggregate({
+        where: { accountId: account.id },
+        _sum: { likesCount: true },
+      }),
+      this.#prisma.texturePack.aggregate({
+        where: { accountId: account.id },
+        _sum: { likesCount: true },
+      }),
+      this.#prisma.map.count({
+        where: { accountId: account.id, isPublished: true },
+      }),
+      this.#prisma.texturePack.count({
+        where: { accountId: account.id, isPublished: true },
+      }),
+    ]);
+
+    return {
+      nickname: account.nickname,
+      avatarUrl: account.avatarUrl
+        ? this.#avatars.publicUrl(account.userId, account.avatarUrl)
+        : null,
+      bio: account.bio,
+      createdAt: account.createdAt.toISOString(),
+      likesReceived:
+        (mapLikes._sum.likesCount ?? 0) +
+        (texturePackLikes._sum.likesCount ?? 0),
+      publishedMapsCount,
+      publishedTexturePacksCount,
+    };
   }
 }

@@ -1,0 +1,9 @@
+<div class="empty-state">
+  <strong>{{ title() }}</strong>
+  @if (description()) {
+    <span>{{ description() }}</span>
+  }
+  <div class="empty-state__action">
+    <ng-content></ng-content>
+  </div>
+</div>

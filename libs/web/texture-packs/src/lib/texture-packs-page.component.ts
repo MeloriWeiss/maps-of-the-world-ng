@@ -1,7 +1,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import {
@@ -15,10 +17,18 @@ import {
   TexturePackView,
 } from '@wm/web/data-access/texture-packs';
 import { finalize } from 'rxjs';
+import { EmptyStateComponent } from '@wm/web/common-ui';
+import { TexturePackPreviewSliderComponent } from './texture-pack-preview-slider/texture-pack-preview-slider.component';
+
+type TexturePackList = 'drafts' | 'published';
 
 @Component({
   selector: 'wm-texture-packs-page',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    EmptyStateComponent,
+    TexturePackPreviewSliderComponent,
+  ],
   templateUrl: './texture-packs-page.component.html',
   styleUrl: './texture-packs-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,7 +40,17 @@ export class TexturePacksPageComponent {
   isLoading = signal(true);
   isCreating = signal(false);
   uploadingPackId = signal<string | null>(null);
+  publishingPackId = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
+  embedded = input(false);
+  activeList = signal<TexturePackList>('drafts');
+  draftPacks = computed(() => this.packs().filter((pack) => !pack.isPublished));
+  publishedPacks = computed(() =>
+    this.packs().filter((pack) => pack.isPublished),
+  );
+  visiblePacks = computed(() =>
+    this.activeList() === 'drafts' ? this.draftPacks() : this.publishedPacks(),
+  );
 
   createForm = new FormGroup({
     name: new FormControl('', {
@@ -51,7 +71,7 @@ export class TexturePacksPageComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .list()
+      .listMine()
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (packs) => this.packs.set(packs),
@@ -79,6 +99,7 @@ export class TexturePacksPageComponent {
       .subscribe({
         next: () => {
           this.createForm.reset();
+          this.activeList.set('drafts');
           this.loadPacks();
         },
         error: () => {
@@ -106,5 +127,31 @@ export class TexturePacksPageComponent {
           );
         },
       });
+  }
+
+  togglePublication(pack: TexturePackView) {
+    if (this.publishingPackId()) return;
+    this.publishingPackId.set(pack.id);
+    this.errorMessage.set(null);
+    this.#texturePacksService
+      .updatePublication(pack.id, !pack.isPublished)
+      .pipe(finalize(() => this.publishingPackId.set(null)))
+      .subscribe({
+        next: () => {
+          this.activeList.set(pack.isPublished ? 'drafts' : 'published');
+          this.loadPacks();
+        },
+        error: () => {
+          this.errorMessage.set(
+            pack.isPublished
+              ? 'Не удалось снять текстур-пак с публикации.'
+              : 'Добавьте хотя бы одну текстуру перед публикацией.',
+          );
+        },
+      });
+  }
+
+  selectList(list: TexturePackList) {
+    this.activeList.set(list);
   }
 }

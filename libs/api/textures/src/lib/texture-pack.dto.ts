@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -32,4 +33,9 @@ export class TexturePageQueryDto {
   @Min(1)
   @Max(100)
   pageSize = 24;
+}
+
+export class UpdateTexturePackPublicationDto {
+  @IsBoolean()
+  isPublished!: boolean;
 }

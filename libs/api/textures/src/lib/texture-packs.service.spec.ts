@@ -10,6 +10,7 @@ describe('TexturePacksService', () => {
       create: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
+      update: jest.fn(),
     },
     texture: {
       findMany: jest.fn(),
@@ -87,6 +88,32 @@ describe('TexturePacksService', () => {
     expect(prisma.texture.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ skip: 24, take: 24 }),
     );
+  });
+
+  it('never includes drafts in the public catalog', async () => {
+    prisma.texturePack.findMany.mockResolvedValue([]);
+    const service = await createService();
+
+    await service.listPublished();
+
+    expect(prisma.texturePack.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isPublished: true },
+      }),
+    );
+  });
+
+  it('does not publish an empty texture pack', async () => {
+    prisma.texturePack.findFirst.mockResolvedValue({
+      id: 'pack-id',
+      _count: { textures: 0 },
+    });
+    const service = await createService();
+
+    await expect(service.updatePublication(7, 'pack-id', true)).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(prisma.texturePack.update).not.toHaveBeenCalled();
   });
 
   async function createService() {

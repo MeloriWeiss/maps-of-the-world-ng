@@ -1,0 +1,128 @@
+@use 'functions' as *;
+@use 'media' as *;
+
+.profile-edit {
+  padding: fluid(32, 20);
+  border-radius: rem(20);
+  background-color: var(--light-color);
+}
+
+.profile-edit__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: rem(20);
+  margin-bottom: rem(28);
+
+  p {
+    margin-bottom: rem(6);
+    color: var(--dark-primary-color);
+    font-size: rem(12);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    color: var(--semi-dark-font-color);
+    font-family: 'Platypi', serif;
+    font-size: fluid(28, 22);
+  }
+
+  a {
+    color: var(--dark-primary-color);
+    font-weight: 700;
+  }
+}
+
+.profile-edit__form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: rem(20);
+
+  label {
+    display: grid;
+    gap: rem(8);
+    color: var(--dark-gray-font-color);
+    font-size: rem(14);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: rem(12) rem(14);
+    border: rem(1) solid var(--light-primary-color);
+    border-radius: rem(10);
+    outline: none;
+    color: var(--semi-dark-font-color);
+    background-color: var(--light-bg-color);
+    font: inherit;
+    resize: vertical;
+
+    &:focus {
+      border-color: var(--primary-color);
+    }
+  }
+}
+
+.profile-edit__wide,
+.profile-edit__actions {
+  grid-column: 1 / -1;
+}
+
+.profile-edit__avatar {
+  input {
+    padding: rem(8);
+    cursor: pointer;
+  }
+}
+
+.profile-edit__file-name {
+  color: var(--light-gray-font-color);
+  font-size: rem(12);
+}
+
+.profile-edit__actions {
+  display: flex;
+  align-items: center;
+  gap: rem(16);
+
+  button {
+    min-height: rem(44);
+    padding: rem(10) rem(22);
+    border-radius: rem(10);
+    color: var(--light-color);
+    background-color: var(--dark-primary-color);
+    font-weight: 700;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+  }
+
+  span {
+    color: var(--dark-primary-color);
+  }
+}
+
+.profile-edit__state {
+  min-height: rem(180);
+  color: var(--light-gray-font-color);
+}
+
+@include mobile {
+  .profile-edit__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-edit__form {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-edit__wide,
+  .profile-edit__actions {
+    grid-column: auto;
+  }
+}

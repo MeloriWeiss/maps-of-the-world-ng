@@ -68,6 +68,7 @@ export class WorkshopPageComponent implements AfterViewInit {
   #panningService = inject(WorkshopPanningService);
   #canvasManagerService = inject(WorkshopCanvasManagerService);
   #canvasSetupFacade = inject(WorkshopCanvasSetupFacade);
+  #mapPersistence = inject(WorkshopMapPersistenceService);
 
   isReady = this.#canvasSetupFacade.isReady;
   loadingMessage = this.#canvasSetupFacade.loadingMessage;
@@ -97,6 +98,7 @@ export class WorkshopPageComponent implements AfterViewInit {
 
     this.#canvasSizeService.resizeCanvas();
     await this.#canvasSetupFacade.waitUntilMapReady();
+    await this.#mapPersistence.initializeFromRoute();
 
     await this.#renderInitialFrame();
     this.#canvasSetupFacade.finishInitialization();

@@ -60,6 +60,9 @@ model TexturePack {
   id          String   @id @default(uuid())
   name        String
   description String?
+  isPublished Boolean   @default(false) @map("is_published")
+  likesCount  Int       @default(0) @map("likes_count")
+  publishedAt DateTime? @map("published_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -68,6 +71,7 @@ model TexturePack {
   textures  Texture[]
 
   @@index([accountId, updatedAt])
+  @@index([isPublished, publishedAt])
   @@map("texture_packs")
 }
 

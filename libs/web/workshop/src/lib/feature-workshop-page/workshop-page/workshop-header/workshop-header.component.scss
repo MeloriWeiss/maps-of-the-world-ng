@@ -1,3 +1,5 @@
+@use 'functions' as *;
+
 :host {
   display: block;
   height: 58px;
@@ -45,6 +47,41 @@
   width: 1px;
   height: 40px;
   background: rgb(255 255 255 / 45%);
+}
+
+.controls__map {
+  display: grid;
+  grid-template-columns: rem(170) rem(150);
+  gap: rem(5);
+
+  select,
+  input {
+    box-sizing: border-box;
+    min-width: 0;
+    padding: rem(6) rem(8);
+    border: rem(1) solid var(--light-transparent-font-color);
+    border-radius: rem(4);
+    outline: none;
+    background-color: var(--dark-primary-color);
+    color: var(--light-color);
+    font: inherit;
+  }
+
+  select {
+    overflow: hidden;
+    padding-right: rem(24);
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--light-color) 50%),
+      linear-gradient(135deg, var(--light-color) 50%, transparent 50%);
+    background-position:
+      calc(100% - #{rem(12)}) 50%,
+      calc(100% - #{rem(8)}) 50%;
+    background-repeat: no-repeat;
+    background-size: rem(4) rem(4);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .controls__generator {

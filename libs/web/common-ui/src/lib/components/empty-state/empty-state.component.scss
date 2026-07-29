@@ -1,0 +1,32 @@
+@use '../../styles/functions' as *;
+
+:host {
+  display: block;
+}
+
+.empty-state {
+  display: grid;
+  min-height: rem(180);
+  place-content: center;
+  gap: rem(10);
+  padding: rem(24);
+  border: rem(1) solid var(--light-primary-color);
+  border-radius: rem(20);
+  background-color: var(--light-color);
+  color: var(--light-gray-font-color);
+  text-align: center;
+
+  strong {
+    color: var(--semi-dark-font-color);
+    font-size: rem(19);
+  }
+}
+
+.empty-state__action {
+  color: var(--dark-primary-color);
+  font-weight: 700;
+
+  &:empty {
+    display: none;
+  }
+}

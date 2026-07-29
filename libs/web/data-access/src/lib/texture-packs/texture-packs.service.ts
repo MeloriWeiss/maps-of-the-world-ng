@@ -4,6 +4,8 @@ import { map } from 'rxjs';
 import { API_CONFIG } from '../shared';
 import {
   CreateTexturePack,
+  PublishedTexturePack,
+  PublishedTexturePackView,
   TextureItem,
   TextureItemView,
   TexturePack,
@@ -17,10 +19,20 @@ export class TexturePacksService {
   #http = inject(HttpClient);
   #apiConfig = inject(API_CONFIG);
 
-  list() {
+  listMine() {
     return this.#http
-      .get<TexturePack[]>(`${this.#apiConfig.baseUrl}texture-packs`)
+      .get<TexturePack[]>(`${this.#apiConfig.baseUrl}texture-packs/mine`)
       .pipe(map((packs) => packs.map((pack) => this.#toView(pack))));
+  }
+
+  listPublished(authorUserId?: number) {
+    const path =
+      authorUserId === undefined
+        ? 'texture-packs'
+        : `texture-packs/authors/${authorUserId}`;
+    return this.#http
+      .get<PublishedTexturePack[]>(`${this.#apiConfig.baseUrl}${path}`)
+      .pipe(map((packs) => packs.map((pack) => this.#toPublishedView(pack))));
   }
 
   create(request: CreateTexturePack) {
@@ -40,6 +52,16 @@ export class TexturePacksService {
     );
   }
 
+  updatePublication(packId: string, isPublished: boolean) {
+    return this.#http.patch<{
+      id: string;
+      isPublished: boolean;
+      publishedAt: string | null;
+    }>(`${this.#apiConfig.baseUrl}texture-packs/${packId}/publication`, {
+      isPublished,
+    });
+  }
+
   #toView(pack: TexturePack): TexturePackView {
     const previewTextures = pack.previewTextures.map((texture) =>
       this.#toTextureView(texture),
@@ -54,6 +76,15 @@ export class TexturePacksService {
     return {
       ...texture,
       fileUrl: `${this.#apiConfig.baseUrl}textures/${texture.id}/file`,
+    };
+  }
+
+  #toPublishedView(pack: PublishedTexturePack): PublishedTexturePackView {
+    return {
+      ...pack,
+      previewTextures: pack.previewTextures.map((texture) =>
+        this.#toTextureView(texture),
+      ),
     };
   }
 }

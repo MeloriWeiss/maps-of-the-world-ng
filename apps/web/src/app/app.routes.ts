@@ -46,7 +46,7 @@ export const routes: Routes = [
             path: 'texture-packs',
             loadComponent: () =>
               import('@wm/web/texture-packs').then(
-                (m) => m.TexturePacksPageComponent,
+                (m) => m.TexturePackCatalogPageComponent,
               ),
             title: 'Maps of the world: Текстур-паки',
           },

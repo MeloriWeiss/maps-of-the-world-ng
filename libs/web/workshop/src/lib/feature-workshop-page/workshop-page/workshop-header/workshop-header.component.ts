@@ -129,4 +129,20 @@ export class WorkshopHeaderComponent {
   loadMap() {
     void this.persistence.load();
   }
+
+  selectMap(event: Event) {
+    const select = event.target;
+    if (!(select instanceof HTMLSelectElement)) return;
+
+    const mapId = Number(select.value);
+    void this.persistence.selectMap(
+      Number.isInteger(mapId) && mapId > 0 ? mapId : null,
+    );
+  }
+
+  updateMapName(event: Event) {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+    this.persistence.mapName.set(input.value);
+  }
 }

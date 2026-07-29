@@ -1,4 +1,4 @@
-import { ObjectStorage, PutObjectInput } from '../lib/object-storage.interface';
+import { ObjectStorage, PutObjectInput } from '@wm/api/api-shared';
 
 export class FakeObjectStorage implements ObjectStorage {
   readonly objects = new Map<string, Buffer>();

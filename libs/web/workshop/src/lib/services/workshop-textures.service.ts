@@ -52,7 +52,7 @@ export class WorkshopTexturesService {
   load() {
     this.loading.set(true);
     this.error.set('');
-    this.#http.get<WorkshopTexturePack[]>('/api/texture-packs').subscribe({
+    this.#http.get<WorkshopTexturePack[]>('/api/texture-packs/mine').subscribe({
       next: (packs) => {
         this.packs.set(packs);
         const selectedPackId = this.#resolveSelectedPackId(packs);

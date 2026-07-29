@@ -1,0 +1,48 @@
+<section class="profile-edit">
+  <header class="profile-edit__header">
+    <div>
+      <p>Настройки профиля</p>
+      <h2>Редактирование профиля</h2>
+    </div>
+    <a routerLink="../maps">Вернуться в профиль</a>
+  </header>
+
+  @if (isLoading()) {
+    <div class="profile-edit__state">Загружаем данные…</div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="profile-edit__form">
+      <label>
+        <span>Отображаемое имя</span>
+        <input formControlName="nickname" maxlength="128" />
+      </label>
+      <label>
+        <span>Имя</span>
+        <input formControlName="firstName" />
+      </label>
+      <label class="profile-edit__avatar">
+        <span>Аватар</span>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          (change)="selectAvatar($event)"
+        />
+        <span class="profile-edit__file-name">
+          {{ avatarFile()?.name || 'PNG, JPEG или WebP, до 5 МБ' }}
+        </span>
+      </label>
+      <label class="profile-edit__wide">
+        <span>О себе</span>
+        <textarea formControlName="bio" rows="5"></textarea>
+      </label>
+
+      <div class="profile-edit__actions">
+        <button type="submit" [disabled]="form.invalid || isSaving()">
+          {{ isSaving() ? 'Сохраняем…' : 'Сохранить' }}
+        </button>
+        @if (statusMessage()) {
+          <span role="status">{{ statusMessage() }}</span>
+        }
+      </div>
+    </form>
+  }
+</section>

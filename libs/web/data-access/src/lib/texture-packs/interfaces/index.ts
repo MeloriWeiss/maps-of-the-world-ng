@@ -5,4 +5,7 @@ export type {
   TexturePack,
   TexturePackView,
   TexturePage,
+  TexturePackAuthor,
+  PublishedTexturePack,
+  PublishedTexturePackView,
 } from './texture-pack';

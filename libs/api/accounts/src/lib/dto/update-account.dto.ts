@@ -1,13 +1,6 @@
 import { ThemeEnum } from '@wm/shared/common';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUrl,
-  Length,
-  Matches,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString, Length, Matches } from 'class-validator';
 
 export class UpdateAccountDto {
   @ApiPropertyOptional({
@@ -90,17 +83,6 @@ export class UpdateAccountDto {
   @IsOptional()
   @IsString()
   bio?: string | null;
-
-  @ApiPropertyOptional({
-    type: String,
-    nullable: true,
-    required: false,
-    example: 'https://company.com',
-    description: 'Absolute URL pointing to the hosted profile image asset',
-  })
-  @IsOptional()
-  @IsUrl()
-  avatarUrl?: string | null;
 
   @ApiPropertyOptional({
     type: String,

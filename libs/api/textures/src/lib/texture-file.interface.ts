@@ -1,6 +1,3 @@
-export interface UploadedTextureFile {
-  originalname: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-}
+import { UploadedImageFile } from '@wm/api/api-shared';
+
+export type UploadedTextureFile = UploadedImageFile;

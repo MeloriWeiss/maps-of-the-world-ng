@@ -37,28 +37,39 @@
 ## Domain
 
 - Prisma schema is at `libs/api/database-main/src/lib/prisma/schema.prisma`.
-- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapComment`, `Forum`, `ForumComment`, and `Texture`.
-- Backend endpoints cover auth, users, accounts, and owned-map persistence; forum endpoints are not implemented yet.
+- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapComment`, `Forum`, `ForumComment`, `TexturePack`, and `Texture`.
+- Backend endpoints cover auth, users, accounts/profiles, owned and published maps, texture packs, and texture files; forum endpoints are not implemented yet.
 - Auth uses access/refresh JWT cookies, refresh rotation, session storage, logout, logout-all, and sessions listing.
-- `libs/api/maps` now implements authenticated map persistence:
-  - `GET /api/maps` lists the current account's maps.
+- `libs/api/maps` implements map persistence and publication:
+  - `GET /api/maps` lists the current account's draft and published maps.
+  - `GET /api/maps/authors/:userId` lists an author's published maps.
   - `GET /api/maps/:id` loads one owned map.
   - `POST /api/maps` creates a map.
   - `PUT /api/maps/:id` updates an owned map.
+  - `PATCH /api/maps/:id/publication` publishes or unpublishes an owned map.
   - Workshop snapshots are stored in the existing `Map.body` string column.
 - API JSON request bodies accept up to 10 MB to accommodate workshop snapshots.
-- `libs/api/textures` implements authenticated user texture management:
-  - `GET /api/textures` lists textures owned by the current account.
-  - `POST /api/textures` accepts multipart PNG/JPEG/WebP uploads up to 5 MB and validates their file signatures.
-  - `GET /api/textures/:id/file` serves an image by its opaque UUID.
-  - PostgreSQL stores texture metadata, ownership, and the unique `objectKey`; binary image contents are stored in S3-compatible object storage.
+- Textures are not standalone user-library entities. Every texture belongs to a `TexturePack`; do not restore a UI or API for creating ungrouped textures.
+- `libs/api/textures` implements texture-pack management:
+  - `GET /api/texture-packs` lists published packs for the public catalog.
+  - `GET /api/texture-packs/authors/:userId` lists an author's published packs.
+  - `GET /api/texture-packs/mine` lists all packs owned by the current account.
+  - `GET /api/texture-packs/:id` reads one owned pack.
+  - `GET /api/texture-packs/:id/textures?page=&pageSize=` reads a paginated page of textures from an owned pack; consumers should request individual textures/pages rather than download the whole pack.
+  - `POST /api/texture-packs` creates a draft pack.
+  - `POST /api/texture-packs/:id/textures` accepts up to 50 multipart PNG/JPEG/WebP files, each up to 5 MB.
+  - `PATCH /api/texture-packs/:id/publication` publishes or unpublishes an owned pack; empty packs cannot be published.
+  - `GET /api/textures/:id` reads texture metadata and `GET /api/textures/:id/file` streams one image by opaque UUID.
+  - Pack list responses currently include at most eight recent `previewTextures`, not all pack contents.
+  - PostgreSQL stores pack/texture metadata, ownership, publication state, like counters, and the unique texture `objectKey`; binary image contents are stored in S3-compatible object storage.
   - `TexturesService` depends on the `ObjectStorage` contract. `S3ObjectStorageService` is the current adapter and signs MinIO/R2 requests with AWS Signature Version 4 without an additional SDK dependency.
   - Object storage configuration is required; there is no local-directory fallback.
   - Development always uses MinIO from `docker/docker-compose.dev.yml`.
   - Production can use either self-hosted MinIO or Cloudflare R2 without API code changes.
   - Switching providers does not migrate existing objects; preserve all `objectKey` values when copying a bucket.
   - The former one-time import from `.data/textures` has been removed and must not be restored.
-  - `TexturesModule` must import both `DatabaseMainModule` and `ApiAuthModule`; importing them only in root `AppModule` does not expose their providers in the feature module.
+  - `TexturesModule` imports `DatabaseMainModule`, `ApiAuthModule`, and the shared `ObjectStorageModule`; importing them only in root `AppModule` does not expose their providers in the feature module.
+- Profile avatars also use the existing object-storage abstraction; PostgreSQL stores only `PersonalAccount.avatarUrl`, not image bytes.
 
 ## Docker and Object Storage
 
@@ -88,7 +99,7 @@
 
 - Routes are in `apps/web/src/app/app.routes.ts`.
 - Authenticated area uses `BaseLayoutComponent` and `canActivateAuth`.
-- Lazy routes: `home`, `profile/:id`, `forum`, `mods`.
+- Lazy/feature routes include `home`, `profile/:id`, `forum`, `mods`, and the public `texture-packs` catalog.
 - `workshop` loads `WorkshopPageComponent` directly.
 - `login` and `register` use `AuthLayoutComponent` and `canActivateNonAuth`.
 
@@ -98,6 +109,30 @@
 - `wm-form-input` is a ControlValueAccessor and supports `type`, `placeholder`, and optional `[showPasswordToggle]="true"`.
 - Password visibility toggle is implemented inside `wm-form-input` using `eye` / `eye-off` SVG assets from `public/assets/svg`.
 - Auth login/register password fields enable the toggle via `[showPasswordToggle]="true"`.
+- Reusable popovers/context menus are implemented by `PopoverComponent` in `libs/web/common-ui`.
+  - Content is projected through `wmPopoverTrigger` and `wmPopoverContent`.
+  - It supports alignment, bare/default appearance, fixed positioning, outside-click closing, and Escape.
+  - The header profile icon uses it for at least `Профиль` and `Выйти`.
+  - Workshop tool settings and scene-node context menus also use it; do not reintroduce separate local popup infrastructure for equivalent interactions.
+- The auth interceptor handles `/auth/refresh` before normal global unauthorized reporting. A failed refresh must not show a transient user-facing `Unauthorized` notification.
+- Empty profile tabs use the shared `EmptyStateComponent`; new empty tabs should follow the same pattern.
+
+## Profile and Catalog Notes
+
+- Profile routes use `/profile/me/...` for the current account and `/profile/:userId/...` for another user.
+- The profile header displays the viewed user's nickname, avatar, bio/member-since information, aggregate received likes, and counts of published maps and texture packs.
+- Only the current user's profile shows the edit-profile link. Profile editing supports nickname/bio changes and multipart avatar upload; no surname field is used.
+- Profile navigation is a horizontal full-width tab bar for maps, texture packs, and favourites.
+- Own maps and own texture packs are split into separate `Черновики` and `Опубликованные` lists. Other users expose only published content.
+- Every empty list/tab should render a contextual shared empty state rather than a blank region.
+- `/texture-packs` is the public catalog and contains only published packs. Own drafts and published packs are managed from the profile texture-pack section.
+- Texture-pack cards use `TexturePackPreviewSliderComponent`, which adapts texture data to the existing `ImagesSliderComponent`/`ngx-owl-carousel-o` approach.
+  - The profile uses the compact `regular` presentation.
+  - The public catalog passes `size="large"` and uses the same responsive carousel configuration as the mods page: 2 items on small screens, 3 from 480px, and 4 from 768px upward.
+  - The public carousel intentionally avoids `autoWidth`; mixing `autoWidth` with looping caused clipped initial slides and blank track space.
+  - Public pack cards occupy the available content width, remain white, use only a subtle shadow, and do not reserve `min-height`.
+  - Author links are styled application links rather than browser-default blue links.
+  - If a pack has no description, the public card omits the description element entirely.
 
 ## Workshop Notes
 
@@ -161,10 +196,14 @@
   - `WorkshopPageComponent.ngAfterViewInit()` waits for canvas setup, measures the rendered shell, resizes the canvas, waits for referenced texture images, renders the initial fitted frame, and only then tells the facade to mark the editor ready.
   - Preserve this ordering: the editor must not become interactive before its layout, texture assets, and first frame are ready.
 - Rendering is layer-buffered: the current `WorkshopCanvasManagerService.#renderLayer()` draws layer children into an offscreen canvas and then composites it onto the main canvas even in the branch used when `useOffscreen` is false. The flag changes buffering behavior rather than simply enabling/disabling all offscreen rendering.
-- The workshop header has a prototype generation/persistence toolbar:
+- The workshop header has a generation/persistence toolbar:
   - Seed input and `Сгенерировать` invoke `WorkshopWorldGeneratorService`.
-  - `Сохранить` and `Загрузить` use `WorkshopMapPersistenceService` and `/api/maps`.
+  - A map selector loads an owned saved map for editing; the current map name is editable.
+  - `Сохранить` and `Перезагрузить` use `WorkshopMapPersistenceService` and `/api/maps`.
+  - Saving from Workshop creates or updates the map that appears in the current user's profile map lists.
+  - Profile map cards link back to Workshop for editing.
   - The current backend map id is remembered in localStorage under `workshop-map-id`.
+  - The native map selector reserves space for a custom-positioned arrow and truncates long labels instead of allowing text to overlap the arrow.
 - Procedural world prototype:
   - A seed produces a deterministic editable world.
   - Generated object kinds currently include continents, rivers, mountains, houses, tables, wardrobes, beds, and chairs.
@@ -179,7 +218,7 @@
 - The header uses the editor mockup styling. Undo/redo buttons are currently visual only; drawing controls remain connected.
 - The header `Очистить` action removes user-created scene content through `WorkshopCanvasManagerService.clearUserContent()`, creates a fresh active root layer, and redraws. The editor background and grid are renderer-owned and remain visible after clearing.
 - The bottom full-screen button is currently visual only.
-- A reusable mini-menu/context-menu module was discussed but explicitly postponed. No common mini-menu service, host, or trigger directive has been added; the existing workshop context menus remain local implementations.
+- Reusable mini-menu/context-menu behavior is provided by the shared `PopoverComponent`; Workshop uses it for tool settings and node menus.
 
 ## Commands
 
@@ -218,7 +257,7 @@
 
 - The local PostgreSQL database originally contained legacy PascalCase tables while Prisma expected snake_case tables. This caused login to fail with a Prisma error and HTTP 500.
 - The migration chain is now registered and applied locally. The refactor migration preserves legacy data by renaming/converting tables and foreign keys instead of dropping them.
-- The database schema reports up to date with seven migrations, including `20260728150000_add_textures`.
+- The migration chain currently contains ten migrations through `20260729190000_add_texture_pack_likes`, including texture packs, publication, and pack-like counters.
 - The local database previously matched the Prisma schema but had no `_prisma_migrations` table because it had been created outside the migration chain. The six pre-texture migrations were safely baselined after `prisma migrate diff` confirmed that the only schema delta was `textures`; the texture migration was then deployed.
 - The invalid historical seed bcrypt placeholder was replaced. Demo credentials are `admin@example.com` / `admin123`.
 - Login validation intentionally does not enforce registration password-strength rules; invalid credentials return 401.

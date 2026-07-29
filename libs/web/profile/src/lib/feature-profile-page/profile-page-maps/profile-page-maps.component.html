@@ -1,14 +1,145 @@
 <div class="primary-bg">
-  <h2 class="profile-subtitle">Опубликованные карты:</h2>
-  <div class="published-cards cards">
-    <wm-map-card [isLikeable]="true"></wm-map-card>
-    <wm-map-card [isLikeable]="true"></wm-map-card>
+  <div class="maps-header">
+    <div>
+      <p class="eyebrow">
+        {{ isOwnProfile ? 'Личная библиотека' : 'Карты автора' }}
+      </p>
+      <h2 class="profile-subtitle">
+        {{ isOwnProfile ? 'Мои карты' : 'Опубликованные карты' }}
+      </h2>
+      <p class="profile-description">
+        @if (isOwnProfile) {
+          Создавайте карты в мастерской, возвращайтесь к черновикам и публикуйте
+          готовые работы.
+        } @else {
+          Здесь собраны карты, которыми автор поделился с сообществом.
+        }
+      </p>
+    </div>
+
+    @if (isOwnProfile) {
+      <a
+        class="create-map-button"
+        [routerLink]="['/workshop']"
+        [queryParams]="{ new: true }"
+      >
+        Создать карту
+      </a>
+    }
   </div>
 
-  <h2 class="profile-subtitle">Созданные карты:</h2>
-  <div class="created-maps cards">
-    <wm-map-card [isLikeable]="false"></wm-map-card>
-    <wm-map-card [isLikeable]="false"></wm-map-card>
-    <wm-map-card [isLikeable]="false"></wm-map-card>
-  </div>
+  @if (isOwnProfile) {
+    <div class="map-list-tabs" role="tablist" aria-label="Состояние карт">
+      <button
+        class="map-list-tab"
+        type="button"
+        role="tab"
+        [class.map-list-tab--active]="activeList() === 'drafts'"
+        [attr.aria-selected]="activeList() === 'drafts'"
+        (click)="selectList('drafts')"
+      >
+        Черновики
+        <span class="map-list-tab__count">{{ draftMaps().length }}</span>
+      </button>
+      <button
+        class="map-list-tab"
+        type="button"
+        role="tab"
+        [class.map-list-tab--active]="activeList() === 'published'"
+        [attr.aria-selected]="activeList() === 'published'"
+        (click)="selectList('published')"
+      >
+        Опубликованные
+        <span class="map-list-tab__count">{{ publishedMaps().length }}</span>
+      </button>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-message" role="alert">
+      <span>{{ errorMessage() }}</span>
+      <button type="button" (click)="loadMaps()">Повторить</button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="state-card">Загружаем карты…</div>
+  } @else if (visibleMaps().length === 0) {
+    <wm-empty-state
+      [title]="
+        activeList() === 'drafts'
+          ? 'Черновиков пока нет'
+          : 'Опубликованных карт пока нет'
+      "
+      [description]="
+        activeList() === 'drafts'
+          ? 'Создайте новую карту в мастерской — после сохранения она появится здесь.'
+          : isOwnProfile
+            ? 'Готовые карты можно опубликовать из списка черновиков.'
+            : 'Когда автор опубликует карты, они появятся здесь.'
+      "
+    >
+      @if (isOwnProfile && activeList() === 'drafts') {
+        <a [routerLink]="['/workshop']" [queryParams]="{ new: true }"
+          >Создать первую карту</a
+        >
+      }
+    </wm-empty-state>
+  } @else {
+    <section class="cards" role="tabpanel">
+      @for (map of visibleMaps(); track map.id) {
+        <article class="map-card">
+          <img
+            class="map-card__image"
+            src="/assets/imgs/old-map-card.png"
+            alt=""
+          />
+          <div class="map-card__body">
+            <div class="map-card__heading">
+              <div>
+                <h3>{{ map.name }}</h3>
+                <span class="publication-badge">
+                  {{ map.isPublished ? 'Опубликована' : 'Черновик' }}
+                </span>
+              </div>
+              @if (map.description) {
+                <p>{{ map.description }}</p>
+              }
+            </div>
+
+            <div class="map-card__actions">
+              @if (isOwnProfile) {
+                <a
+                  class="edit-button"
+                  [routerLink]="['/workshop']"
+                  [queryParams]="{ mapId: map.id }"
+                >
+                  Редактировать
+                </a>
+                <button
+                  class="publication-button"
+                  type="button"
+                  [disabled]="publishingMapId() !== null"
+                  (click)="togglePublication(map)"
+                >
+                  @if (publishingMapId() === map.id) {
+                    Обновляем…
+                  } @else {
+                    {{
+                      map.isPublished ? 'Снять с публикации' : 'Опубликовать'
+                    }}
+                  }
+                </button>
+              } @else {
+                <span class="map-card__metrics">
+                  {{ map.likesCount }} отметок ·
+                  {{ map.commentsCount }} комментариев
+                </span>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </section>
+  }
 </div>

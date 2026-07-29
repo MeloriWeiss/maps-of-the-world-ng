@@ -1,0 +1,12 @@
+<div
+  class="texture-preview"
+  [class.texture-preview--centered]="textures().length <= 2"
+  [class.texture-preview--large]="size() === 'large'"
+>
+  <wm-images-slider
+    class="texture-preview__slider"
+    [options]="options()"
+    [slides]="slides()"
+    [showNavigation]="textures().length > 2"
+  ></wm-images-slider>
+</div>

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { PrismaMainService } from '@wm/api/database-main';
 import { FakeObjectStorage } from '../testing/fake-object-storage';
-import { OBJECT_STORAGE } from './object-storage.interface';
+import { OBJECT_STORAGE } from '@wm/api/api-shared';
 import { TexturesService } from './textures.service';
 
 describe('TexturesService', () => {

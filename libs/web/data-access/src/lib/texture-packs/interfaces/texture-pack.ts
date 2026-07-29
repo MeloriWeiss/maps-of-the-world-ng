@@ -16,6 +16,8 @@ export interface TexturePack {
   id: string;
   name: string;
   description: string | null;
+  isPublished: boolean;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
   previewTextures: TextureItem[];
@@ -24,7 +26,21 @@ export interface TexturePack {
   };
 }
 
+export interface TexturePackAuthor {
+  id: number;
+  nickname: string;
+}
+
+export interface PublishedTexturePack extends TexturePack {
+  author: TexturePackAuthor;
+}
+
 export interface TexturePackView extends Omit<TexturePack, 'previewTextures'> {
+  previewTextures: TextureItemView[];
+}
+
+export interface PublishedTexturePackView
+  extends Omit<PublishedTexturePack, 'previewTextures'> {
   previewTextures: TextureItemView[];
 }
 
