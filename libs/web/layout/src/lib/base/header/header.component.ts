@@ -5,8 +5,12 @@ import {
   Renderer2,
   signal,
 } from '@angular/core';
-import { SearchInputComponent, SvgComponent } from '@wm/web/common-ui';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  PopoverComponent,
+  SearchInputComponent,
+  SvgComponent,
+} from '@wm/web/common-ui';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '@wm/web/data-access/auth';
 import { firstValueFrom } from 'rxjs';
@@ -19,6 +23,7 @@ import { firstValueFrom } from 'rxjs';
     RouterLink,
     ReactiveFormsModule,
     RouterLinkActive,
+    PopoverComponent,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
@@ -46,6 +51,7 @@ export class HeaderComponent {
   }
 
   logout() {
+    this.closeMenu();
     firstValueFrom(this.#authService.logout()).then();
   }
 }

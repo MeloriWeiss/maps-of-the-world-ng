@@ -1,0 +1,52 @@
+@use 'functions' as *;
+
+:host {
+  position: relative;
+  display: inline-flex;
+}
+
+.popover-root,
+.popover-trigger {
+  display: inline-flex;
+}
+
+.popover-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + #{rem(10)});
+  min-width: rem(180);
+  overflow: hidden;
+  border: rem(1) solid var(--light-primary-color);
+  border-radius: rem(12);
+  background-color: var(--light-color);
+  box-shadow: 0 rem(12) rem(32) var(--dark-primary-transparent-color);
+  color: var(--dark-color);
+
+  &--start {
+    left: 0;
+  }
+
+  &--center {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  &--end {
+    right: 0;
+  }
+
+  &--fixed {
+    position: fixed;
+    right: auto;
+    transform: none;
+  }
+
+  &--bare {
+    min-width: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+  }
+}

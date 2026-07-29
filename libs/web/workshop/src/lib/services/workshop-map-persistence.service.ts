@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { BYPASS_GLOBAL_ERROR } from '@wm/web/data-access/shared';
 import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
 import { WorkshopPanningService } from './workshop-panning.service';
+import { createTransientMessage } from '@wm/web/common-ui';
 
 interface MapSummary {
   id: number;
@@ -25,15 +26,16 @@ export class WorkshopMapPersistenceService {
   #storage = inject(WorkshopSceneGraphStorageService);
   #panning = inject(WorkshopPanningService);
   #mapIdKey = 'workshop-map-id';
+  #statusMessage = createTransientMessage();
 
   mapId = signal<number | null>(this.#readMapId());
   mapName = signal('Generated world');
-  status = signal('');
+  status = this.#statusMessage.value;
   busy = signal(false);
 
   async save() {
     this.busy.set(true);
-    this.status.set('Сохранение…');
+    this.#statusMessage.show('Сохранение…', 0);
     const payload = {
       name: this.mapName(),
       description: 'Workshop prototype map',
@@ -69,9 +71,9 @@ export class WorkshopMapPersistenceService {
 
       this.mapId.set(map.id);
       localStorage.setItem(this.#mapIdKey, String(map.id));
-      this.status.set(`Карта «${map.name}» сохранена`);
+      this.#statusMessage.show(`Карта «${map.name}» сохранена`);
     } catch {
-      this.status.set('Не удалось сохранить карту');
+      this.#statusMessage.show('Не удалось сохранить карту');
     } finally {
       this.busy.set(false);
     }
@@ -79,7 +81,7 @@ export class WorkshopMapPersistenceService {
 
   async load() {
     this.busy.set(true);
-    this.status.set('Загрузка…');
+    this.#statusMessage.show('Загрузка…', 0);
     try {
       let id = this.mapId();
       if (!id) {
@@ -89,7 +91,7 @@ export class WorkshopMapPersistenceService {
         id = maps[0]?.id ?? null;
       }
       if (!id) {
-        this.status.set('Сохранённых карт пока нет');
+        this.#statusMessage.show('Сохранённых карт пока нет');
         return;
       }
 
@@ -111,7 +113,7 @@ export class WorkshopMapPersistenceService {
         );
         const fallbackId = maps[0]?.id;
         if (!fallbackId) {
-          this.status.set('Сохранённых карт пока нет');
+          this.#statusMessage.show('Сохранённых карт пока нет');
           return;
         }
         map = await firstValueFrom(
@@ -123,9 +125,9 @@ export class WorkshopMapPersistenceService {
       this.mapName.set(map.name);
       localStorage.setItem(this.#mapIdKey, String(map.id));
       this.#panning.fitContent();
-      this.status.set(`Карта «${map.name}» загружена`);
+      this.#statusMessage.show(`Карта «${map.name}» загружена`);
     } catch {
-      this.status.set('Не удалось загрузить карту');
+      this.#statusMessage.show('Не удалось загрузить карту');
     } finally {
       this.busy.set(false);
     }
@@ -133,7 +135,7 @@ export class WorkshopMapPersistenceService {
 
   newMap() {
     this.#forgetMapId();
-    this.status.set('Следующее сохранение создаст новую карту');
+    this.#statusMessage.show('Следующее сохранение создаст новую карту');
   }
 
   #readMapId() {

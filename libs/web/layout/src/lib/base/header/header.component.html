@@ -32,9 +32,6 @@
     <nav>
       <ul class="header-nav-list">
         <li>
-          <button (click)="logout()">Выйти</button>
-        </li>
-        <li>
           <a
             [routerLink]="['workshop']"
             routerLinkActive="active"
@@ -50,6 +47,15 @@
             class="header-nav-link"
             (click)="closeMenu()"
             >Форум</a
+          >
+        </li>
+        <li>
+          <a
+            [routerLink]="['texture-packs']"
+            routerLinkActive="active"
+            class="header-nav-link"
+            (click)="closeMenu()"
+            >Текстур-паки</a
           >
         </li>
         <li>
@@ -73,12 +79,36 @@
       </ul>
     </nav>
 
-    <a
-      (click)="closeMenu()"
-      [routerLink]="['profile', 'me']"
-      class="linked-block avatar-link"
-    >
-      <svg icon="avatar" class="svg40"></svg>
-    </a>
+    <wm-popover #profileMenu ariaLabel="Меню профиля">
+      <button
+        wmPopoverTrigger
+        type="button"
+        class="linked-block avatar-link"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="profileMenu.isOpen()"
+        aria-label="Открыть меню профиля"
+      >
+        <svg icon="avatar" class="svg40"></svg>
+      </button>
+
+      <nav wmPopoverContent class="profile-menu" aria-label="Профиль">
+        <a
+          [routerLink]="['profile', 'me']"
+          (click)="closeMenu()"
+          role="menuitem"
+          class="profile-menu__item"
+        >
+          Профиль
+        </a>
+        <button
+          (click)="logout()"
+          type="button"
+          role="menuitem"
+          class="profile-menu__item profile-menu__item--danger"
+        >
+          Выйти
+        </button>
+      </nav>
+    </wm-popover>
   </div>
 </header>

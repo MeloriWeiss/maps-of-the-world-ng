@@ -48,9 +48,27 @@ model Texture {
 
   accountId Int             @map("account_id")
   owner     PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  packId    String          @map("pack_id")
+  pack      TexturePack     @relation(fields: [packId], references: [id], onDelete: Cascade)
 
   @@index([accountId, createdAt])
+  @@index([packId, createdAt])
   @@map("textures")
+}
+
+model TexturePack {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  accountId Int             @map("account_id")
+  owner     PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  textures  Texture[]
+
+  @@index([accountId, updatedAt])
+  @@map("texture_packs")
 }
 
 model MapComment {
@@ -131,6 +149,7 @@ model PersonalAccount {
   forums        Forum[]
   forumComments ForumComment[]
   textures      Texture[]
+  texturePacks  TexturePack[]
 
   @@map("accounts")
 }

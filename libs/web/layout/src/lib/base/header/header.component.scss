@@ -88,6 +88,30 @@
   }
 }
 
+.profile-menu {
+  display: grid;
+  padding: rem(6);
+
+  &__item {
+    width: 100%;
+    padding: rem(10) rem(12);
+    border-radius: rem(8);
+    color: var(--dark-gray-font-color);
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--light-primary-color);
+    }
+
+    &--danger {
+      color: var(--error-color);
+    }
+  }
+}
+
 .header-right-side.is-open {
   width: rem(250);
 }

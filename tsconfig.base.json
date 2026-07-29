@@ -32,6 +32,7 @@
       "@wm/web/layout/*": ["libs/web/layout/src/lib/*"],
       "@wm/web/mods": ["libs/web/mods/src/index.ts"],
       "@wm/web/profile": ["libs/web/profile/src/index.ts"],
+      "@wm/web/texture-packs": ["libs/web/texture-packs/src/index.ts"],
       "@wm/web/web-shared": ["libs/web/shared/src/index.ts"],
       "@wm/web/workshop": ["libs/web/workshop/src/index.ts"]
     },

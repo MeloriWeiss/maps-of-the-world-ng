@@ -42,6 +42,14 @@ export const routes: Routes = [
             loadChildren: () =>
               import('@wm/web/mods').then((m) => m.modsRoutes),
           },
+          {
+            path: 'texture-packs',
+            loadComponent: () =>
+              import('@wm/web/texture-packs').then(
+                (m) => m.TexturePacksPageComponent,
+              ),
+            title: 'Maps of the world: Текстур-паки',
+          },
         ],
       },
       {

@@ -51,11 +51,38 @@
   - `GET /api/textures` lists textures owned by the current account.
   - `POST /api/textures` accepts multipart PNG/JPEG/WebP uploads up to 5 MB and validates their file signatures.
   - `GET /api/textures/:id/file` serves an image by its opaque UUID.
-  - PostgreSQL stores texture metadata and ownership; binary image contents are stored outside PostgreSQL.
-  - Cloudflare R2 is the selected production object storage. The implementation uses its S3-compatible signed API without an additional SDK dependency.
-  - When R2 variables are absent, development uses `.data/textures`; `.data` is gitignored.
-  - Required optional R2 variables are documented in `.env.example`.
+  - PostgreSQL stores texture metadata, ownership, and the unique `objectKey`; binary image contents are stored in S3-compatible object storage.
+  - `TexturesService` depends on the `ObjectStorage` contract. `S3ObjectStorageService` is the current adapter and signs MinIO/R2 requests with AWS Signature Version 4 without an additional SDK dependency.
+  - Object storage configuration is required; there is no local-directory fallback.
+  - Development always uses MinIO from `docker/docker-compose.dev.yml`.
+  - Production can use either self-hosted MinIO or Cloudflare R2 without API code changes.
+  - Switching providers does not migrate existing objects; preserve all `objectKey` values when copying a bucket.
+  - The former one-time import from `.data/textures` has been removed and must not be restored.
   - `TexturesModule` must import both `DatabaseMainModule` and `ApiAuthModule`; importing them only in root `AppModule` does not expose their providers in the feature module.
+
+## Docker and Object Storage
+
+- Root `.env` is development-only and is created from `.env.example`.
+- `yarn start:api-deps:docker` runs Docker Compose in attached mode and always starts PostgreSQL, MinIO, `minio-init`, and pgAdmin.
+  - Logs remain in the terminal.
+  - `Ctrl+C` stops the development services.
+  - PostgreSQL is published at `localhost:5433`.
+  - MinIO S3 API is at `http://localhost:9000`; Console is at `http://localhost:9001`.
+  - pgAdmin is at `http://localhost:5050`; connect from pgAdmin to host `db`, port `5432`.
+- `minio-init` is a short-lived idempotent container. It creates the bucket and application user, attaches the policy, then exits successfully. It has no volume or legacy texture mount.
+- Production uses `docker/docker-compose.prod.yml`:
+  - `yarn deploy:api:prod:docker:minio` starts migrator, API, MinIO, and `minio-init`.
+  - `yarn deploy:api:prod:docker:cloudflare-r2` starts only migrator and API and uses external R2.
+  - The one-shot migrator runs `prisma migrate deploy`; API waits for successful migrations.
+  - API binds only to `127.0.0.1:3000`, runs as the non-root `node` user, and has a healthcheck.
+  - pgAdmin is not a production service.
+- Production secrets live in ignored files:
+  - `docker/.env.prod`, based on `docker/examples/.env.prod.example`;
+  - `docker/.env.minio.prod`, based on `docker/examples/.env.minio.prod.example`, only for self-hosted MinIO administration.
+- Documentation roles:
+  - `README.md`: local setup, development, and builds.
+  - `DEPLOYMENT.md`: end-to-end Linux server deployment, MinIO/R2 choice, verification, backup, and update procedure.
+  - `OBJECT_STORAGE.md`: S3 terminology and the internal storage architecture; do not duplicate operational instructions there.
 
 ## Angular Routing
 
@@ -129,6 +156,10 @@
 - `WorkshopSceneGraphStorageService` now supports versioned `exportSnapshot()` and `importSnapshot()` in addition to localStorage auto-save.
 - Texture strokes are part of scene-graph serialization and persist texture id/URL, scale, rotation, color, and points.
 - `TextureStrokeShape` uses the uploaded image as a repeating `CanvasPattern`; texture scale affects the pattern transform independently from stroke width.
+- The editor is hidden behind an interactive full-page loader while its map and texture assets initialize.
+  - `WorkshopCanvasSetupFacade` owns canvas setup, asset-readiness waiting, and the reactive loading status.
+  - `WorkshopPageComponent.ngAfterViewInit()` waits for canvas setup, measures the rendered shell, resizes the canvas, waits for referenced texture images, renders the initial fitted frame, and only then tells the facade to mark the editor ready.
+  - Preserve this ordering: the editor must not become interactive before its layout, texture assets, and first frame are ready.
 - Rendering is layer-buffered: the current `WorkshopCanvasManagerService.#renderLayer()` draws layer children into an offscreen canvas and then composites it onto the main canvas even in the branch used when `useOffscreen` is false. The flag changes buffering behavior rather than simply enabling/disabling all offscreen rendering.
 - The workshop header has a prototype generation/persistence toolbar:
   - Seed input and `Сгенерировать` invoke `WorkshopWorldGeneratorService`.
@@ -155,10 +186,13 @@
 - Install dependencies: `yarn install`.
 - Start web: `yarn start:web`.
 - Start API: `yarn start:api`.
-- Start API dependencies: `yarn start:api-deps:docker`.
+- Start attached development infrastructure (PostgreSQL + MinIO + pgAdmin): `yarn start:api-deps:docker`.
 - Create/apply a development migration: `yarn db:main:migrate`.
+- Apply existing production migrations: `yarn db:main:deploy`.
 - Generate Prisma client: `yarn db:main:generate`.
 - Prisma seed: `yarn db:main:seed`.
+- Deploy production API with self-hosted MinIO: `yarn deploy:api:prod:docker:minio`.
+- Deploy production API with Cloudflare R2: `yarn deploy:api:prod:docker:cloudflare-r2`.
 - Lint all: `yarn lint`.
 - Test all: `yarn test`.
 - Generate docs: `yarn docs:gen`.

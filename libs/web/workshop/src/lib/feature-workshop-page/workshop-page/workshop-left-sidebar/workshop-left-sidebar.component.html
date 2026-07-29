@@ -23,167 +23,195 @@
   }
 </div>
 
-@if (contextMenu; as menu) {
-  <div
-    class="tool-context-menu"
-    role="dialog"
-    aria-label="Настройки инструмента"
-    [style.left.px]="menu.x"
-    [style.top.px]="menu.y"
-    (mousedown)="$event.stopPropagation()"
-    (contextmenu)="$event.preventDefault()"
-  >
-    <div class="tool-context-menu__title">
-      <span>{{
-        menu.tool === WorkshopTools.TEXTURE ? 'Текстура' : 'Кисть'
-      }}</span>
-      <button type="button" (click)="closeContextMenu()">×</button>
-    </div>
+<wm-popover
+  appearance="bare"
+  ariaLabel="Настройки инструмента"
+  [closeOnContentClick]="false"
+  [position]="contextMenu ? { x: contextMenu.x, y: contextMenu.y } : null"
+  (openedChange)="onPopoverOpenChange($event)"
+>
+  @if (contextMenu; as menu) {
+    <div
+      wmPopoverContent
+      class="tool-context-menu"
+      role="dialog"
+      aria-label="Настройки инструмента"
+      (mousedown)="$event.stopPropagation()"
+      (contextmenu)="$event.preventDefault()"
+    >
+      <div class="tool-context-menu__title">
+        <span>{{
+          menu.tool === WorkshopTools.TEXTURE ? 'Текстура' : 'Кисть'
+        }}</span>
+        <button type="button" (click)="closeContextMenu()">×</button>
+      </div>
 
-    <div class="tool-context-menu__tabs" aria-hidden="true">
-      <span class="active">●</span>
-      <span>▦</span>
-      <span>✳</span>
-      <span>□</span>
-      <span>○</span>
-      <span>⬠</span>
-    </div>
+      <div class="tool-context-menu__tabs" aria-hidden="true">
+        <span class="active">●</span>
+        <span>▦</span>
+        <span>✳</span>
+        <span>□</span>
+        <span>○</span>
+        <span>⬠</span>
+      </div>
 
-    <div class="tool-context-menu__content">
-      <label class="tool-context-menu__field">
-        <span>Толщина линии</span>
-        <div class="tool-context-menu__range">
-          <input
-            type="range"
-            min="1"
-            max="40"
-            [ngModel]="
-              workshopSettingsService.toolStyles[menu.tool].strokeWidth
-            "
-            (ngModelChange)="updateStrokeWidth(menu.tool, $event)"
-          />
-          <output>{{
-            workshopSettingsService.toolStyles[menu.tool].strokeWidth
-          }}</output>
-        </div>
-      </label>
-
-      <label class="tool-context-menu__field">
-        <span>
-          Непрозрачность:
-          {{
-            workshopSettingsService.shapeStyle.opacity * 100 | number: '1.0-0'
-          }}
-        </span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          [ngModel]="workshopSettingsService.shapeStyle.opacity"
-          (ngModelChange)="updateOpacity($event)"
-        />
-      </label>
-
-      <label class="tool-context-menu__field tool-context-menu__color">
-        <span>Цвет линии</span>
-        <input
-          type="color"
-          [ngModel]="workshopSettingsService.toolStyles[menu.tool].strokeColor"
-          (ngModelChange)="updateStrokeColor(menu.tool, $event)"
-        />
-      </label>
-
-      <label class="tool-context-menu__field tool-context-menu__color">
-        <span>Заливка</span>
-        <input
-          type="color"
-          [ngModel]="workshopSettingsService.toolStyles[menu.tool].fillColor"
-          (ngModelChange)="updateFillColor(menu.tool, $event)"
-        />
-      </label>
-
-      @if (menu.tool === WorkshopTools.TEXTURE) {
-        <div class="texture-library">
-          <label
-            class="texture-library__upload"
-            [class.disabled]="textureUploading()"
-            title="Загрузить текстуру"
-          >
-            <span>{{ textureUploading() ? '…' : '+' }}</span>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              [disabled]="textureUploading()"
-              (change)="uploadTexture($event)"
-            />
-          </label>
-
-          @for (texture of textures(); track texture.id) {
-            <button
-              class="texture-library__item"
-              type="button"
-              [class.selected]="
-                workshopSettingsService.textureStyle.textureId === texture.id
-              "
-              [title]="texture.name"
-              (click)="selectTexture(texture)"
-            >
-              <img [src]="texture.imageUrl" [alt]="texture.name" />
-            </button>
-          }
-        </div>
-
-        @if (texturesLoading()) {
-          <p class="texture-library__status">Загрузка библиотеки…</p>
-        } @else if (!textures().length) {
-          <p class="texture-library__status">
-            Загрузите первую текстуру в формате PNG, JPEG или WebP
-          </p>
-        }
-
-        @if (textureError()) {
-          <p class="texture-library__error">{{ textureError() }}</p>
-        }
-
-        @if (workshopSettingsService.textureStyle.textureUrl; as textureUrl) {
-          <div
-            class="texture-preview"
-            aria-label="Предпросмотр текстуры"
-            [style.background-image]="'url(' + textureUrl + ')'"
-          ></div>
-        }
-
+      <div class="tool-context-menu__content">
         <label class="tool-context-menu__field">
-          <span>
-            Масштаб текстуры:
-            {{ workshopSettingsService.textureStyle.textureScale }}
-          </span>
-          <input
-            type="range"
-            min="0.25"
-            max="4"
-            step="0.05"
-            [ngModel]="workshopSettingsService.textureStyle.textureScale"
-            (ngModelChange)="updateTextureScale($event)"
-          />
+          <span>Толщина линии</span>
+          <div class="tool-context-menu__range">
+            <input
+              type="range"
+              min="1"
+              max="40"
+              [ngModel]="
+                workshopSettingsService.toolStyles[menu.tool].strokeWidth
+              "
+              (ngModelChange)="updateStrokeWidth(menu.tool, $event)"
+            />
+            <output>{{
+              workshopSettingsService.toolStyles[menu.tool].strokeWidth
+            }}</output>
+          </div>
         </label>
 
         <label class="tool-context-menu__field">
           <span>
-            Поворот:
-            {{ workshopSettingsService.textureStyle.textureRotation }}°
+            Непрозрачность:
+            {{
+              workshopSettingsService.shapeStyle.opacity * 100 | number: '1.0-0'
+            }}
           </span>
           <input
             type="range"
             min="0"
-            max="360"
-            step="1"
-            [ngModel]="workshopSettingsService.textureStyle.textureRotation"
-            (ngModelChange)="updateTextureRotation($event)"
+            max="1"
+            step="0.01"
+            [ngModel]="workshopSettingsService.shapeStyle.opacity"
+            (ngModelChange)="updateOpacity($event)"
           />
         </label>
-      }
+
+        <label class="tool-context-menu__field tool-context-menu__color">
+          <span>Цвет линии</span>
+          <input
+            type="color"
+            [ngModel]="
+              workshopSettingsService.toolStyles[menu.tool].strokeColor
+            "
+            (ngModelChange)="updateStrokeColor(menu.tool, $event)"
+          />
+        </label>
+
+        <label class="tool-context-menu__field tool-context-menu__color">
+          <span>Заливка</span>
+          <input
+            type="color"
+            [ngModel]="workshopSettingsService.toolStyles[menu.tool].fillColor"
+            (ngModelChange)="updateFillColor(menu.tool, $event)"
+          />
+        </label>
+
+        @if (menu.tool === WorkshopTools.TEXTURE) {
+          <label class="texture-pack-select">
+            <span>Текстур-пак</span>
+            <select
+              [value]="selectedTexturePackId() || ''"
+              (change)="selectTexturePack($event)"
+            >
+              @for (pack of texturePacks(); track pack.id) {
+                <option [value]="pack.id">
+                  {{ pack.name }} ({{ pack._count.textures }})
+                </option>
+              }
+            </select>
+          </label>
+
+          <div class="texture-library">
+            <a
+              class="texture-library__upload"
+              routerLink="/texture-packs"
+              title="Управление текстур-паками"
+            >
+              <span>+</span>
+            </a>
+
+            @for (texture of textures(); track texture.id) {
+              <button
+                class="texture-library__item"
+                type="button"
+                [class.selected]="
+                  workshopSettingsService.textureStyle.textureId === texture.id
+                "
+                [title]="texture.name"
+                (click)="selectTexture(texture)"
+              >
+                <img [src]="texture.imageUrl" [alt]="texture.name" />
+              </button>
+            }
+          </div>
+
+          @if (hasMoreTextures()) {
+            <button
+              class="texture-library__more"
+              type="button"
+              [disabled]="texturesLoading()"
+              (click)="loadMoreTextures()"
+            >
+              Показать ещё
+            </button>
+          }
+
+          @if (texturesLoading()) {
+            <p class="texture-library__status">Загрузка библиотеки…</p>
+          } @else if (!textures().length) {
+            <p class="texture-library__status">
+              Добавьте текстуры в текстур-пак
+            </p>
+          }
+
+          @if (textureError()) {
+            <p class="texture-library__error">{{ textureError() }}</p>
+          }
+
+          @if (workshopSettingsService.textureStyle.textureUrl; as textureUrl) {
+            <div
+              class="texture-preview"
+              aria-label="Предпросмотр текстуры"
+              [style.background-image]="'url(' + textureUrl + ')'"
+            ></div>
+          }
+
+          <label class="tool-context-menu__field">
+            <span>
+              Масштаб текстуры:
+              {{ workshopSettingsService.textureStyle.textureScale }}
+            </span>
+            <input
+              type="range"
+              min="0.25"
+              max="4"
+              step="0.05"
+              [ngModel]="workshopSettingsService.textureStyle.textureScale"
+              (ngModelChange)="updateTextureScale($event)"
+            />
+          </label>
+
+          <label class="tool-context-menu__field">
+            <span>
+              Поворот:
+              {{ workshopSettingsService.textureStyle.textureRotation }}°
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              [ngModel]="workshopSettingsService.textureStyle.textureRotation"
+              (ngModelChange)="updateTextureRotation($event)"
+            />
+          </label>
+        }
+      </div>
     </div>
-  </div>
-}
+  }
+</wm-popover>

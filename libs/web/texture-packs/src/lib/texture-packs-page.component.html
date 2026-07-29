@@ -1,0 +1,133 @@
+<main class="texture-packs">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Библиотека материалов</p>
+        <h1>Мои текстур-паки</h1>
+        <p class="page-description">
+          Собирайте связанные текстуры в наборы и загружайте их сразу группой.
+        </p>
+      </div>
+      <div class="format-note">PNG · JPEG · WebP<br />до 5 МБ на файл</div>
+    </header>
+
+    <section class="create-card" aria-labelledby="create-pack-title">
+      <div class="create-card__intro">
+        <span class="step-number">01</span>
+        <div>
+          <h2 id="create-pack-title">Создать новый пак</h2>
+          <p>
+            Задайте понятное название, чтобы быстро найти набор в мастерской.
+          </p>
+        </div>
+      </div>
+
+      <form
+        [formGroup]="createForm"
+        (ngSubmit)="createPack()"
+        class="create-form"
+      >
+        <label>
+          <span>Название</span>
+          <input
+            formControlName="name"
+            maxlength="120"
+            placeholder="Например, Каменные стены"
+          />
+        </label>
+        <label>
+          <span>Описание <small>необязательно</small></span>
+          <textarea
+            formControlName="description"
+            maxlength="500"
+            rows="3"
+            placeholder="Для каких карт и сцен подходит этот набор"
+          ></textarea>
+        </label>
+        <button class="primary-button" type="submit" [disabled]="isCreating()">
+          @if (isCreating()) {
+            Создаём…
+          } @else {
+            Создать текстур-пак
+          }
+        </button>
+      </form>
+    </section>
+
+    @if (errorMessage()) {
+      <div class="error-message" role="alert">
+        <span>{{ errorMessage() }}</span>
+        <button type="button" (click)="loadPacks()">Повторить</button>
+      </div>
+    }
+
+    <section class="packs-section" aria-labelledby="packs-title">
+      <div class="section-heading">
+        <div>
+          <span class="step-number">02</span>
+          <h2 id="packs-title">Наполнить паки текстурами</h2>
+        </div>
+        <span class="pack-total">{{ packs().length }} наборов</span>
+      </div>
+
+      @if (isLoading()) {
+        <div class="state-card">Загружаем ваши наборы…</div>
+      } @else if (packs().length === 0) {
+        <div class="state-card state-card--empty">
+          <strong>Здесь пока пусто</strong>
+          <span
+            >Создайте первый пак выше — после этого в него можно загрузить
+            текстуры.</span
+          >
+        </div>
+      } @else {
+        <div class="pack-grid">
+          @for (pack of packs(); track pack.id) {
+            <article class="pack-card">
+              <div class="pack-card__top">
+                <div>
+                  <h3>{{ pack.name }}</h3>
+                  <p>{{ pack.description || 'Описание пока не добавлено' }}</p>
+                </div>
+                <span class="texture-count">{{ pack._count.textures }}</span>
+              </div>
+
+              <div class="preview-grid">
+                @for (texture of pack.previewTextures; track texture.id) {
+                  <figure class="texture-preview">
+                    <img [src]="texture.fileUrl" [alt]="texture.name" />
+                    <figcaption>{{ texture.name }}</figcaption>
+                  </figure>
+                }
+                @if (pack.previewTextures.length === 0) {
+                  <div class="empty-preview">
+                    <span>+</span>
+                    <p>Добавьте первые файлы</p>
+                  </div>
+                }
+              </div>
+
+              <label
+                class="upload-button"
+                [class.is-uploading]="uploadingPackId() === pack.id"
+              >
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  multiple
+                  [disabled]="uploadingPackId() !== null"
+                  (change)="uploadTextures(pack.id, $event)"
+                />
+                @if (uploadingPackId() === pack.id) {
+                  Загружаем…
+                } @else {
+                  Добавить текстуры
+                }
+              </label>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</main>

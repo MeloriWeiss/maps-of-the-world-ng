@@ -3,9 +3,9 @@ import {
   Component,
   ElementRef,
   HostBinding,
-  HostListener,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { WorkshopTools } from '../../../consts';
 import {
@@ -15,9 +15,10 @@ import {
   WorkshopTexture,
   WorkshopTexturesService,
 } from '../../../services';
-import { SvgComponent } from '@wm/web/common-ui';
+import { PopoverComponent, SvgComponent } from '@wm/web/common-ui';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 interface ToolButton {
   name: WorkshopTools;
@@ -34,7 +35,13 @@ interface ContextMenuState {
 
 @Component({
   selector: 'wm-workshop-left-sidebar',
-  imports: [DecimalPipe, FormsModule, SvgComponent],
+  imports: [
+    DecimalPipe,
+    FormsModule,
+    PopoverComponent,
+    RouterLink,
+    SvgComponent,
+  ],
   templateUrl: './workshop-left-sidebar.component.html',
   styleUrl: './workshop-left-sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,11 +55,14 @@ export class WorkshopLeftSidebarComponent {
 
   currentToolName = this.#workshopToolsService.currentToolName;
   textures = this.#texturesService.textures;
+  texturePacks = this.#texturesService.packs;
+  selectedTexturePackId = this.#texturesService.selectedPackId;
   texturesLoading = this.#texturesService.loading;
-  textureUploading = this.#texturesService.uploading;
+  hasMoreTextures = this.#texturesService.hasMore;
   textureError = this.#texturesService.error;
   WorkshopTools = WorkshopTools;
   contextMenu: ContextMenuState | null = null;
+  toolPopover = viewChild(PopoverComponent);
   collapsed = signal(false);
 
   @HostBinding('class.collapsed')
@@ -142,6 +152,7 @@ export class WorkshopLeftSidebarComponent {
         Math.min(targetRect.top - 20, window.innerHeight - menuHeight - 8),
       ),
     };
+    this.toolPopover()?.setOpenState(true);
   }
 
   updateStrokeWidth(tool: WorkshopTools, value: number): void {
@@ -180,24 +191,14 @@ export class WorkshopLeftSidebarComponent {
     this.workshopSettingsService.textureStyle.textureUrl = texture.imageUrl;
   }
 
-  uploadTexture(event: Event): void {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement)) return;
+  selectTexturePack(event: Event) {
+    const select = event.target;
+    if (!(select instanceof HTMLSelectElement)) return;
+    this.#texturesService.loadPack(select.value);
+  }
 
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) return;
-
-    this.#texturesService.upload(file).subscribe({
-      next: (response) => {
-        const texture = this.#texturesService.add(response);
-        this.selectTexture(texture);
-      },
-      error: () =>
-        this.#texturesService.error.set(
-          'Не удалось загрузить текстуру. Используйте PNG, JPEG или WebP до 5 МБ',
-        ),
-    });
+  loadMoreTextures() {
+    this.#texturesService.loadMore();
   }
 
   #applyStyleIfCurrent(tool: WorkshopTools): void {
@@ -206,13 +207,12 @@ export class WorkshopLeftSidebarComponent {
     }
   }
 
-  @HostListener('document:mousedown')
-  closeContextMenu(): void {
+  closeContextMenu() {
     this.contextMenu = null;
+    this.toolPopover()?.close();
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    this.closeContextMenu();
+  onPopoverOpenChange(open: boolean) {
+    if (!open) this.contextMenu = null;
   }
 }

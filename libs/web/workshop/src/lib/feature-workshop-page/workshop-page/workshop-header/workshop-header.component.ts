@@ -16,6 +16,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { tap } from 'rxjs';
 import { RouterLink } from '@angular/router';
+import { createTransientMessage } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-workshop-header',
@@ -31,7 +32,8 @@ export class WorkshopHeaderComponent {
   #worldGenerator = inject(WorkshopWorldGeneratorService);
   persistence = inject(WorkshopMapPersistenceService);
 
-  generationStatus = signal('');
+  #generationMessage = createTransientMessage();
+  generationStatus = this.#generationMessage.value;
   seed = signal('middle-earth');
 
   drawSetupForm = new FormGroup({
@@ -115,7 +117,7 @@ export class WorkshopHeaderComponent {
     const result = this.#worldGenerator.generate(
       this.seed().trim() || undefined,
     );
-    this.generationStatus.set(
+    this.#generationMessage.show(
       `Seed ${result.seed}: ${result.objects.toLocaleString('ru-RU')} объектов`,
     );
   }

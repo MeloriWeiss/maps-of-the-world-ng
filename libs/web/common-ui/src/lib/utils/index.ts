@@ -1,3 +1,5 @@
 import { DateUtil } from './date.util';
+import { createTransientMessage } from './transient-message';
 
-export { DateUtil };
+export { createTransientMessage, DateUtil };
+export type { TransientMessage } from './transient-message';

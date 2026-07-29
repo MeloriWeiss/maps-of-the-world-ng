@@ -80,19 +80,21 @@
   }
 </div>
 
-@if (contextMenu(); as menu) {
-  <button
-    class="node-context-menu"
-    [style.left.px]="menu.x"
-    [style.top.px]="menu.y"
-    (click)="$event.stopPropagation()"
-  >
-    <button
-      type="button"
-      class="node-context-menu__action"
-      (click)="deleteNode(menu.nodeId)"
-    >
-      Удалить
-    </button>
-  </button>
-}
+<wm-popover
+  appearance="bare"
+  ariaLabel="Меню узла"
+  [position]="contextMenuPosition()"
+  (openedChange)="onPopoverOpenChange($event)"
+>
+  @if (contextMenu(); as menu) {
+    <div wmPopoverContent class="node-context-menu">
+      <button
+        type="button"
+        class="node-context-menu__action"
+        (click)="deleteNode(menu.nodeId)"
+      >
+        Удалить
+      </button>
+    </div>
+  }
+</wm-popover>

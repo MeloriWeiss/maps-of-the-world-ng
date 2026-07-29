@@ -4,11 +4,11 @@ import {
   computed,
   effect,
   ElementRef,
-  HostListener,
   inject,
   input,
   signal,
   viewChildren,
+  viewChild,
 } from '@angular/core';
 import { GraphNode, LayerNode, ShapeNode } from '../../../../nodes';
 import { NodesTypes } from '../../../../consts';
@@ -17,11 +17,11 @@ import {
   WorkshopSceneGraphService,
   WorkshopSceneGraphStorageService,
 } from '../../../../services';
-import { VirtualListComponent } from '@wm/web/common-ui';
+import { PopoverComponent, VirtualListComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-workshop-nodes-panel',
-  imports: [VirtualListComponent],
+  imports: [PopoverComponent, VirtualListComponent],
   templateUrl: './workshop-nodes-panel.component.html',
   styleUrl: './workshop-nodes-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +38,11 @@ export class WorkshopNodesPanelComponent {
   editingNodeId = signal<string | null>(null);
   editedName = signal('');
   contextMenu = signal<{ x: number; y: number; nodeId: string } | null>(null);
+  contextMenuPosition = computed(() => {
+    const menu = this.contextMenu();
+    return menu ? { x: menu.x, y: menu.y } : null;
+  });
+  nodePopover = viewChild(PopoverComponent);
   #draggedNodeId: string | null = null;
   readonly nameInputs = viewChildren<ElementRef<HTMLInputElement>>('nameInput');
 
@@ -83,6 +88,7 @@ export class WorkshopNodesPanelComponent {
       y: event.clientY,
       nodeId: node.id,
     });
+    this.nodePopover()?.setOpenState(true);
   }
 
   toggleVisible(node: GraphNode) {
@@ -157,7 +163,7 @@ export class WorkshopNodesPanelComponent {
   deleteNode(nodeId: string) {
     this.#sceneGraphService.removeNode(nodeId);
     this.#canvasManagerService.requestRedraw();
-    this.contextMenu.set(null);
+    this.closeContextMenu();
   }
 
   startNodeDrag(nodeId: string) {
@@ -175,9 +181,13 @@ export class WorkshopNodesPanelComponent {
     this.#draggedNodeId = null;
   }
 
-  @HostListener('document:click')
-  onDocumentClick() {
+  closeContextMenu() {
     this.contextMenu.set(null);
+    this.nodePopover()?.close();
+  }
+
+  onPopoverOpenChange(open: boolean) {
+    if (!open) this.contextMenu.set(null);
   }
 }
 

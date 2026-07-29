@@ -1,0 +1,27 @@
+<div wmClickOutside (wmClickOutside)="close()" class="popover-root">
+  <div
+    (click)="toggle()"
+    (keydown.escape)="close()"
+    class="popover-trigger"
+    tabindex="-1"
+  >
+    <ng-content select="[wmPopoverTrigger]"></ng-content>
+  </div>
+
+  @if (isOpen()) {
+    <div
+      [class]="'popover-panel popover-panel--' + alignment()"
+      [class.popover-panel--bare]="appearance() === 'bare'"
+      [class.popover-panel--fixed]="position()"
+      [style.left.px]="position()?.x"
+      [style.top.px]="position()?.y"
+      [attr.aria-label]="ariaLabel()"
+      (click)="onContentClick()"
+      (keydown.escape)="close()"
+      tabindex="-1"
+      role="menu"
+    >
+      <ng-content select="[wmPopoverContent]"></ng-content>
+    </div>
+  }
+</div>

@@ -24,31 +24,13 @@ export class TexturesService {
     this.#storage = storage;
   }
 
-  list(accountId: number) {
-    return this.#prisma.texture.findMany({
-      where: { accountId },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        mimeType: true,
-        size: true,
-        width: true,
-        height: true,
-      },
-    });
-  }
-
-  async upload(accountId: number, name: string, file?: UploadedTextureFile) {
-    if (!file) throw new BadRequestException('Texture file is required');
-    if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
-      throw new BadRequestException('Only PNG, JPEG and WebP are supported');
-    }
-    if (!this.#hasValidSignature(file)) {
-      throw new BadRequestException(
-        'File contents do not match its image type',
-      );
-    }
+  async upload(
+    accountId: number,
+    name: string,
+    file: UploadedTextureFile,
+    packId: string,
+  ) {
+    this.validateFile(file);
 
     const extension = this.#extension(file.mimetype);
     const objectKey = `${accountId}-${randomUUID()}.${extension}`;
@@ -66,6 +48,7 @@ export class TexturesService {
           mimeType: file.mimetype,
           size: file.size,
           accountId,
+          packId,
         },
         select: {
           id: true,
@@ -82,6 +65,17 @@ export class TexturesService {
     }
   }
 
+  validateFile(file: UploadedTextureFile) {
+    if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      throw new BadRequestException('Only PNG, JPEG and WebP are supported');
+    }
+    if (!this.#hasValidSignature(file)) {
+      throw new BadRequestException(
+        'File contents do not match its image type',
+      );
+    }
+  }
+
   async getFile(id: string) {
     const texture = await this.#prisma.texture.findUnique({
       where: { id },
@@ -93,6 +87,23 @@ export class TexturesService {
       body: await this.#storage.get(texture.objectKey),
       mimeType: texture.mimeType,
     };
+  }
+
+  async getMetadata(id: string) {
+    const texture = await this.#prisma.texture.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        mimeType: true,
+        size: true,
+        width: true,
+        height: true,
+        packId: true,
+      },
+    });
+    if (!texture) throw new NotFoundException('Texture not found');
+    return texture;
   }
 
   #extension(mimeType: string): string {

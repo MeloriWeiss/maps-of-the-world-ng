@@ -23,12 +23,17 @@ describe('TexturesService', () => {
     const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
     await expect(
-      service.upload(1, 'texture', {
-        originalname: 'texture.png',
-        mimetype: 'image/png',
-        size: png.length,
-        buffer: png,
-      }),
+      service.upload(
+        1,
+        'texture',
+        {
+          originalname: 'texture.png',
+          mimetype: 'image/png',
+          size: png.length,
+          buffer: png,
+        },
+        'pack-id',
+      ),
     ).rejects.toThrow('Database unavailable');
 
     expect(storage.objects.size).toBe(0);

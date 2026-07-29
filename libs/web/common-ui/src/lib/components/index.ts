@@ -22,6 +22,7 @@ import { SuccessToastComponent } from './toasts/success-toast/success-toast.comp
 import { InfoToastComponent } from './toasts/info-toast/info-toast.component';
 import { ErrorToastComponent } from './toasts/error-toast/error-toast.component';
 import { VirtualListComponent } from './virtual-list/virtual-list.component';
+import { PopoverComponent } from './popover/popover.component';
 
 export {
   FormInputComponent,
@@ -48,6 +49,12 @@ export {
   InfoToastComponent,
   ErrorToastComponent,
   VirtualListComponent,
+  PopoverComponent,
 };
 
 export type { VirtualListItemContext } from './virtual-list/virtual-list.component';
+export type { PopoverAlignment } from './popover/popover.component';
+export type {
+  PopoverAppearance,
+  PopoverPosition,
+} from './popover/popover.component';
