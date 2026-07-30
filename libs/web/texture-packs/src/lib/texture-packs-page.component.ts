@@ -19,6 +19,7 @@ import {
 import { finalize } from 'rxjs';
 import { EmptyStateComponent } from '@wm/web/common-ui';
 import { TexturePackPreviewSliderComponent } from './texture-pack-preview-slider/texture-pack-preview-slider.component';
+import { RouterLink } from '@angular/router';
 
 type TexturePackList = 'drafts' | 'published';
 
@@ -28,6 +29,7 @@ type TexturePackList = 'drafts' | 'published';
     ReactiveFormsModule,
     EmptyStateComponent,
     TexturePackPreviewSliderComponent,
+    RouterLink,
   ],
   templateUrl: './texture-packs-page.component.html',
   styleUrl: './texture-packs-page.component.scss',
@@ -39,7 +41,6 @@ export class TexturePacksPageComponent {
   packs = signal<TexturePackView[]>([]);
   isLoading = signal(true);
   isCreating = signal(false);
-  uploadingPackId = signal<string | null>(null);
   publishingPackId = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
   embedded = input(false);
@@ -104,27 +105,6 @@ export class TexturePacksPageComponent {
         },
         error: () => {
           this.errorMessage.set('Не удалось создать текстур-пак.');
-        },
-      });
-  }
-
-  uploadTextures(packId: string, event: Event) {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement) || !input.files?.length) return;
-
-    const files = Array.from(input.files);
-    input.value = '';
-    this.uploadingPackId.set(packId);
-    this.errorMessage.set(null);
-    this.#texturePacksService
-      .upload(packId, files)
-      .pipe(finalize(() => this.uploadingPackId.set(null)))
-      .subscribe({
-        next: () => this.loadPacks(),
-        error: () => {
-          this.errorMessage.set(
-            'Не удалось загрузить текстуры. Допустимы PNG, JPEG и WebP до 5 МБ.',
-          );
         },
       });
   }

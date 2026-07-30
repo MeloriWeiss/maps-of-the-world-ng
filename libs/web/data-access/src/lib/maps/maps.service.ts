@@ -1,7 +1,13 @@
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_CONFIG } from '../shared';
-import { MapSummary, SaveMap, StoredMap } from './interfaces';
+import {
+  MapSummary,
+  PublishedMapSummary,
+  PublishedStoredMap,
+  SaveMap,
+  StoredMap,
+} from './interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +23,19 @@ export class MapsService {
   listPublished(authorUserId: number) {
     return this.#http.get<MapSummary[]>(
       `${this.#apiConfig.baseUrl}maps/authors/${authorUserId}`,
+    );
+  }
+
+  listCatalog() {
+    return this.#http.get<PublishedMapSummary[]>(
+      `${this.#apiConfig.baseUrl}maps/published`,
+    );
+  }
+
+  getPublished(mapId: number, context?: HttpContext) {
+    return this.#http.get<PublishedStoredMap>(
+      `${this.#apiConfig.baseUrl}maps/published/${mapId}`,
+      { context },
     );
   }
 
@@ -43,6 +62,12 @@ export class MapsService {
     return this.#http.patch<{ id: number; isPublished: boolean }>(
       `${this.#apiConfig.baseUrl}maps/${mapId}/publication`,
       { isPublished },
+    );
+  }
+
+  remove(mapId: number) {
+    return this.#http.delete<{ id: number }>(
+      `${this.#apiConfig.baseUrl}maps/${mapId}`,
     );
   }
 }

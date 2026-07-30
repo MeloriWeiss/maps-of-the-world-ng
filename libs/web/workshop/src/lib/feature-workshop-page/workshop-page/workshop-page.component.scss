@@ -180,6 +180,10 @@
   }
 }
 
+.workshop__body--viewer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .workshop__left-sidebar {
   background-color: var(--dark-primary-color);
   position: relative;

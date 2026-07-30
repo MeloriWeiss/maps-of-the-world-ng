@@ -5,11 +5,16 @@ import { API_CONFIG } from '../shared';
 import {
   CreateTexturePack,
   PublishedTexturePack,
+  PublishedTexturePackDetails,
   PublishedTexturePackView,
   TextureItem,
   TextureItemView,
+  TexturePackDetails,
+  TexturePage,
+  TexturePageView,
   TexturePack,
   TexturePackView,
+  UpdateTexturePack,
 } from './interfaces';
 
 @Injectable({
@@ -35,11 +40,62 @@ export class TexturePacksService {
       .pipe(map((packs) => packs.map((pack) => this.#toPublishedView(pack))));
   }
 
+  getPublished(packId: string) {
+    return this.#http.get<PublishedTexturePackDetails>(
+      `${this.#apiConfig.baseUrl}texture-packs/published/${packId}`,
+    );
+  }
+
+  listPublishedTextures(packId: string, page: number, pageSize = 48) {
+    return this.#http
+      .get<TexturePage>(
+        `${this.#apiConfig.baseUrl}texture-packs/published/${packId}/textures`,
+        { params: { page, pageSize } },
+      )
+      .pipe(
+        map(
+          (result): TexturePageView => ({
+            ...result,
+            items: result.items.map((texture) => this.#toTextureView(texture)),
+          }),
+        ),
+      );
+  }
+
   create(request: CreateTexturePack) {
     return this.#http.post<Omit<TexturePack, 'textures' | '_count'>>(
       `${this.#apiConfig.baseUrl}texture-packs`,
       request,
     );
+  }
+
+  get(packId: string) {
+    return this.#http.get<TexturePackDetails>(
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}`,
+    );
+  }
+
+  update(packId: string, request: UpdateTexturePack) {
+    return this.#http.patch<TexturePackDetails>(
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}`,
+      request,
+    );
+  }
+
+  listTextures(packId: string, page: number, pageSize = 48) {
+    return this.#http
+      .get<TexturePage>(
+        `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures`,
+        { params: { page, pageSize } },
+      )
+      .pipe(
+        map(
+          (result): TexturePageView => ({
+            ...result,
+            items: result.items.map((texture) => this.#toTextureView(texture)),
+          }),
+        ),
+      );
   }
 
   upload(packId: string, files: File[]) {
@@ -49,6 +105,18 @@ export class TexturePacksService {
     return this.#http.post<TextureItem[]>(
       `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures`,
       body,
+    );
+  }
+
+  removeTexture(packId: string, textureId: string) {
+    return this.#http.delete<{ id: string }>(
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures/${textureId}`,
+    );
+  }
+
+  remove(packId: string) {
+    return this.#http.delete<{ id: string }>(
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}`,
     );
   }
 

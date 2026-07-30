@@ -19,17 +19,6 @@
         <span>Имя</span>
         <input formControlName="firstName" />
       </label>
-      <label class="profile-edit__avatar">
-        <span>Аватар</span>
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          (change)="selectAvatar($event)"
-        />
-        <span class="profile-edit__file-name">
-          {{ avatarFile()?.name || 'PNG, JPEG или WebP, до 5 МБ' }}
-        </span>
-      </label>
       <label class="profile-edit__wide">
         <span>О себе</span>
         <textarea formControlName="bio" rows="5"></textarea>

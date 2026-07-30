@@ -126,6 +126,10 @@ export class WorkshopHeaderComponent {
     void this.persistence.save();
   }
 
+  saveCopy() {
+    void this.persistence.saveCopy();
+  }
+
   loadMap() {
     void this.persistence.load();
   }

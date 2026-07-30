@@ -11,6 +11,7 @@ describe('TexturePacksService', () => {
       findFirst: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     texture: {
       findMany: jest.fn(),
@@ -21,6 +22,8 @@ describe('TexturePacksService', () => {
   const textures = {
     upload: jest.fn(),
     validateFile: jest.fn(),
+    remove: jest.fn(),
+    removeFiles: jest.fn(),
   };
 
   beforeEach(() => {
@@ -52,6 +55,27 @@ describe('TexturePacksService', () => {
 
     expect(() => service.create(7, { name: '   ' })).toThrow(
       BadRequestException,
+    );
+  });
+
+  it('updates only a pack owned by the account and normalizes values', async () => {
+    prisma.texturePack.findFirst.mockResolvedValue({ id: 'pack-id' });
+    prisma.texturePack.update.mockResolvedValue({ id: 'pack-id' });
+    const service = await createService();
+
+    await service.update(7, 'pack-id', {
+      name: '  Stone walls  ',
+      description: '   ',
+    });
+
+    expect(prisma.texturePack.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'pack-id' },
+        data: {
+          name: 'Stone walls',
+          description: null,
+        },
+      }),
     );
   });
 
@@ -103,6 +127,36 @@ describe('TexturePacksService', () => {
     );
   });
 
+  it('returns published pack details with public author data', async () => {
+    prisma.texturePack.findFirst.mockResolvedValue({
+      id: 'pack-id',
+      name: 'Stone',
+      owner: { userId: 11, nickname: 'Cartographer' },
+    });
+    const service = await createService();
+
+    await expect(service.getPublished('pack-id')).resolves.toEqual({
+      id: 'pack-id',
+      name: 'Stone',
+      author: { id: 11, nickname: 'Cartographer' },
+    });
+    expect(prisma.texturePack.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'pack-id', isPublished: true },
+      }),
+    );
+  });
+
+  it('does not expose textures of an unpublished pack', async () => {
+    prisma.texturePack.findFirst.mockResolvedValue(null);
+    const service = await createService();
+
+    await expect(
+      service.listPublishedTextures('draft-pack', { page: 1, pageSize: 24 }),
+    ).rejects.toThrow(NotFoundException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('does not publish an empty texture pack', async () => {
     prisma.texturePack.findFirst.mockResolvedValue({
       id: 'pack-id',
@@ -114,6 +168,48 @@ describe('TexturePacksService', () => {
       BadRequestException,
     );
     expect(prisma.texturePack.update).not.toHaveBeenCalled();
+  });
+
+  it('delegates texture removal with owner and pack identifiers', async () => {
+    textures.remove.mockResolvedValue({ id: 'texture-id' });
+    prisma.texture.count.mockResolvedValue(1);
+    const service = await createService();
+
+    await service.removeTexture(7, 'pack-id', 'texture-id');
+
+    expect(textures.remove).toHaveBeenCalledWith(7, 'pack-id', 'texture-id');
+  });
+
+  it('deletes only an owned pack and removes its stored files', async () => {
+    prisma.texturePack.findFirst.mockResolvedValue({ id: 'pack-id' });
+    prisma.texture.findMany.mockResolvedValue([
+      { objectKey: 'first.png' },
+      { objectKey: 'second.webp' },
+    ]);
+    prisma.texturePack.delete.mockResolvedValue({ id: 'pack-id' });
+    const service = await createService();
+
+    await expect(service.remove(7, 'pack-id')).resolves.toEqual({
+      id: 'pack-id',
+    });
+    expect(prisma.texturePack.delete).toHaveBeenCalledWith({
+      where: { id: 'pack-id' },
+    });
+    expect(textures.removeFiles).toHaveBeenCalledWith([
+      'first.png',
+      'second.webp',
+    ]);
+  });
+
+  it('does not delete a pack owned by another account', async () => {
+    prisma.texturePack.findFirst.mockResolvedValue(null);
+    const service = await createService();
+
+    await expect(service.remove(7, 'foreign-pack')).rejects.toThrow(
+      NotFoundException,
+    );
+    expect(prisma.texturePack.delete).not.toHaveBeenCalled();
+    expect(textures.removeFiles).not.toHaveBeenCalled();
   });
 
   async function createService() {

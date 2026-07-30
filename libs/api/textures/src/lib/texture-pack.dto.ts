@@ -22,6 +22,19 @@ export class CreateTexturePackDto {
   description?: string;
 }
 
+export class UpdateTexturePackDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+}
+
 export class TexturePageQueryDto {
   @Type(() => Number)
   @IsInt()

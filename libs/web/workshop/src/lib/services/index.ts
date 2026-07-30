@@ -13,6 +13,7 @@ import { WorkshopShapesService } from './workshop-shapes.service';
 import { WorkshopCanvasSizeService } from './workshop-canvas-size.service';
 import { WorkshopWorldGeneratorService } from './workshop-world-generator.service';
 import { WorkshopMapPersistenceService } from './workshop-map-persistence.service';
+import { WorkshopModeService } from './workshop-mode.service';
 
 export {
   WorkshopDrawService,
@@ -30,6 +31,7 @@ export {
   WorkshopCanvasSizeService,
   WorkshopWorldGeneratorService,
   WorkshopMapPersistenceService,
+  WorkshopModeService,
 };
 
 export * from './facades';

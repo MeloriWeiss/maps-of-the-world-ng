@@ -11,10 +11,11 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, forkJoin, of } from 'rxjs';
+import { finalize } from 'rxjs';
 import { ProfileService } from '@wm/web/data-access/profile';
+import { SuccessToastComponent, ToastService } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-profile-page-edit',
@@ -25,12 +26,14 @@ import { ProfileService } from '@wm/web/data-access/profile';
 })
 export class ProfilePageEditComponent {
   #profileService = inject(ProfileService);
+  #toastService = inject(ToastService);
+  #router = inject(Router);
+  #route = inject(ActivatedRoute);
   #destroyRef = inject(DestroyRef);
 
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
   readonly statusMessage = signal<string | null>(null);
-  readonly avatarFile = signal<File | null>(null);
   readonly form = new FormGroup({
     nickname: new FormControl('', {
       nonNullable: true,
@@ -72,44 +75,26 @@ export class ProfilePageEditComponent {
     const value = this.form.getRawValue();
     this.isSaving.set(true);
     this.statusMessage.set(null);
-    const avatar = this.avatarFile();
-    forkJoin({
-      account: this.#profileService.updateMyAccount({
+    this.#profileService
+      .updateMyAccount({
         nickname: value.nickname.trim(),
         firstName: value.firstName.trim() || null,
         bio: value.bio.trim() || null,
-      }),
-      avatar: avatar ? this.#profileService.uploadAvatar(avatar) : of(null),
-    })
+      })
       .pipe(
         finalize(() => this.isSaving.set(false)),
         takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe({
         next: () => {
-          this.avatarFile.set(null);
-          this.statusMessage.set('Изменения сохранены.');
+          this.#toastService.show(SuccessToastComponent, {
+            message: 'Изменения профиля сохранены',
+          });
+          void this.#router.navigate(['../maps'], {
+            relativeTo: this.#route,
+          });
         },
         error: () => this.statusMessage.set('Не удалось сохранить профиль.'),
       });
-  }
-
-  selectAvatar(event: Event) {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement)) return;
-    const file = input.files?.[0] ?? null;
-    input.value = '';
-    if (!file) return;
-
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
-    if (!allowedTypes.includes(file.type) || file.size > 5_000_000) {
-      this.statusMessage.set(
-        'Выберите PNG, JPEG или WebP размером не более 5 МБ.',
-      );
-      return;
-    }
-
-    this.avatarFile.set(file);
-    this.statusMessage.set(null);
   }
 }

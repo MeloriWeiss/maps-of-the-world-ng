@@ -45,8 +45,18 @@
             </div>
             <div class="catalog-card__body">
               <div>
-                <h2>{{ pack.name }}</h2>
-                <a [routerLink]="['/profile', pack.author.id, 'texture-packs']">
+                <h2>
+                  <a
+                    class="catalog-card__title-link"
+                    [routerLink]="['/texture-packs', pack.id]"
+                  >
+                    {{ pack.name }}
+                  </a>
+                </h2>
+                <a
+                  class="catalog-card__author-link"
+                  [routerLink]="['/profile', pack.author.id, 'texture-packs']"
+                >
                   {{ pack.author.nickname }}
                 </a>
               </div>
@@ -55,6 +65,13 @@
             @if (pack.description) {
               <p>{{ pack.description }}</p>
             }
+            <a
+              class="catalog-card__details-link"
+              [routerLink]="['/texture-packs', pack.id]"
+            >
+              Подробнее о паке
+              <span aria-hidden="true">→</span>
+            </a>
           </article>
         }
       </div>

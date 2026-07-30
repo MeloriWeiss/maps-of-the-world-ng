@@ -1,11 +1,19 @@
 <wm-workshop-header [attr.inert]="isReady() ? null : ''"></wm-workshop-header>
 
-<div class="workshop__body" [attr.inert]="isReady() ? null : ''">
-  <wm-workshop-left-sidebar
-    class="workshop__left-sidebar"
-  ></wm-workshop-left-sidebar>
+<div
+  class="workshop__body"
+  [class.workshop__body--viewer]="isReadOnly()"
+  [attr.inert]="isReady() ? null : ''"
+>
+  @if (!isReadOnly()) {
+    <wm-workshop-left-sidebar
+      class="workshop__left-sidebar"
+    ></wm-workshop-left-sidebar>
+  }
   <wm-workshop-workspace></wm-workshop-workspace>
-  <wm-workshop-right-sidebar></wm-workshop-right-sidebar>
+  @if (!isReadOnly()) {
+    <wm-workshop-right-sidebar></wm-workshop-right-sidebar>
+  }
 </div>
 
 @if (!isReady()) {

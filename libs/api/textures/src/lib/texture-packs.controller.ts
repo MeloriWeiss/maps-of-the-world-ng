@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -17,6 +18,7 @@ import { AccessRequest, JwtAccessGuard } from '@wm/api/api-auth';
 import {
   CreateTexturePackDto,
   TexturePageQueryDto,
+  UpdateTexturePackDto,
   UpdateTexturePackPublicationDto,
 } from './texture-pack.dto';
 import { UploadedTextureFile } from './texture-file.interface';
@@ -37,6 +39,21 @@ export class TexturePacksController {
   @ApiOperation({ summary: 'List published texture packs by author' })
   listByAuthor(@Param('userId') userId: string) {
     return this.texturePacks.listPublished(Number(userId));
+  }
+
+  @Get('published/:id')
+  @ApiOperation({ summary: 'Read a published texture pack' })
+  getPublished(@Param('id') id: string) {
+    return this.texturePacks.getPublished(id);
+  }
+
+  @Get('published/:id/textures')
+  @ApiOperation({ summary: 'Read one page of published pack textures' })
+  listPublishedTextures(
+    @Param('id') id: string,
+    @Query() query: TexturePageQueryDto,
+  ) {
+    return this.texturePacks.listPublishedTextures(id, query);
   }
 
   @Get('mine')
@@ -71,6 +88,17 @@ export class TexturePacksController {
     return this.texturePacks.create(request.user.profileId, dto);
   }
 
+  @Patch(':id')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Update an owned texture pack' })
+  update(
+    @Req() request: AccessRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateTexturePackDto,
+  ) {
+    return this.texturePacks.update(request.user.profileId, id, dto);
+  }
+
   @Post(':id/textures')
   @UseGuards(JwtAccessGuard)
   @UseInterceptors(
@@ -97,6 +125,28 @@ export class TexturePacksController {
     @UploadedFiles() files?: UploadedTextureFile[],
   ) {
     return this.texturePacks.upload(request.user.profileId, id, files ?? []);
+  }
+
+  @Delete(':id/textures/:textureId')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Delete a texture from an owned pack' })
+  removeTexture(
+    @Req() request: AccessRequest,
+    @Param('id') id: string,
+    @Param('textureId') textureId: string,
+  ) {
+    return this.texturePacks.removeTexture(
+      request.user.profileId,
+      id,
+      textureId,
+    );
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Delete an owned texture pack and its textures' })
+  remove(@Req() request: AccessRequest, @Param('id') id: string) {
+    return this.texturePacks.remove(request.user.profileId, id);
   }
 
   @Patch(':id/publication')

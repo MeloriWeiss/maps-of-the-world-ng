@@ -38,9 +38,31 @@ export const routes: Routes = [
               import('@wm/web/forum').then((m) => m.forumRoutes),
           },
           {
+            path: 'maps',
+            loadComponent: () =>
+              import('@wm/web/maps').then((m) => m.MapsCatalogPageComponent),
+            title: 'Maps of the world: Карты',
+          },
+          {
             path: 'mods',
             loadChildren: () =>
               import('@wm/web/mods').then((m) => m.modsRoutes),
+          },
+          {
+            path: 'texture-packs/:id/edit',
+            loadComponent: () =>
+              import('@wm/web/texture-packs').then(
+                (m) => m.TexturePackEditPageComponent,
+              ),
+            title: 'Maps of the world: Редактирование текстур-пака',
+          },
+          {
+            path: 'texture-packs/:id',
+            loadComponent: () =>
+              import('@wm/web/texture-packs').then(
+                (m) => m.TexturePackDetailsPageComponent,
+              ),
+            title: 'Maps of the world: Текстур-пак',
           },
           {
             path: 'texture-packs',

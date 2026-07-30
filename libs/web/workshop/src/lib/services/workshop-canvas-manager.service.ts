@@ -7,6 +7,7 @@ import { Bounds } from '../interfaces';
 import { GraphNode, LayerNode, ShapeNode } from '../nodes';
 import { NodesTypes } from '../consts';
 import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
+import { WorkshopModeService } from './workshop-mode.service';
 
 @Injectable()
 export class WorkshopCanvasManagerService {
@@ -14,6 +15,7 @@ export class WorkshopCanvasManagerService {
   #workshopShapesService = inject(WorkshopShapesService);
   #workshopSceneGraphStorageService = inject(WorkshopSceneGraphStorageService);
   #workshopCoordsService = inject(WorkshopCoordsService);
+  #mode = inject(WorkshopModeService);
   #rootNode = this.#workshopSceneGraphStorageService.nodesRoot;
 
   useOffscreen = signal(false);
@@ -128,6 +130,7 @@ export class WorkshopCanvasManagerService {
 
   listenKeyEvents() {
     return fromEvent<KeyboardEvent, void>(document.body, 'keydown', (e) => {
+      if (this.#mode.isReadOnly()) return;
       if (e.key === 'Delete') {
         this.#workshopShapesService.deleteSelectedShapes();
       }

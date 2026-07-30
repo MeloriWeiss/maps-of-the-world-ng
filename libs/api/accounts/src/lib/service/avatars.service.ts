@@ -71,6 +71,22 @@ export class AvatarsService {
     };
   }
 
+  async remove(accountId: number) {
+    const account = await this.#prisma.personalAccount.findUnique({
+      where: { id: accountId },
+      select: { avatarUrl: true },
+    });
+    if (!account) throw new NotFoundException('Account not found');
+    if (!account.avatarUrl) return { avatarUrl: null };
+
+    await this.#prisma.personalAccount.update({
+      where: { id: accountId },
+      data: { avatarUrl: null },
+    });
+    await this.#storage.delete(account.avatarUrl).catch(() => undefined);
+    return { avatarUrl: null };
+  }
+
   publicUrl(userId: number, objectKey: string) {
     if (objectKey.startsWith('https://') || objectKey.startsWith('http://')) {
       return objectKey;

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
   Param,
@@ -19,6 +20,18 @@ import { MapsService } from './maps.service';
 @ApiTags('maps')
 export class MapsController {
   constructor(private readonly maps: MapsService) {}
+
+  @Get('published')
+  @ApiOperation({ summary: 'List published maps' })
+  listCatalog() {
+    return this.maps.listCatalog();
+  }
+
+  @Get('published/:id')
+  @ApiOperation({ summary: 'Read a published map for viewing' })
+  getPublished(@Param('id', ParseIntPipe) id: number) {
+    return this.maps.getPublished(id);
+  }
 
   @Get('authors/:userId')
   @ApiOperation({ summary: 'List published maps by author' })
@@ -71,5 +84,12 @@ export class MapsController {
       request.user.profileId,
       dto.isPublished,
     );
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Delete an owned map' })
+  remove(@Param('id', ParseIntPipe) id: number, @Req() request: AccessRequest) {
+    return this.maps.remove(id, request.user.profileId);
   }
 }

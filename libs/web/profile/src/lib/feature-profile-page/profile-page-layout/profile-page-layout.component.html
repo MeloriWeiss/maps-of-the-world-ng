@@ -2,7 +2,60 @@
   <div class="profile-header-wrapper">
     <div class="profile-header">
       <div class="profile__user">
-        @if (summary().avatarUrl) {
+        @if (isOwnProfile && isEditing()) {
+          <wm-popover
+            #avatarMenu
+            alignment="start"
+            ariaLabel="Действия с аватаром"
+          >
+            <button
+              wmPopoverTrigger
+              class="profile__avatar-button"
+              type="button"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="avatarMenu.isOpen()"
+              [disabled]="isAvatarUpdating()"
+            >
+              @if (summary().avatarUrl) {
+                <img
+                  class="profile__avatar"
+                  [src]="summary().avatarUrl"
+                  alt="Текущий аватар"
+                />
+              } @else {
+                <svg icon="avatar-light" class="svg120"></svg>
+              }
+              <span class="profile__avatar-edit">
+                {{ isAvatarUpdating() ? 'Обновляем…' : 'Изменить' }}
+              </span>
+            </button>
+
+            <div wmPopoverContent class="profile__avatar-menu">
+              <button
+                type="button"
+                role="menuitem"
+                (click)="avatarInput.click()"
+              >
+                Загрузить изображение
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                [disabled]="!summary().avatarUrl"
+                (click)="removeAvatar()"
+              >
+                Удалить изображение
+              </button>
+            </div>
+          </wm-popover>
+          <input
+            #avatarInput
+            class="profile__avatar-input"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="selectAvatar($event)"
+          />
+        } @else if (summary().avatarUrl) {
           <img class="profile__avatar" [src]="summary().avatarUrl" alt="" />
         } @else {
           <svg icon="avatar-light" class="svg120"></svg>
@@ -54,37 +107,39 @@
     </div>
   </div>
 
-  <nav class="profile__nav" aria-label="Разделы профиля">
-    <ul class="profile__tabs-list">
-      <li class="profile__tabs-item">
-        <a
-          [routerLink]="['maps']"
-          routerLinkActive="active"
-          class="profile__tabs-link"
-        >
-          Карты
-        </a>
-      </li>
-      <li class="profile__tabs-item">
-        <a
-          [routerLink]="['texture-packs']"
-          routerLinkActive="active"
-          class="profile__tabs-link"
-        >
-          Текстур-паки
-        </a>
-      </li>
-      <li class="profile__tabs-item">
-        <a
-          [routerLink]="['favourite']"
-          routerLinkActive="active"
-          class="profile__tabs-link"
-        >
-          Понравилось
-        </a>
-      </li>
-    </ul>
-  </nav>
+  @if (!isEditing()) {
+    <nav class="profile__nav" aria-label="Разделы профиля">
+      <ul class="profile__tabs-list">
+        <li class="profile__tabs-item">
+          <a
+            [routerLink]="['maps']"
+            routerLinkActive="active"
+            class="profile__tabs-link"
+          >
+            Карты
+          </a>
+        </li>
+        <li class="profile__tabs-item">
+          <a
+            [routerLink]="['texture-packs']"
+            routerLinkActive="active"
+            class="profile__tabs-link"
+          >
+            Текстур-паки
+          </a>
+        </li>
+        <li class="profile__tabs-item">
+          <a
+            [routerLink]="['favourite']"
+            routerLinkActive="active"
+            class="profile__tabs-link"
+          >
+            Понравилось
+          </a>
+        </li>
+      </ul>
+    </nav>
+  }
 
   <div class="profile-body">
     <div class="page-content">

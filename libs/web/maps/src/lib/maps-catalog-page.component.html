@@ -1,0 +1,90 @@
+<main class="maps-catalog">
+  <div class="container">
+    <header class="catalog-header">
+      <div>
+        <p class="eyebrow">Открытая библиотека</p>
+        <h1>Карты сообщества</h1>
+        <p class="catalog-description">
+          Исследуйте опубликованные миры других авторов и находите идеи для
+          собственных карт.
+        </p>
+      </div>
+      <a
+        class="create-map-button"
+        [routerLink]="['/workshop']"
+        [queryParams]="{ new: true }"
+      >
+        Создать карту
+      </a>
+    </header>
+
+    @if (isLoading()) {
+      <div class="catalog-state">Загружаем опубликованные карты…</div>
+    } @else if (hasError()) {
+      <div class="catalog-state">
+        <span>Не удалось загрузить каталог.</span>
+        <button type="button" (click)="load()">Повторить</button>
+      </div>
+    } @else if (maps().length === 0) {
+      <wm-empty-state
+        title="Опубликованных карт пока нет"
+        description="Когда авторы поделятся своими мирами, они появятся в этой библиотеке."
+      >
+        <a [routerLink]="['/workshop']" [queryParams]="{ new: true }">
+          Создать первую карту
+        </a>
+      </wm-empty-state>
+    } @else {
+      <section class="catalog-grid" aria-label="Опубликованные карты">
+        @for (map of maps(); track map.id) {
+          <article class="map-card">
+            <a
+              class="map-card__preview-link"
+              [routerLink]="['/workshop']"
+              [queryParams]="{ viewMapId: map.id }"
+              [attr.aria-label]="'Открыть карту «' + map.name + '»'"
+            >
+              <img
+                class="map-card__image"
+                src="/assets/imgs/old-map-card.png"
+                alt=""
+              />
+            </a>
+            <div class="map-card__body">
+              <div>
+                <h2>
+                  <a
+                    [routerLink]="['/workshop']"
+                    [queryParams]="{ viewMapId: map.id }"
+                  >
+                    {{ map.name }}
+                  </a>
+                </h2>
+                <a
+                  class="author-link"
+                  [routerLink]="['/profile', map.author.id, 'maps']"
+                >
+                  {{ map.author.nickname }}
+                </a>
+              </div>
+              @if (map.description) {
+                <p>{{ map.description }}</p>
+              }
+              <div class="map-card__metrics">
+                <span>{{ map.likesCount }} отметок</span>
+                <span>{{ map.commentsCount }} комментариев</span>
+              </div>
+              <a
+                class="open-map-link"
+                [routerLink]="['/workshop']"
+                [queryParams]="{ viewMapId: map.id }"
+              >
+                Открыть карту
+              </a>
+            </div>
+          </article>
+        }
+      </section>
+    }
+  </div>
+</main>

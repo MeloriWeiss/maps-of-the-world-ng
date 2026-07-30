@@ -1,0 +1,84 @@
+<main class="pack-details">
+  <div class="container">
+    <a class="back-link" routerLink="/texture-packs">
+      <span aria-hidden="true">←</span>
+      Все текстур-паки
+    </a>
+
+    @if (isLoading()) {
+      <div class="page-state">Загружаем текстур-пак…</div>
+    } @else if (!pack()) {
+      <div class="page-state page-state--error">
+        <p>{{ errorMessage() }}</p>
+        <button type="button" (click)="load()">Повторить</button>
+      </div>
+    } @else {
+      <header class="pack-header">
+        <div class="pack-header__content">
+          <p class="eyebrow">Опубликованный текстур-пак</p>
+          <h1>{{ pack()!.name }}</h1>
+          @if (pack()!.description) {
+            <p class="pack-description">{{ pack()!.description }}</p>
+          }
+          <div class="pack-meta">
+            <a [routerLink]="['/profile', pack()!.author.id, 'texture-packs']">
+              {{ pack()!.author.nickname }}
+            </a>
+            <span>{{ total() }} текстур</span>
+          </div>
+        </div>
+      </header>
+
+      @if (errorMessage()) {
+        <div class="error-message" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <section class="textures-section" aria-labelledby="textures-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Содержимое набора</p>
+            <h2 id="textures-title">Все текстуры</h2>
+          </div>
+          <span>Показано {{ textures().length }} из {{ total() }}</span>
+        </div>
+
+        @if (textures().length === 0) {
+          <wm-empty-state
+            title="В паке нет текстур"
+            description="Автор пока не добавил изображения в этот набор."
+          ></wm-empty-state>
+        } @else {
+          <div class="texture-grid">
+            @for (texture of textures(); track texture.id) {
+              <article class="texture-card">
+                <div class="texture-card__preview">
+                  <img [src]="texture.fileUrl" [alt]="texture.name" />
+                </div>
+                <div class="texture-card__body">
+                  <h3 [title]="texture.name">{{ texture.name }}</h3>
+                  <p>
+                    {{ texture.displaySize }}
+                    @if (texture.width && texture.height) {
+                      · {{ texture.width }}×{{ texture.height }}
+                    }
+                  </p>
+                </div>
+              </article>
+            }
+          </div>
+
+          @if (hasMore()) {
+            <button
+              class="load-more-button"
+              type="button"
+              [disabled]="isLoadingMore()"
+              (click)="loadMore()"
+            >
+              {{ isLoadingMore() ? 'Загружаем…' : 'Показать ещё' }}
+            </button>
+          }
+        }
+      </section>
+    }
+  </div>
+</main>

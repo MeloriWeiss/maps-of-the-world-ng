@@ -10,13 +10,21 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { MapsService, MapSummary } from '@wm/web/data-access/maps';
-import { EmptyStateComponent } from '@wm/web/common-ui';
+import {
+  ConfirmationModalComponent,
+  EmptyStateComponent,
+  ModalService,
+  SuccessToastComponent,
+  SvgComponent,
+  ToastService,
+} from '@wm/web/common-ui';
+import { firstValueFrom } from 'rxjs';
 
 type MapList = 'drafts' | 'published';
 
 @Component({
   selector: 'wm-profile-page-maps',
-  imports: [RouterLink, EmptyStateComponent],
+  imports: [RouterLink, EmptyStateComponent, SvgComponent],
   templateUrl: './profile-page-maps.component.html',
   styleUrl: './profile-page-maps.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +33,8 @@ export class ProfilePageMapsComponent {
   #mapsService = inject(MapsService);
   #route = inject(ActivatedRoute);
   #destroyRef = inject(DestroyRef);
+  #modalService = inject(ModalService);
+  #toastService = inject(ToastService);
 
   readonly profileId =
     this.#route.parent?.parent?.snapshot.paramMap.get('id') ?? 'me';
@@ -35,6 +45,7 @@ export class ProfilePageMapsComponent {
   );
   readonly isLoading = signal(true);
   readonly publishingMapId = signal<number | null>(null);
+  readonly deletingMapId = signal<number | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly draftMaps = computed(() =>
     this.maps().filter((map) => !map.isPublished),
@@ -90,6 +101,37 @@ export class ProfilePageMapsComponent {
         },
         error: () =>
           this.errorMessage.set('Не удалось изменить статус публикации карты.'),
+      });
+  }
+
+  async removeMap(map: MapSummary) {
+    const confirmed = await firstValueFrom(
+      this.#modalService.show<boolean>(ConfirmationModalComponent, {
+        title: `Удалить карту «${map.name}»?`,
+        subtitle:
+          'Карта будет удалена без возможности восстановления, включая её публикацию и комментарии.',
+        agreeBtnText: 'Удалить карту',
+        rejectBtnText: 'Отмена',
+      }),
+    );
+    if (!confirmed || this.deletingMapId() !== null) return;
+
+    this.deletingMapId.set(map.id);
+    this.errorMessage.set(null);
+    this.#mapsService
+      .remove(map.id)
+      .pipe(
+        finalize(() => this.deletingMapId.set(null)),
+        takeUntilDestroyed(this.#destroyRef),
+      )
+      .subscribe({
+        next: () => {
+          this.maps.update((maps) => maps.filter(({ id }) => id !== map.id));
+          this.#toastService.show(SuccessToastComponent, {
+            message: `Карта «${map.name}» удалена`,
+          });
+        },
+        error: () => this.errorMessage.set('Не удалось удалить карту.'),
       });
   }
 }

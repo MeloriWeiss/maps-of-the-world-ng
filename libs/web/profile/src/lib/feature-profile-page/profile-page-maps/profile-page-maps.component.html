@@ -89,6 +89,18 @@
     <section class="cards" role="tabpanel">
       @for (map of visibleMaps(); track map.id) {
         <article class="map-card">
+          @if (isOwnProfile) {
+            <button
+              class="map-card__delete"
+              type="button"
+              [disabled]="deletingMapId() !== null"
+              [attr.aria-label]="'Удалить карту «' + map.name + '»'"
+              title="Удалить карту"
+              (click)="removeMap(map)"
+            >
+              <svg icon="trash" class="svg20" aria-hidden="true"></svg>
+            </button>
+          }
           <img
             class="map-card__image"
             src="/assets/imgs/old-map-card.png"

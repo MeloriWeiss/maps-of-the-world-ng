@@ -96,4 +96,24 @@ export class TexturesService {
     if (!texture) throw new NotFoundException('Texture not found');
     return texture;
   }
+
+  async remove(accountId: number, packId: string, textureId: string) {
+    const texture = await this.#prisma.texture.findFirst({
+      where: { id: textureId, packId, accountId },
+      select: { id: true, objectKey: true },
+    });
+    if (!texture) throw new NotFoundException('Texture not found');
+
+    await this.#prisma.texture.delete({ where: { id: texture.id } });
+    await this.#storage.delete(texture.objectKey).catch(() => undefined);
+    return { id: texture.id };
+  }
+
+  async removeFiles(objectKeys: string[]) {
+    await Promise.all(
+      objectKeys.map((objectKey) =>
+        this.#storage.delete(objectKey).catch(() => undefined),
+      ),
+    );
+  }
 }

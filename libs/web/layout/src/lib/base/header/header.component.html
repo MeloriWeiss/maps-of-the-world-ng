@@ -49,23 +49,53 @@
             >Форум</a
           >
         </li>
-        <li>
-          <a
-            [routerLink]="['texture-packs']"
-            routerLinkActive="active"
-            class="header-nav-link"
-            (click)="closeMenu()"
-            >Текстур-паки</a
+        <li class="library-nav-item">
+          <wm-popover
+            #libraryMenu
+            alignment="center"
+            ariaLabel="Разделы библиотеки"
+            routerLinkActive="library-active"
           >
-        </li>
-        <li>
-          <a
-            [routerLink]="['mods']"
-            routerLinkActive="active"
-            class="header-nav-link"
-            (click)="closeMenu()"
-            >Моды</a
-          >
+            <button
+              wmPopoverTrigger
+              type="button"
+              class="header-nav-link library-trigger"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="libraryMenu.isOpen()"
+            >
+              Библиотека
+            </button>
+
+            <nav wmPopoverContent class="library-menu" aria-label="Библиотека">
+              <a
+                [routerLink]="['maps']"
+                routerLinkActive="active"
+                role="menuitem"
+                (click)="closeMenu()"
+              >
+                <strong>Карты</strong>
+                <span>Миры, созданные сообществом</span>
+              </a>
+              <a
+                [routerLink]="['texture-packs']"
+                routerLinkActive="active"
+                role="menuitem"
+                (click)="closeMenu()"
+              >
+                <strong>Текстур-паки</strong>
+                <span>Наборы материалов для карт</span>
+              </a>
+              <a
+                [routerLink]="['mods']"
+                routerLinkActive="active"
+                role="menuitem"
+                (click)="closeMenu()"
+              >
+                <strong>Моды</strong>
+                <span>Расширения возможностей</span>
+              </a>
+            </nav>
+          </wm-popover>
         </li>
         <li>
           <a
@@ -104,7 +134,7 @@
           (click)="logout()"
           type="button"
           role="menuitem"
-          class="profile-menu__item profile-menu__item--danger"
+          class="profile-menu__item profile-menu__item--separated"
         >
           Выйти
         </button>

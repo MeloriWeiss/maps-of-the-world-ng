@@ -23,6 +23,7 @@ import {
   WorkshopWorldGeneratorService,
   WorkshopMapPersistenceService,
   WorkshopTexturesService,
+  WorkshopModeService,
 } from '../../services';
 import { WorkshopSceneGraphStorageService } from '../../services';
 import { WorkshopWorkspaceComponent } from './workshop-workspace/workshop-workspace.component';
@@ -60,6 +61,7 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
     WorkshopWorldGeneratorService,
     WorkshopMapPersistenceService,
     WorkshopTexturesService,
+    WorkshopModeService,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -72,6 +74,7 @@ export class WorkshopPageComponent implements AfterViewInit {
 
   isReady = this.#canvasSetupFacade.isReady;
   loadingMessage = this.#canvasSetupFacade.loadingMessage;
+  isReadOnly = this.#mapPersistence.isReadOnly;
 
   header = viewChild.required(WorkshopHeaderComponent, { read: ElementRef });
   leftSidebar = viewChild.required(WorkshopLeftSidebarComponent, {

@@ -2,6 +2,7 @@ import {
   Body,
   BadRequestException,
   Controller,
+  Delete,
   Get,
   Header,
   HttpCode,
@@ -106,6 +107,13 @@ export class AccountsController {
   ) {
     if (!file) throw new BadRequestException('Avatar file is required');
     return this.#avatarsService.upload(req.user.profileId, file);
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Delete('/me/avatar')
+  @ApiOperation({ summary: 'Delete my avatar' })
+  removeAvatar(@Req() req: AccessRequest) {
+    return this.#avatarsService.remove(req.user.profileId);
   }
 
   @Get('/profiles/:userId/avatar')

@@ -30,6 +30,7 @@
       "@wm/web/forum": ["libs/web/forum/src/index.ts"],
       "@wm/web/home": ["libs/web/home/src/index.ts"],
       "@wm/web/layout/*": ["libs/web/layout/src/lib/*"],
+      "@wm/web/maps": ["libs/web/maps/src/index.ts"],
       "@wm/web/mods": ["libs/web/mods/src/index.ts"],
       "@wm/web/profile": ["libs/web/profile/src/index.ts"],
       "@wm/web/texture-packs": ["libs/web/texture-packs/src/index.ts"],

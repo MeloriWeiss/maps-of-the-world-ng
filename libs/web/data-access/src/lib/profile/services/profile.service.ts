@@ -69,4 +69,12 @@ export class ProfileService {
       }>(`${this.#apiConfig.baseUrl}accounts/me/avatar`, body)
       .pipe(tap(() => this.#profileChanged.next()));
   }
+
+  removeAvatar() {
+    return this.#http
+      .delete<{
+        avatarUrl: null;
+      }>(`${this.#apiConfig.baseUrl}accounts/me/avatar`)
+      .pipe(tap(() => this.#profileChanged.next()));
+  }
 }

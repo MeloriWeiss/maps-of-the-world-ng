@@ -39,12 +39,24 @@ export interface TexturePackView extends Omit<TexturePack, 'previewTextures'> {
   previewTextures: TextureItemView[];
 }
 
+export type TexturePackDetails = Omit<TexturePack, 'previewTextures'>;
+
 export interface PublishedTexturePackView
   extends Omit<PublishedTexturePack, 'previewTextures'> {
   previewTextures: TextureItemView[];
 }
 
+export type PublishedTexturePackDetails = Omit<
+  PublishedTexturePack,
+  'previewTextures'
+>;
+
 export interface CreateTexturePack {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateTexturePack {
   name: string;
   description?: string;
 }
@@ -54,4 +66,8 @@ export interface TexturePage {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface TexturePageView extends Omit<TexturePage, 'items'> {
+  items: TextureItemView[];
 }

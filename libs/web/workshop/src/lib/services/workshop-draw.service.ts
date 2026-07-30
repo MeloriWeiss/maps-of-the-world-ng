@@ -4,6 +4,7 @@ import { fromEvent, merge, switchMap, takeUntil } from 'rxjs';
 import { WorkshopCoordsService } from './workshop-coords.service';
 import { WorkshopToolsService } from './workshop-tools.service';
 import { WorkshopCanvasService } from './workshop-canvas.service';
+import { WorkshopModeService } from './workshop-mode.service';
 
 @Injectable()
 export class WorkshopDrawService {
@@ -11,6 +12,7 @@ export class WorkshopDrawService {
   #workshopCoordsService = inject(WorkshopCoordsService);
   #workshopToolsService = inject(WorkshopToolsService);
   #workshopCanvasService = inject(WorkshopCanvasService);
+  #mode = inject(WorkshopModeService);
 
   canvasRef = this.#workshopCanvasService.canvasRef;
   ctx = this.#workshopCanvasService.ctx;
@@ -52,6 +54,7 @@ export class WorkshopDrawService {
   }
 
   startDrawing(e: MouseEvent) {
+    if (this.#mode.isReadOnly()) return;
     if (e.button !== this.#workshopSettingsService.drawMouseButton) return;
 
     this.isDrawing = true;
@@ -69,6 +72,7 @@ export class WorkshopDrawService {
   }
 
   draw(e: MouseEvent) {
+    if (this.#mode.isReadOnly()) return;
     if (!this.isDrawing) return;
 
     const worldCoords = this.#workshopCoordsService.getWorldCoords(
@@ -80,6 +84,10 @@ export class WorkshopDrawService {
   }
 
   stopDrawing(e: MouseEvent) {
+    if (this.#mode.isReadOnly()) {
+      this.isDrawing = false;
+      return;
+    }
     if (!this.isDrawing) return;
 
     this.isDrawing = false;

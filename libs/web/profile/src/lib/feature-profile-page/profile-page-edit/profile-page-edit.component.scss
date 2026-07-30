@@ -70,18 +70,6 @@
   grid-column: 1 / -1;
 }
 
-.profile-edit__avatar {
-  input {
-    padding: rem(8);
-    cursor: pointer;
-  }
-}
-
-.profile-edit__file-name {
-  color: var(--light-gray-font-color);
-  font-size: rem(12);
-}
-
 .profile-edit__actions {
   display: flex;
   align-items: center;

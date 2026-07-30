@@ -1,7 +1,13 @@
 <wm-base-modal>
-  <div class="layers__modal">
-    <div class="layers__modal-title">{{ title() }}</div>
-    <div class="layers__modal-text">
+  <div
+    class="layers__modal"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="confirmation-title"
+    aria-describedby="confirmation-description"
+  >
+    <div class="layers__modal-title" id="confirmation-title">{{ title() }}</div>
+    <div class="layers__modal-text" id="confirmation-description">
       {{ subtitle() }}
     </div>
     <div class="layers__modal-actions">

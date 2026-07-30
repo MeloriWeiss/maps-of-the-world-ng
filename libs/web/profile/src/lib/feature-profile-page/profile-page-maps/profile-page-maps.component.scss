@@ -114,6 +114,58 @@
   background-color: var(--light-color);
 }
 
+.map-card {
+  position: relative;
+
+  &:hover,
+  &:focus-within {
+    .map-card__delete {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+.map-card__delete {
+  position: absolute;
+  z-index: 1;
+  top: rem(12);
+  right: rem(12);
+  display: grid;
+  width: rem(38);
+  height: rem(38);
+  place-items: center;
+  border: rem(1) solid var(--light-primary-color);
+  border-radius: 50%;
+  visibility: hidden;
+  pointer-events: none;
+  color: var(--dark-primary-color);
+  background-color: var(--light-color);
+  opacity: 0;
+  transition:
+    opacity 0.18s,
+    visibility 0.18s;
+
+  &:hover {
+    color: var(--dark-primary-color);
+    background-color: var(--light-primary-color);
+  }
+
+  &:focus-visible {
+    visibility: visible;
+    outline: rem(2) solid var(--primary-color);
+    outline-offset: rem(2);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.55;
+  }
+}
+
 .map-card__image {
   display: block;
   width: 100%;
@@ -218,5 +270,11 @@
 
   .map-card__actions {
     grid-template-columns: 1fr;
+  }
+
+  .map-card__delete {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
   }
 }

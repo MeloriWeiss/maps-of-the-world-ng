@@ -4,8 +4,12 @@ export type {
   TextureItemView,
   TexturePack,
   TexturePackView,
+  TexturePackDetails,
   TexturePage,
+  TexturePageView,
+  UpdateTexturePack,
   TexturePackAuthor,
   PublishedTexturePack,
   PublishedTexturePackView,
+  PublishedTexturePackDetails,
 } from './texture-pack';

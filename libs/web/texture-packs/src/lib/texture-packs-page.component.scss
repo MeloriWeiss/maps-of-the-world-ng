@@ -170,8 +170,7 @@ h2 {
   font-weight: 700;
 }
 
-.primary-button:disabled,
-.upload-button.is-uploading {
+.primary-button:disabled {
   cursor: wait;
   opacity: 0.65;
 }
@@ -331,17 +330,10 @@ h2 {
 }
 
 .upload-button {
+  min-height: rem(40);
   cursor: pointer;
   border: rem(1) solid var(--dark-primary-color);
   background-color: transparent;
-
-  input {
-    position: absolute;
-    width: rem(1);
-    height: rem(1);
-    overflow: hidden;
-    opacity: 0;
-  }
 }
 
 .publication-button {

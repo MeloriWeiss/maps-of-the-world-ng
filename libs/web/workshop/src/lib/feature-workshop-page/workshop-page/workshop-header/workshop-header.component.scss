@@ -22,6 +22,52 @@
   object-fit: contain;
 }
 
+.controls__viewer {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: rem(10);
+
+  strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.controls__viewer-badge {
+  flex: 0 0 auto;
+  padding: rem(5) rem(8);
+  border-radius: rem(999);
+  color: var(--dark-primary-color);
+  background-color: var(--light-primary-color);
+  font-size: rem(12);
+}
+
+.controls__viewer-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: rem(10);
+  margin-left: auto;
+
+  a {
+    color: var(--light-color);
+  }
+
+  button {
+    padding: rem(8) rem(12);
+    border-radius: rem(6);
+    color: var(--dark-primary-color);
+    background-color: var(--light-color);
+    font-weight: 700;
+
+    &:disabled {
+      opacity: 0.55;
+    }
+  }
+}
+
 .controls__history {
   display: flex;
   gap: 8px;

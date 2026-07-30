@@ -160,23 +160,12 @@
                 </div>
               }
 
-              <label
+              <a
                 class="upload-button"
-                [class.is-uploading]="uploadingPackId() === pack.id"
+                [routerLink]="['/texture-packs', pack.id, 'edit']"
               >
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  multiple
-                  [disabled]="uploadingPackId() !== null"
-                  (change)="uploadTextures(pack.id, $event)"
-                />
-                @if (uploadingPackId() === pack.id) {
-                  Загружаем…
-                } @else {
-                  Добавить текстуры
-                }
-              </label>
+                Редактировать
+              </a>
               <button
                 class="publication-button"
                 type="button"

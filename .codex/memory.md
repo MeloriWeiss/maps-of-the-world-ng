@@ -40,24 +40,32 @@
 - Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapComment`, `Forum`, `ForumComment`, `TexturePack`, and `Texture`.
 - Backend endpoints cover auth, users, accounts/profiles, owned and published maps, texture packs, and texture files; forum endpoints are not implemented yet.
 - Auth uses access/refresh JWT cookies, refresh rotation, session storage, logout, logout-all, and sessions listing.
-- `libs/api/maps` implements map persistence and publication:
+- `libs/api/maps` implements map persistence, publication, public viewing, and deletion:
+  - `GET /api/maps/published` lists the public map catalog.
+  - `GET /api/maps/published/:id` returns one published map for read-only viewing.
   - `GET /api/maps` lists the current account's draft and published maps.
   - `GET /api/maps/authors/:userId` lists an author's published maps.
   - `GET /api/maps/:id` loads one owned map.
   - `POST /api/maps` creates a map.
   - `PUT /api/maps/:id` updates an owned map.
   - `PATCH /api/maps/:id/publication` publishes or unpublishes an owned map.
+  - `DELETE /api/maps/:id` deletes only an owned map and its comments.
   - Workshop snapshots are stored in the existing `Map.body` string column.
 - API JSON request bodies accept up to 10 MB to accommodate workshop snapshots.
 - Textures are not standalone user-library entities. Every texture belongs to a `TexturePack`; do not restore a UI or API for creating ungrouped textures.
 - `libs/api/textures` implements texture-pack management:
   - `GET /api/texture-packs` lists published packs for the public catalog.
   - `GET /api/texture-packs/authors/:userId` lists an author's published packs.
+  - `GET /api/texture-packs/published/:id` returns public details of one published pack.
+  - `GET /api/texture-packs/published/:id/textures?page=&pageSize=` returns a paginated public texture page; drafts must return 404.
   - `GET /api/texture-packs/mine` lists all packs owned by the current account.
   - `GET /api/texture-packs/:id` reads one owned pack.
   - `GET /api/texture-packs/:id/textures?page=&pageSize=` reads a paginated page of textures from an owned pack; consumers should request individual textures/pages rather than download the whole pack.
   - `POST /api/texture-packs` creates a draft pack.
+  - `PATCH /api/texture-packs/:id` updates an owned pack's name and description.
   - `POST /api/texture-packs/:id/textures` accepts up to 50 multipart PNG/JPEG/WebP files, each up to 5 MB.
+  - `DELETE /api/texture-packs/:id/textures/:textureId` deletes an owned texture and its object-storage file. Removing the final texture automatically unpublishes the pack.
+  - `DELETE /api/texture-packs/:id` deletes an owned pack, its texture metadata, and all associated object-storage files.
   - `PATCH /api/texture-packs/:id/publication` publishes or unpublishes an owned pack; empty packs cannot be published.
   - `GET /api/textures/:id` reads texture metadata and `GET /api/textures/:id/file` streams one image by opaque UUID.
   - Pack list responses currently include at most eight recent `previewTextures`, not all pack contents.
@@ -70,6 +78,8 @@
   - The former one-time import from `.data/textures` has been removed and must not be restored.
   - `TexturesModule` imports `DatabaseMainModule`, `ApiAuthModule`, and the shared `ObjectStorageModule`; importing them only in root `AppModule` does not expose their providers in the feature module.
 - Profile avatars also use the existing object-storage abstraction; PostgreSQL stores only `PersonalAccount.avatarUrl`, not image bytes.
+  - `POST /api/accounts/me/avatar` immediately uploads or replaces the current avatar.
+  - `DELETE /api/accounts/me/avatar` clears the database reference and removes the stored image.
 
 ## Docker and Object Storage
 
@@ -99,7 +109,8 @@
 
 - Routes are in `apps/web/src/app/app.routes.ts`.
 - Authenticated area uses `BaseLayoutComponent` and `canActivateAuth`.
-- Lazy/feature routes include `home`, `profile/:id`, `forum`, `mods`, and the public `texture-packs` catalog.
+- Lazy/feature routes include `home`, `profile/:id`, `forum`, `mods`, `/maps`, and the `/texture-packs` catalog.
+- `/texture-packs/:id` is the read-only public pack details page; `/texture-packs/:id/edit` is the separate owner editor. Keep the `/edit` route before the generic `/:id` route.
 - `workshop` loads `WorkshopPageComponent` directly.
 - `login` and `register` use `AuthLayoutComponent` and `canActivateNonAuth`.
 
@@ -114,6 +125,9 @@
   - It supports alignment, bare/default appearance, fixed positioning, outside-click closing, and Escape.
   - The header profile icon uses it for at least `Профиль` and `Выйти`.
   - Workshop tool settings and scene-node context menus also use it; do not reintroduce separate local popup infrastructure for equivalent interactions.
+- `ConfirmationModalComponent` is opened through `ModalService.show(component, inputs)`. Its reusable inputs are `title`, `subtitle`, `agreeBtnText`, and `rejectBtnText`.
+  - `BaseModalComponent` owns the fixed overlay, dark translucent backdrop, outside-click closing, and stacking above the header.
+  - `modal-wrapper` must remain a neutral shrink-to-fit container; each concrete modal owns its width, background, padding, and visual styling.
 - The auth interceptor handles `/auth/refresh` before normal global unauthorized reporting. A failed refresh must not show a transient user-facing `Unauthorized` notification.
 - Empty profile tabs use the shared `EmptyStateComponent`; new empty tabs should follow the same pattern.
 
@@ -121,18 +135,28 @@
 
 - Profile routes use `/profile/me/...` for the current account and `/profile/:userId/...` for another user.
 - The profile header displays the viewed user's nickname, avatar, bio/member-since information, aggregate received likes, and counts of published maps and texture packs.
-- Only the current user's profile shows the edit-profile link. Profile editing supports nickname/bio changes and multipart avatar upload; no surname field is used.
+- Only the current user's profile shows the edit-profile link. The form edits nickname, first name, and bio; no surname field is used.
+- Avatar management is intentionally outside the edit form:
+  - On `/profile/me/edit`, clicking the avatar opens the shared popover with `Загрузить изображение` and `Удалить изображение`.
+  - Selecting PNG/JPEG/WebP up to 5 MB uploads immediately and replaces the visible avatar without submitting the profile form.
+  - Deletion uses the shared confirmation modal and immediately restores the placeholder.
+  - The avatar popover must escape the profile information card; do not restore `overflow: hidden` on `.profile-header-wrapper`.
 - Profile navigation is a horizontal full-width tab bar for maps, texture packs, and favourites.
 - Own maps and own texture packs are split into separate `Черновики` and `Опубликованные` lists. Other users expose only published content.
 - Every empty list/tab should render a contextual shared empty state rather than a blank region.
 - `/texture-packs` is the public catalog and contains only published packs. Own drafts and published packs are managed from the profile texture-pack section.
+- Public catalog cards link by title and `Подробнее о паке` to `/texture-packs/:id`.
+- `/texture-packs/:id` displays public pack metadata, author link, description, and all textures through paginated loading; it never exposes editing controls.
+- `/texture-packs/:id/edit` is the detailed owner editor for name, description, upload, individual texture deletion, publication, and full-pack deletion.
 - Texture-pack cards use `TexturePackPreviewSliderComponent`, which adapts texture data to the existing `ImagesSliderComponent`/`ngx-owl-carousel-o` approach.
   - The profile uses the compact `regular` presentation.
   - The public catalog passes `size="large"` and uses the same responsive carousel configuration as the mods page: 2 items on small screens, 3 from 480px, and 4 from 768px upward.
   - The public carousel intentionally avoids `autoWidth`; mixing `autoWidth` with looping caused clipped initial slides and blank track space.
-  - Public pack cards occupy the available content width, remain white, use only a subtle shadow, and do not reserve `min-height`.
+- Public pack cards occupy the available content width, remain white, use only a subtle shadow, and do not reserve `min-height`.
   - Author links are styled application links rather than browser-default blue links.
-  - If a pack has no description, the public card omits the description element entirely.
+- If a pack has no description, the public card omits the description element entirely.
+- The header groups growing content sections under the `Библиотека` popover: maps, texture packs, and mods. Do not add each section as another top-level header item.
+- Own map cards expose deletion as a neutral trash icon in the preview's top-right corner. It appears via opacity on hover/focus (and remains visible on touch layouts) and opens `ConfirmationModalComponent`; do not add a third full-width action button.
 
 ## Workshop Notes
 
@@ -204,6 +228,10 @@
   - Profile map cards link back to Workshop for editing.
   - The current backend map id is remembered in localStorage under `workshop-map-id`.
   - The native map selector reserves space for a custom-positioned arrow and truncates long labels instead of allowing text to overlap the arrow.
+- Published maps open in Workshop through `viewMapId` as read-only maps:
+  - Drawing/editing tools are disabled, but canvas pan and zoom remain available.
+  - The canvas keeps its natural aspect ratio and must not stretch to the available width.
+  - `Сохранить в мои черновики` creates an editable owned copy and switches out of read-only mode.
 - Procedural world prototype:
   - A seed produces a deterministic editable world.
   - Generated object kinds currently include continents, rivers, mountains, houses, tables, wardrobes, beds, and chairs.
@@ -241,9 +269,9 @@
 - PowerShell displayed `README.md` and some Russian strings as mojibake during inspection; be careful with file encoding.
 - The working tree is not clean. Existing user changes include `.husky/post-merge`, the tool factory/disposal work in `WorkshopToolsService`, and optional `Tool.dispose()`. Preserve them.
 - Workshop changes are currently uncommitted and span layout, sidebars, context settings, zoom/panning, selection transforms, shapes, and settings services. Preserve them as one ongoing body of user work.
-- `yarn nx lint workshop` currently succeeds without lint errors or warnings.
-- `yarn nx build web --configuration=development` succeeds after the latest viewport-resize, custom scrollbar, and clear-content changes.
-- `yarn nx build web --configuration=development` and `yarn build:api` succeed after the procedural-generation and map-persistence prototype.
+- Current production checks pass: `yarn build:web` and `yarn build:api`.
+- Relevant lint checks pass for `profile`, `texture-packs`, `textures`, and `common-ui`; `common-ui` still reports pre-existing warnings in unrelated components.
+- `yarn nx test textures --runInBand` currently passes 14 tests covering uploads, ownership, individual/full-pack deletion, and public-pack visibility.
 - The authenticated map API was smoke-tested end-to-end: login, create, read, and update succeeded; the temporary test map was removed.
 - `git diff --check` succeeds; Git only reports expected LF-to-CRLF conversion warnings on Windows.
 - Prefer existing Nx project patterns and standalone Angular conventions.
