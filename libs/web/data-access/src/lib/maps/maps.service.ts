@@ -7,6 +7,7 @@ import {
   PublishedStoredMap,
   SaveMap,
   StoredMap,
+  LikeState,
 } from './interfaces';
 
 @Injectable({
@@ -17,31 +18,31 @@ export class MapsService {
   #apiConfig = inject(API_CONFIG);
 
   listMine() {
-    return this.#http.get<MapSummary[]>(`${this.#apiConfig.baseUrl}maps`);
+    return this.#http.get<MapSummary[]>(`${this.#apiConfig.baseUrl}maps/mine`);
   }
 
-  listPublished(authorUserId: number) {
-    return this.#http.get<MapSummary[]>(
-      `${this.#apiConfig.baseUrl}maps/authors/${authorUserId}`,
-    );
+  listPublicByAuthor(authorUserId: number) {
+    return this.#http.get<MapSummary[]>(`${this.#apiConfig.baseUrl}maps`, {
+      params: { authorId: authorUserId },
+    });
   }
 
   listCatalog() {
     return this.#http.get<PublishedMapSummary[]>(
-      `${this.#apiConfig.baseUrl}maps/published`,
+      `${this.#apiConfig.baseUrl}maps`,
     );
   }
 
-  getPublished(mapId: number, context?: HttpContext) {
+  getPublicMap(mapId: number, context?: HttpContext) {
     return this.#http.get<PublishedStoredMap>(
-      `${this.#apiConfig.baseUrl}maps/published/${mapId}`,
+      `${this.#apiConfig.baseUrl}maps/${mapId}`,
       { context },
     );
   }
 
-  get(mapId: number, context?: HttpContext) {
+  getOwned(mapId: number, context?: HttpContext) {
     return this.#http.get<StoredMap>(
-      `${this.#apiConfig.baseUrl}maps/${mapId}`,
+      `${this.#apiConfig.baseUrl}maps/mine/${mapId}`,
       { context },
     );
   }
@@ -65,9 +66,22 @@ export class MapsService {
     );
   }
 
-  remove(mapId: number) {
+  removeOwned(mapId: number) {
     return this.#http.delete<{ id: number }>(
       `${this.#apiConfig.baseUrl}maps/${mapId}`,
+    );
+  }
+
+  like(mapId: number) {
+    return this.#http.post<LikeState>(
+      `${this.#apiConfig.baseUrl}maps/${mapId}/like`,
+      {},
+    );
+  }
+
+  unlike(mapId: number) {
+    return this.#http.delete<LikeState>(
+      `${this.#apiConfig.baseUrl}maps/${mapId}/like`,
     );
   }
 }

@@ -15,6 +15,7 @@ import {
   TexturePack,
   TexturePackView,
   UpdateTexturePack,
+  TexturePackLikeState,
 } from './interfaces';
 
 @Injectable({
@@ -30,26 +31,32 @@ export class TexturePacksService {
       .pipe(map((packs) => packs.map((pack) => this.#toView(pack))));
   }
 
-  listPublished(authorUserId?: number) {
-    const path =
-      authorUserId === undefined
-        ? 'texture-packs'
-        : `texture-packs/authors/${authorUserId}`;
+  listPublicCatalog() {
+    return this.#listPublic('texture-packs');
+  }
+
+  listPublicByAuthor(authorUserId: number) {
+    return this.#listPublic('texture-packs', authorUserId);
+  }
+
+  #listPublic(path: string, authorId?: number) {
     return this.#http
-      .get<PublishedTexturePack[]>(`${this.#apiConfig.baseUrl}${path}`)
+      .get<PublishedTexturePack[]>(`${this.#apiConfig.baseUrl}${path}`, {
+        params: authorId === undefined ? {} : { authorId },
+      })
       .pipe(map((packs) => packs.map((pack) => this.#toPublishedView(pack))));
   }
 
-  getPublished(packId: string) {
+  getPublicPack(packId: string) {
     return this.#http.get<PublishedTexturePackDetails>(
-      `${this.#apiConfig.baseUrl}texture-packs/published/${packId}`,
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}`,
     );
   }
 
-  listPublishedTextures(packId: string, page: number, pageSize = 48) {
+  listPublicTextures(packId: string, page: number, pageSize = 48) {
     return this.#http
       .get<TexturePage>(
-        `${this.#apiConfig.baseUrl}texture-packs/published/${packId}/textures`,
+        `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures`,
         { params: { page, pageSize } },
       )
       .pipe(
@@ -69,9 +76,9 @@ export class TexturePacksService {
     );
   }
 
-  get(packId: string) {
+  getOwned(packId: string) {
     return this.#http.get<TexturePackDetails>(
-      `${this.#apiConfig.baseUrl}texture-packs/${packId}`,
+      `${this.#apiConfig.baseUrl}texture-packs/mine/${packId}`,
     );
   }
 
@@ -82,10 +89,10 @@ export class TexturePacksService {
     );
   }
 
-  listTextures(packId: string, page: number, pageSize = 48) {
+  listOwnedTextures(packId: string, page: number, pageSize = 48) {
     return this.#http
       .get<TexturePage>(
-        `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures`,
+        `${this.#apiConfig.baseUrl}texture-packs/mine/${packId}/textures`,
         { params: { page, pageSize } },
       )
       .pipe(
@@ -108,13 +115,13 @@ export class TexturePacksService {
     );
   }
 
-  removeTexture(packId: string, textureId: string) {
+  removeOwnedTexture(packId: string, textureId: string) {
     return this.#http.delete<{ id: string }>(
       `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures/${textureId}`,
     );
   }
 
-  remove(packId: string) {
+  removeOwned(packId: string) {
     return this.#http.delete<{ id: string }>(
       `${this.#apiConfig.baseUrl}texture-packs/${packId}`,
     );
@@ -128,6 +135,19 @@ export class TexturePacksService {
     }>(`${this.#apiConfig.baseUrl}texture-packs/${packId}/publication`, {
       isPublished,
     });
+  }
+
+  like(packId: string) {
+    return this.#http.post<TexturePackLikeState>(
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}/like`,
+      {},
+    );
+  }
+
+  unlike(packId: string) {
+    return this.#http.delete<TexturePackLikeState>(
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}/like`,
+    );
   }
 
   #toView(pack: TexturePack): TexturePackView {

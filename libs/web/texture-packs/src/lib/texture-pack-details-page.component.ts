@@ -9,6 +9,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EmptyStateComponent } from '@wm/web/common-ui';
+import { SvgComponent } from '@wm/web/common-ui';
+import { AuthService } from '@wm/web/data-access/auth';
 import {
   PublishedTexturePackDetails,
   TextureItemView,
@@ -22,7 +24,7 @@ interface TextureDetailsCard extends TextureItemView {
 
 @Component({
   selector: 'wm-texture-pack-details-page',
-  imports: [RouterLink, EmptyStateComponent],
+  imports: [RouterLink, EmptyStateComponent, SvgComponent],
   templateUrl: './texture-pack-details-page.component.html',
   styleUrl: './texture-pack-details-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +33,7 @@ export class TexturePackDetailsPageComponent {
   #route = inject(ActivatedRoute);
   #texturePacksService = inject(TexturePacksService);
   #destroyRef = inject(DestroyRef);
+  #authService = inject(AuthService);
   #pageSize = 48;
 
   readonly packId = this.#route.snapshot.paramMap.get('id') ?? '';
@@ -42,9 +45,17 @@ export class TexturePackDetailsPageComponent {
   readonly isLoadingMore = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly hasMore = computed(() => this.textures().length < this.total());
+  readonly isAuthorized = signal(false);
+  readonly isLiked = signal(false);
+  readonly isUpdatingLike = signal(false);
 
   constructor() {
     this.load();
+    this.#authService.isAuthorized$
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe((isAuthorized) => {
+        this.isAuthorized.set(isAuthorized);
+      });
   }
 
   load() {
@@ -57,8 +68,8 @@ export class TexturePackDetailsPageComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     forkJoin({
-      pack: this.#texturePacksService.getPublished(this.packId),
-      textures: this.#texturePacksService.listPublishedTextures(
+      pack: this.#texturePacksService.getPublicPack(this.packId),
+      textures: this.#texturePacksService.listPublicTextures(
         this.packId,
         1,
         this.#pageSize,
@@ -71,6 +82,7 @@ export class TexturePackDetailsPageComponent {
       .subscribe({
         next: ({ pack, textures }) => {
           this.pack.set(pack);
+          this.isLiked.set(pack.isLiked);
           this.textures.set(
             textures.items.map((texture) => this.#toCard(texture)),
           );
@@ -91,7 +103,7 @@ export class TexturePackDetailsPageComponent {
     this.isLoadingMore.set(true);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .listPublishedTextures(this.packId, nextPage, this.#pageSize)
+      .listPublicTextures(this.packId, nextPage, this.#pageSize)
       .pipe(
         finalize(() => this.isLoadingMore.set(false)),
         takeUntilDestroyed(this.#destroyRef),
@@ -107,6 +119,26 @@ export class TexturePackDetailsPageComponent {
         },
         error: () =>
           this.errorMessage.set('Не удалось загрузить остальные текстуры.'),
+      });
+  }
+
+  toggleLike() {
+    const pack = this.pack();
+    if (!pack || !this.isAuthorized() || this.isUpdatingLike()) return;
+    this.isUpdatingLike.set(true);
+    const request = this.isLiked()
+      ? this.#texturePacksService.unlike(pack.id)
+      : this.#texturePacksService.like(pack.id);
+    request
+      .pipe(
+        finalize(() => this.isUpdatingLike.set(false)),
+        takeUntilDestroyed(this.#destroyRef),
+      )
+      .subscribe(({ isLiked, likesCount }) => {
+        this.isLiked.set(isLiked);
+        this.pack.update((current) =>
+          current ? { ...current, likesCount } : current,
+        );
       });
   }
 

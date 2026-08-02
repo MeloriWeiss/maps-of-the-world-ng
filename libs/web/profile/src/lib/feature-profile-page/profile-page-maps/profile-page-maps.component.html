@@ -144,7 +144,21 @@
                 </button>
               } @else {
                 <span class="map-card__metrics">
-                  {{ map.likesCount }} отметок ·
+                  <button
+                    type="button"
+                    [class.active]="map.isLiked"
+                    [disabled]="updatingLikeId() !== null"
+                    [attr.aria-pressed]="map.isLiked"
+                    (click)="toggleLike(map)"
+                  >
+                    <svg
+                      [icon]="map.isLiked ? 'heart-filled' : 'heart'"
+                      class="svg16"
+                      aria-hidden="true"
+                    ></svg>
+                    {{ map.likesCount }}
+                  </button>
+                  ·
                   {{ map.commentsCount }} комментариев
                 </span>
               }

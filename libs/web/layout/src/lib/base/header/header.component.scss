@@ -1,4 +1,4 @@
-@use 'functions' as *;
+﻿@use 'functions' as *;
 @use 'mixins' as *;
 @use 'media' as *;
 
@@ -18,7 +18,7 @@
   @include mobile {
     flex-direction: column;
     align-items: stretch;
-    box-shadow: 0 rem(4) rem(4) 0 rgba(0, 0, 0, 0.25);
+    box-shadow: 0 rem(4) rem(4) 0 rgb(from var(--dark-color) r g b / 25%);
   }
 }
 
@@ -89,6 +89,13 @@
 
   .avatar-link {
     color: var(--light-color);
+
+    &__image {
+      width: rem(40);
+      height: rem(40);
+      border-radius: 50%;
+      object-fit: cover;
+    }
   }
 }
 
@@ -225,7 +232,7 @@ body.header-right-side.is-open {
   top: 0;
   left: 0;
   @include square(100%);
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgb(from var(--dark-color) r g b / 50%);
   z-index: 10;
   opacity: 0;
   pointer-events: none;

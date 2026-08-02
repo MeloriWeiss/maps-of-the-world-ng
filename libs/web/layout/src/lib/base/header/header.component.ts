@@ -14,6 +14,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '@wm/web/data-access/auth';
 import { firstValueFrom } from 'rxjs';
+import { CurrentAccountStore } from '@wm/web/data-access/profile';
 
 @Component({
   selector: 'wm-header',
@@ -31,6 +32,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class HeaderComponent {
   #authService = inject(AuthService);
+  readonly currentAccount = inject(CurrentAccountStore);
 
   searchControl = new FormControl('');
 

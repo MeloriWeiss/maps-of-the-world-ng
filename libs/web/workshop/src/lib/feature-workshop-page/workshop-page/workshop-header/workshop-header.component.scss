@@ -1,11 +1,11 @@
-@use 'functions' as *;
+﻿@use 'functions' as *;
 
 :host {
   display: block;
   height: 58px;
-  color: #fff;
-  background: #4b453d;
-  border-bottom: 1px solid rgb(255 255 255 / 18%);
+  color: var(--light-color);
+  background: var(--dark-primary-bright-color);
+  border-bottom: 1px solid rgb(from var(--light-color) r g b / 18%);
 }
 
 .controls__header {
@@ -66,6 +66,16 @@
       opacity: 0.55;
     }
   }
+
+  .controls__like-button {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(5);
+
+    &.active {
+      color: var(--error-color);
+    }
+  }
 }
 
 .controls__history {
@@ -77,57 +87,144 @@
     place-items: center;
     width: 35px;
     height: 22px;
-    color: #fff;
-    background: #736e65;
+    color: var(--light-color);
+    background: var(--primary-color);
     border-radius: 5px;
     font-size: 24px;
     line-height: 1;
 
     &:hover {
-      background: #8b857b;
+      background: var(--primary-color);
     }
   }
+}
+
+.controls__menu-trigger {
+  display: grid;
+  width: rem(36);
+  height: rem(36);
+  padding: rem(8);
+  place-content: center;
+  gap: rem(4);
+  border: rem(1) solid rgb(from var(--light-color) r g b / 24%);
+  border-radius: rem(5);
+
+  span {
+    display: block;
+    width: rem(18);
+    height: rem(2);
+    border-radius: rem(2);
+    background-color: var(--light-color);
+  }
+
+  &:hover {
+    background-color: rgb(from var(--light-color) r g b / 10%);
+  }
+}
+
+.controls__map-menu {
+  display: grid;
+  width: rem(320);
+  padding: rem(18);
+  gap: rem(14);
+
+  h2 {
+    font-size: rem(18);
+  }
+
+  label {
+    display: grid;
+    gap: rem(5);
+    color: var(--light-gray-font-color);
+    font-size: rem(13);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: rem(8) rem(10);
+    border: rem(1) solid var(--light-gray-color);
+    border-radius: rem(5);
+    outline: none;
+    color: var(--semi-dark-font-color);
+    background-color: var(--light-color);
+    font: inherit;
+
+    &:focus {
+      border-color: var(--primary-color);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  a {
+    display: flex;
+    min-height: rem(36);
+    padding: rem(8) rem(10);
+    align-items: center;
+    justify-content: center;
+    border: rem(1) solid var(--primary-color);
+    border-radius: rem(5);
+    color: var(--dark-primary-color);
+    background-color: var(--light-primary-color);
+    font-size: rem(14);
+    font-weight: 700;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--light-color);
+      background-color: var(--dark-primary-color);
+      outline: none;
+    }
+  }
+}
+
+.controls__map-menu-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: rem(7);
+
+  button {
+    padding: rem(8);
+    border-radius: rem(5);
+    color: var(--light-color);
+    background-color: var(--dark-primary-color);
+
+    &:hover:not(:disabled) {
+      background-color: var(--dark-primary-bright-color);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+  }
+}
+
+.controls__map-menu-status {
+  color: var(--light-gray-font-color);
+  font-size: rem(13);
 }
 
 .controls__divider {
   width: 1px;
   height: 40px;
-  background: rgb(255 255 255 / 45%);
+  background: rgb(from var(--light-color) r g b / 45%);
 }
 
 .controls__map {
-  display: grid;
-  grid-template-columns: rem(170) rem(150);
-  gap: rem(5);
+  width: rem(190);
+}
 
-  select,
-  input {
-    box-sizing: border-box;
-    min-width: 0;
-    padding: rem(6) rem(8);
-    border: rem(1) solid var(--light-transparent-font-color);
-    border-radius: rem(4);
-    outline: none;
-    background-color: var(--dark-primary-color);
-    color: var(--light-color);
-    font: inherit;
-  }
-
-  select {
-    overflow: hidden;
-    padding-right: rem(24);
-    appearance: none;
-    background-image:
-      linear-gradient(45deg, transparent 50%, var(--light-color) 50%),
-      linear-gradient(135deg, var(--light-color) 50%, transparent 50%);
-    background-position:
-      calc(100% - #{rem(12)}) 50%,
-      calc(100% - #{rem(8)}) 50%;
-    background-repeat: no-repeat;
-    background-size: rem(4) rem(4);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.controls__select-clear {
+  color: var(--light-color);
+  font-size: rem(20);
+  line-height: 1;
 }
 
 .controls__generator {
@@ -139,16 +236,16 @@
   input {
     width: 112px;
     padding: 6px 8px;
-    color: #f4f1ea;
-    background: #37332e;
-    border: 1px solid rgb(255 255 255 / 22%);
+    color: var(--light-bg-color);
+    background: var(--semi-dark-font-color);
+    border: 1px solid rgb(from var(--light-color) r g b / 22%);
     border-radius: 4px;
   }
 
   button {
     padding: 6px 10px;
-    color: #fff;
-    background: #88704d;
+    color: var(--light-color);
+    background: var(--primary-color);
     border-radius: 4px;
   }
 }
@@ -159,33 +256,12 @@
   left: 0;
   z-index: 20;
   padding: 5px 8px;
-  color: #332d25;
-  background: #f3ead6;
+  color: var(--semi-dark-font-color);
+  background: var(--light-primary-color);
   border-radius: 4px;
-  box-shadow: 0 3px 12px rgb(0 0 0 / 25%);
+  box-shadow: 0 3px 12px rgb(from var(--dark-color) r g b / 25%);
   font-size: 12px;
   white-space: nowrap;
-}
-
-.controls__persistence {
-  position: relative;
-  display: flex;
-  gap: 5px;
-
-  button {
-    padding: 6px 8px;
-    color: #ece8df;
-    border: 1px solid rgb(255 255 255 / 24%);
-    border-radius: 4px;
-
-    &:hover:not(:disabled) {
-      background: rgb(255 255 255 / 10%);
-    }
-
-    &:disabled {
-      opacity: 0.55;
-    }
-  }
 }
 
 .controls__setting {
@@ -209,23 +285,11 @@
   height: 18px;
   padding: 0;
   overflow: hidden;
-  background: #fff;
+  background: var(--light-color);
   border: 0;
   border-radius: 50%;
 }
 
 .controls__drop {
   font-size: 20px;
-}
-
-.controls__clear {
-  margin-left: auto;
-  padding: 7px 12px;
-  color: #e8e6e2;
-  border: 1px solid rgb(255 255 255 / 24%);
-  border-radius: 4px;
-
-  &:hover {
-    background: rgb(255 255 255 / 10%);
-  }
 }

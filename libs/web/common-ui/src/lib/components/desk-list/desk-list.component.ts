@@ -18,7 +18,7 @@ import { NgTemplateOutlet } from '@angular/common';
 })
 export class DeskListComponent {
   @ContentChild('sidebar', { read: TemplateRef })
-  sidebarTemplate: TemplateRef<any> | null = null;
+  sidebarTemplate: TemplateRef<unknown> | null = null;
 
   pageable = input(true);
   title = input<string>('');

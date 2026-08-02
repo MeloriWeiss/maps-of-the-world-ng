@@ -66,7 +66,7 @@ export class SearchInputComponent implements ControlValueAccessor {
     this.disabled.set(isDisabled);
   }
 
-  onChange(value: string | null) {}
+  onChange: (value: string | null) => void = () => undefined;
 
-  onTouched() {}
+  onTouched: VoidFunction = () => undefined;
 }

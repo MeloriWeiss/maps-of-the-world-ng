@@ -14,7 +14,10 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { ProfileService } from '@wm/web/data-access/profile';
+import {
+  CurrentAccountStore,
+  ProfileService,
+} from '@wm/web/data-access/profile';
 import { SuccessToastComponent, ToastService } from '@wm/web/common-ui';
 
 @Component({
@@ -26,6 +29,7 @@ import { SuccessToastComponent, ToastService } from '@wm/web/common-ui';
 })
 export class ProfilePageEditComponent {
   #profileService = inject(ProfileService);
+  #currentAccountStore = inject(CurrentAccountStore);
   #toastService = inject(ToastService);
   #router = inject(Router);
   #route = inject(ActivatedRoute);
@@ -86,7 +90,11 @@ export class ProfilePageEditComponent {
         takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe({
-        next: () => {
+        next: (account) => {
+          this.#currentAccountStore.updateProfile({
+            nickname: account.nickname,
+            bio: account.bio ?? null,
+          });
           this.#toastService.show(SuccessToastComponent, {
             message: 'Изменения профиля сохранены',
           });

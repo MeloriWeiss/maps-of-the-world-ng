@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { WorkshopCanvasComponent } from './workshop-canvas/workshop-canvas.component';
 import { WorkshopCanvasManagerService } from '../../../services';
 import { WorkshopPanningService } from '../../../services';
+import { ToggleComponent } from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-workshop-workspace',
-  imports: [FormsModule, WorkshopCanvasComponent],
+  imports: [FormsModule, WorkshopCanvasComponent, ToggleComponent],
   templateUrl: './workshop-workspace.component.html',
   styleUrl: './workshop-workspace.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,9 +28,8 @@ export class WorkshopWorkspaceComponent {
     this.#panningService.fitWorld();
   }
 
-  toggleGrid(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.showGrid.set(input.checked);
+  toggleGrid(showGrid: boolean) {
+    this.showGrid.set(showGrid);
     this.#canvasManager.requestRedraw();
   }
 }

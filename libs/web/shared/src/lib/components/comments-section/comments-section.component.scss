@@ -1,4 +1,4 @@
-@use 'media' as *;
+﻿@use 'media' as *;
 @use 'functions' as *;
 @use 'mixins' as *;
 
@@ -7,7 +7,7 @@
   background-color: var(--light-color);
   padding: fluid(12, 11) fluid(20, 8);
   border-radius: fluid(15, 10);
-  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgba(0, 0, 0, 0.25);
+  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgb(from var(--dark-color) r g b / 25%);
 }
 
 .comments-section__title {

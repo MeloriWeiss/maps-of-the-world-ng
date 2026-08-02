@@ -1,0 +1,11 @@
+<label class="toggle" [class.toggle--disabled]="disabled()">
+  <span class="toggle__label"><ng-content></ng-content></span>
+  <input
+    type="checkbox"
+    [checked]="checked()"
+    [disabled]="disabled()"
+    [attr.aria-label]="ariaLabel()"
+    (change)="updateChecked($event)"
+  />
+  <span class="toggle__track" aria-hidden="true"></span>
+</label>

@@ -1,0 +1,74 @@
+<div class="searchable-select" wmClickOutside (wmClickOutside)="close()">
+  <button
+    class="searchable-select__trigger"
+    type="button"
+    role="combobox"
+    aria-haspopup="listbox"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-controls]="optionsId"
+    [disabled]="disabled()"
+    (click)="toggle()"
+    (keydown)="handleKeydown($event)"
+  >
+    <span>{{ selectedOption()?.label ?? placeholder() }}</span>
+    <span class="searchable-select__indicator" aria-hidden="true">
+      <ng-content select="[wmSearchableSelectIndicator]">
+        <span class="searchable-select__arrow"></span>
+      </ng-content>
+    </span>
+  </button>
+  @if (isOpen()) {
+    <div class="searchable-select__dropdown">
+      <div class="searchable-select__search-wrapper">
+        <input
+          class="searchable-select__search"
+          type="text"
+          autocomplete="off"
+          [attr.aria-label]="searchPlaceholder()"
+          [placeholder]="searchPlaceholder()"
+          [value]="searchQuery()"
+          (input)="updateSearch($event)"
+          (keydown)="handleKeydown($event)"
+        />
+        @if (searchQuery()) {
+          <button
+            class="searchable-select__clear"
+            type="button"
+            aria-label="Очистить поиск"
+            (click)="clearSearch()"
+          >
+            <ng-content select="[wmSearchableSelectClearIcon]">×</ng-content>
+          </button>
+        }
+      </div>
+      <div class="searchable-select__options" role="listbox" [id]="optionsId">
+        @for (
+          option of filteredOptions();
+          track option.value;
+          let index = $index
+        ) {
+          <button
+            class="searchable-select__option"
+            type="button"
+            role="option"
+            [class.searchable-select__option--active]="index === activeIndex()"
+            [class.searchable-select__option--selected]="
+              option === selectedOption()
+            "
+            [attr.aria-selected]="option === selectedOption()"
+            (pointerenter)="activeIndex.set(index)"
+            (click)="select(option)"
+          >
+            <span>{{ option.label }}</span>
+            @if (option.description) {
+              <small>{{ option.description }}</small>
+            }
+          </button>
+        } @empty {
+          <p class="searchable-select__empty">{{ emptyText() }}</p>
+        }
+      </div>
+    </div>
+  }
+</div>

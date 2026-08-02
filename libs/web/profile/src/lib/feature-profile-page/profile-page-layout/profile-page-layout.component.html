@@ -64,7 +64,7 @@
         <div class="profile__user-info">
           <div class="profile__username-row">
             <p class="profile__username">{{ summary().nickname }}</p>
-            @if (isOwnProfile) {
+            @if (isOwnProfile && !isEditing()) {
               <a
                 class="profile__edit-link"
                 [routerLink]="['edit']"
@@ -128,15 +128,17 @@
             Текстур-паки
           </a>
         </li>
-        <li class="profile__tabs-item">
-          <a
-            [routerLink]="['favourite']"
-            routerLinkActive="active"
-            class="profile__tabs-link"
-          >
-            Понравилось
-          </a>
-        </li>
+        @if (isOwnProfile) {
+          <li class="profile__tabs-item">
+            <a
+              [routerLink]="['favourite']"
+              routerLinkActive="active"
+              class="profile__tabs-link"
+            >
+              Понравилось
+            </a>
+          </li>
+        }
       </ul>
     </nav>
   }

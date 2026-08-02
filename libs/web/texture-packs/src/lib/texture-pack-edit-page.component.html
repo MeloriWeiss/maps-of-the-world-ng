@@ -119,6 +119,18 @@
               <article class="texture-card">
                 <div class="texture-card__preview">
                   <img [src]="texture.fileUrl" [alt]="texture.name" />
+                  <button
+                    class="texture-card__delete"
+                    type="button"
+                    [disabled]="deletingTextureId() !== null"
+                    (click)="removeTexture(texture)"
+                    [attr.aria-label]="
+                      'Удалить текстуру «' + texture.name + '»'
+                    "
+                    title="Удалить текстуру"
+                  >
+                    <svg icon="trash" class="svg20" aria-hidden="true"></svg>
+                  </button>
                 </div>
                 <div class="texture-card__body">
                   <div>
@@ -130,20 +142,6 @@
                       }
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    [disabled]="deletingTextureId() !== null"
-                    (click)="removeTexture(texture)"
-                    [attr.aria-label]="
-                      'Удалить текстуру «' + texture.name + '»'
-                    "
-                  >
-                    {{
-                      deletingTextureId() === texture.id
-                        ? 'Удаляем…'
-                        : 'Удалить'
-                    }}
-                  </button>
                 </div>
               </article>
             }

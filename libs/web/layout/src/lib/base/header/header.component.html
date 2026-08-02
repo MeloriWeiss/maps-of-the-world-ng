@@ -118,7 +118,11 @@
         [attr.aria-expanded]="profileMenu.isOpen()"
         aria-label="Открыть меню профиля"
       >
-        <svg icon="avatar" class="svg40"></svg>
+        @if (currentAccount.avatarUrl(); as avatarUrl) {
+          <img class="avatar-link__image" [src]="avatarUrl" alt="" />
+        } @else {
+          <svg icon="avatar" class="svg40"></svg>
+        }
       </button>
 
       <nav wmPopoverContent class="profile-menu" aria-label="Профиль">

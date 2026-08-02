@@ -88,6 +88,13 @@ export class AccountsController {
   }
 
   @UseGuards(JwtAccessGuard)
+  @Get('/me/favourites')
+  @ApiOperation({ summary: 'List content liked by the current account' })
+  getMyFavourites(@Req() req: AccessRequest) {
+    return this.#accountsService.getMyFavourites(req.user.profileId);
+  }
+
+  @UseGuards(JwtAccessGuard)
   @Post('/me/avatar')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5_000_000 } }))
   @ApiConsumes('multipart/form-data')

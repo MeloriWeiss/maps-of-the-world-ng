@@ -71,7 +71,25 @@
                 <p>{{ map.description }}</p>
               }
               <div class="map-card__metrics">
-                <span>{{ map.likesCount }} отметок</span>
+                @if (isAuthorized()) {
+                  <button
+                    class="map-card__like"
+                    type="button"
+                    [class.active]="map.isLiked"
+                    [disabled]="updatingLikeId() !== null"
+                    [attr.aria-pressed]="map.isLiked"
+                    (click)="toggleLike(map)"
+                  >
+                    <svg
+                      [icon]="map.isLiked ? 'heart-filled' : 'heart'"
+                      class="svg16"
+                      aria-hidden="true"
+                    ></svg>
+                    {{ map.likesCount }}
+                  </button>
+                } @else {
+                  <span>{{ map.likesCount }} отметок</span>
+                }
                 <span>{{ map.commentsCount }} комментариев</span>
               </div>
               <a

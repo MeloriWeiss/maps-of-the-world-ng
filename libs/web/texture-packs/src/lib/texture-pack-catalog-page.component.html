@@ -60,7 +60,27 @@
                   {{ pack.author.nickname }}
                 </a>
               </div>
-              <span>{{ pack._count.textures }} текстур</span>
+              <div class="catalog-card__metrics">
+                <span>{{ pack._count.textures }} текстур</span>
+                @if (isAuthorized()) {
+                  <button
+                    type="button"
+                    [class.active]="pack.isLiked"
+                    [disabled]="updatingLikeId() !== null"
+                    [attr.aria-pressed]="pack.isLiked"
+                    (click)="toggleLike(pack)"
+                  >
+                    <svg
+                      [icon]="pack.isLiked ? 'heart-filled' : 'heart'"
+                      class="svg16"
+                      aria-hidden="true"
+                    ></svg>
+                    {{ pack.likesCount }}
+                  </button>
+                } @else {
+                  <span>{{ pack.likesCount }} отметок</span>
+                }
+              </div>
             </div>
             @if (pack.description) {
               <p>{{ pack.description }}</p>

@@ -102,7 +102,7 @@ describe('TexturePacksService', () => {
     const service = await createService();
 
     await expect(
-      service.listTextures(7, 'pack-id', { page: 2, pageSize: 24 }),
+      service.listOwnedTextures(7, 'pack-id', { page: 2, pageSize: 24 }),
     ).resolves.toEqual({
       items: [{ id: 'texture-id' }],
       total: 49,
@@ -118,7 +118,7 @@ describe('TexturePacksService', () => {
     prisma.texturePack.findMany.mockResolvedValue([]);
     const service = await createService();
 
-    await service.listPublished();
+    await service.listPublicCatalog();
 
     expect(prisma.texturePack.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -132,17 +132,28 @@ describe('TexturePacksService', () => {
       id: 'pack-id',
       name: 'Stone',
       owner: { userId: 11, nickname: 'Cartographer' },
+      _count: { textures: 4, likes: 1 },
     });
     const service = await createService();
 
-    await expect(service.getPublished('pack-id')).resolves.toEqual({
+    await expect(service.getPublicPack('pack-id', 7)).resolves.toEqual({
       id: 'pack-id',
       name: 'Stone',
+      isLiked: true,
+      _count: { textures: 4 },
       author: { id: 11, nickname: 'Cartographer' },
     });
     expect(prisma.texturePack.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'pack-id', isPublished: true },
+        select: expect.objectContaining({
+          _count: {
+            select: {
+              textures: true,
+              likes: { where: { accountId: 7 } },
+            },
+          },
+        }),
       }),
     );
   });
@@ -152,7 +163,7 @@ describe('TexturePacksService', () => {
     const service = await createService();
 
     await expect(
-      service.listPublishedTextures('draft-pack', { page: 1, pageSize: 24 }),
+      service.listPublicTextures('draft-pack', { page: 1, pageSize: 24 }),
     ).rejects.toThrow(NotFoundException);
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
@@ -175,7 +186,7 @@ describe('TexturePacksService', () => {
     prisma.texture.count.mockResolvedValue(1);
     const service = await createService();
 
-    await service.removeTexture(7, 'pack-id', 'texture-id');
+    await service.removeOwnedTexture(7, 'pack-id', 'texture-id');
 
     expect(textures.remove).toHaveBeenCalledWith(7, 'pack-id', 'texture-id');
   });
@@ -189,7 +200,7 @@ describe('TexturePacksService', () => {
     prisma.texturePack.delete.mockResolvedValue({ id: 'pack-id' });
     const service = await createService();
 
-    await expect(service.remove(7, 'pack-id')).resolves.toEqual({
+    await expect(service.removeOwned(7, 'pack-id')).resolves.toEqual({
       id: 'pack-id',
     });
     expect(prisma.texturePack.delete).toHaveBeenCalledWith({
@@ -205,7 +216,7 @@ describe('TexturePacksService', () => {
     prisma.texturePack.findFirst.mockResolvedValue(null);
     const service = await createService();
 
-    await expect(service.remove(7, 'foreign-pack')).rejects.toThrow(
+    await expect(service.removeOwned(7, 'foreign-pack')).rejects.toThrow(
       NotFoundException,
     );
     expect(prisma.texturePack.delete).not.toHaveBeenCalled();

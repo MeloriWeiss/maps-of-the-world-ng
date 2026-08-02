@@ -8,6 +8,7 @@ export type {
   TexturePage,
   TexturePageView,
   UpdateTexturePack,
+  TexturePackLikeState,
   TexturePackAuthor,
   PublishedTexturePack,
   PublishedTexturePackView,

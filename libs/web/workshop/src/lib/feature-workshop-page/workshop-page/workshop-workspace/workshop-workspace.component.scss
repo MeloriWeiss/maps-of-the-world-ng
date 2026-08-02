@@ -1,11 +1,11 @@
-:host {
+﻿:host {
   position: relative;
   display: grid;
   grid-template-rows: minmax(0, 1fr) 35px;
   min-width: 0;
   min-height: 0;
-  background: #2c2b28;
-  border-right: 1px solid #88847e;
+  background: var(--semi-dark-font-color);
+  border-right: 1px solid var(--primary-color);
 }
 
 .workspace-status {
@@ -14,8 +14,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  color: #625f5a;
-  background: #d8d8d8;
+  color: var(--gray-color);
+  background: var(--light-bg-color);
   font-size: 16px;
 
   &__zoom {
@@ -25,22 +25,16 @@
 
     input {
       width: 130px;
-      accent-color: #8e8b85;
+      accent-color: var(--primary-color);
     }
 
     output,
     button {
       padding: 3px 10px;
-      color: #f5f5f5;
-      background: #777571;
+      color: var(--light-bg-color);
+      background: var(--primary-color);
       border-radius: 5px;
       font-size: 16px;
     }
-  }
-
-  &__grid {
-    display: flex;
-    align-items: center;
-    gap: 5px;
   }
 }

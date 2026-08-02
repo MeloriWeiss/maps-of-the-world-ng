@@ -1,3 +1,1 @@
-import { ProfileService } from './profile.service';
-
-export { ProfileService };
+export * from './profile.service';

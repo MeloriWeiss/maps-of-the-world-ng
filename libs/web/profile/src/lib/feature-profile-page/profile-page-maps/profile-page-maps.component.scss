@@ -226,6 +226,22 @@
   grid-column: 1 / -1;
   color: var(--light-gray-font-color);
   font-size: rem(13);
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(5);
+    color: inherit;
+
+    &.active {
+      color: var(--error-color);
+    }
+
+    &:disabled {
+      cursor: wait;
+      opacity: 0.6;
+    }
+  }
 }
 
 .state-card {

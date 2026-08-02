@@ -120,13 +120,41 @@
     }
   }
 
-  span {
+  > span {
     flex: 0 0 auto;
     padding: rem(5) rem(8);
     border-radius: rem(999);
     background-color: var(--light-primary-color);
     color: var(--light-gray-font-color);
     font-size: rem(12);
+  }
+}
+
+.catalog-card__metrics {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: rem(7);
+
+  span,
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(5);
+    padding: rem(5) rem(8);
+    border-radius: rem(999);
+    color: var(--light-gray-font-color);
+    background-color: var(--light-primary-color);
+    font-size: rem(12);
+  }
+
+  button.active {
+    color: var(--error-color);
+  }
+
+  button:disabled {
+    cursor: wait;
+    opacity: 0.6;
   }
 }
 

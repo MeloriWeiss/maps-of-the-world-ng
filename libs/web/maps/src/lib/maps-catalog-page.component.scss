@@ -140,6 +140,22 @@
   font-size: rem(12);
 }
 
+.map-card__like {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(5);
+  color: var(--light-gray-font-color);
+
+  &.active {
+    color: var(--error-color);
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+}
+
 .catalog-state {
   display: flex;
   align-items: center;

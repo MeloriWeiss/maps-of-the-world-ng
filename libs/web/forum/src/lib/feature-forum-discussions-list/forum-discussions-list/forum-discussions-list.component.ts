@@ -48,7 +48,7 @@ export class ForumDiscussionsListComponent {
           page: page ? page : 1,
           search: search ? search : undefined,
         })
-        .pipe(tap((discussions) => this.#paginationService.maxPage.set(2)));
+        .pipe(tap(() => this.#paginationService.maxPage.set(2)));
     }),
   );
 

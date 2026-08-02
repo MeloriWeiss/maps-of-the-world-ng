@@ -20,6 +20,7 @@ export interface TexturePack {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  likesCount: number;
   previewTextures: TextureItem[];
   _count: {
     textures: number;
@@ -32,6 +33,7 @@ export interface TexturePackAuthor {
 }
 
 export interface PublishedTexturePack extends TexturePack {
+  isLiked: boolean;
   author: TexturePackAuthor;
 }
 
@@ -59,6 +61,11 @@ export interface CreateTexturePack {
 export interface UpdateTexturePack {
   name: string;
   description?: string;
+}
+
+export interface TexturePackLikeState {
+  isLiked: boolean;
+  likesCount: number;
 }
 
 export interface TexturePage {

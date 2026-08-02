@@ -10,6 +10,8 @@ import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage
 import { WorkshopPanningService } from './workshop-panning.service';
 import { WorkshopCanvasSizeService } from './workshop-canvas-size.service';
 import { WorkshopModeService } from './workshop-mode.service';
+import { AuthService } from '@wm/web/data-access/auth';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Injectable()
 export class WorkshopMapPersistenceService {
@@ -21,16 +23,25 @@ export class WorkshopMapPersistenceService {
   #mode = inject(WorkshopModeService);
   #route = inject(ActivatedRoute);
   #router = inject(Router);
+  #authService = inject(AuthService);
   #mapIdKey = 'workshop-map-id';
   #statusMessage = createTransientMessage();
 
   readonly maps = signal<MapSummary[]>([]);
   readonly mapId = signal<number | null>(this.#readMapId());
   readonly mapName = signal('Новая карта');
+  readonly mapDescription = signal('');
   readonly isReadOnly = this.#mode.isReadOnly;
   readonly canSaveCopy = signal(false);
   readonly status = this.#statusMessage.value;
   readonly busy = signal(false);
+  readonly publishedMapId = signal<number | null>(null);
+  readonly publishedMapLikesCount = signal(0);
+  readonly isPublishedMapLiked = signal(false);
+  readonly isUpdatingLike = signal(false);
+  readonly isAuthorized = toSignal(this.#authService.isAuthorized$, {
+    initialValue: this.#authService.isAuthorized$.value,
+  });
 
   async initializeFromRoute() {
     await this.refreshMaps();
@@ -69,7 +80,7 @@ export class WorkshopMapPersistenceService {
     this.#statusMessage.show('Сохранение…', 0);
     const payload: SaveMap = {
       name: this.mapName().trim() || 'Новая карта',
-      description: 'Карта из мастерской',
+      description: this.mapDescription().trim() || undefined,
       body: this.#storage.exportSnapshot(),
     };
 
@@ -118,6 +129,7 @@ export class WorkshopMapPersistenceService {
     try {
       const map = await firstValueFrom(this.#mapsService.create(payload));
       this.isReadOnly.set(false);
+      this.#resetPublishedMapState();
       this.#rememberMap(map);
       await this.refreshMaps();
       await this.#setRoute(map.id);
@@ -136,14 +148,19 @@ export class WorkshopMapPersistenceService {
     this.busy.set(true);
     this.isReadOnly.set(true);
     this.canSaveCopy.set(false);
+    this.#resetPublishedMapState();
     this.#statusMessage.show('Загрузка карты…', 0);
     try {
       const map = await firstValueFrom(
-        this.#mapsService.getPublished(mapId, this.#silentErrors()),
+        this.#mapsService.getPublicMap(mapId, this.#silentErrors()),
       );
       this.#storage.importSnapshot(map.body);
       this.mapId.set(null);
+      this.publishedMapId.set(map.id);
       this.mapName.set(map.name);
+      this.mapDescription.set(map.description ?? '');
+      this.publishedMapLikesCount.set(map.likesCount);
+      this.isPublishedMapLiked.set(map.isLiked);
       this.canSaveCopy.set(true);
       await this.#resizeAndFitContent();
       this.#statusMessage.show(`Карта «${map.name}» открыта для просмотра`);
@@ -164,9 +181,10 @@ export class WorkshopMapPersistenceService {
     this.#statusMessage.show('Загрузка…', 0);
     try {
       const map = await firstValueFrom(
-        this.#mapsService.get(mapId, this.#silentErrors()),
+        this.#mapsService.getOwned(mapId, this.#silentErrors()),
       );
       this.#storage.importSnapshot(map.body);
+      this.#resetPublishedMapState();
       this.#rememberMap(map);
       this.#panning.fitContent();
       this.#canvasManager.redraw();
@@ -193,6 +211,8 @@ export class WorkshopMapPersistenceService {
     this.canSaveCopy.set(false);
     this.#forgetMapId();
     this.mapName.set('Новая карта');
+    this.mapDescription.set('');
+    this.#resetPublishedMapState();
     this.#storage.clearStorage();
     this.#panning.fitContent();
     this.#canvasManager.redraw();
@@ -206,9 +226,29 @@ export class WorkshopMapPersistenceService {
     );
   }
 
+  async togglePublishedMapLike() {
+    const mapId = this.publishedMapId();
+    if (!mapId || !this.isAuthorized() || this.isUpdatingLike()) return;
+
+    this.isUpdatingLike.set(true);
+    try {
+      const request = this.isPublishedMapLiked()
+        ? this.#mapsService.unlike(mapId)
+        : this.#mapsService.like(mapId);
+      const result = await firstValueFrom(request);
+      this.isPublishedMapLiked.set(result.isLiked);
+      this.publishedMapLikesCount.set(result.likesCount);
+    } catch {
+      this.#statusMessage.show('Не удалось изменить отметку карты');
+    } finally {
+      this.isUpdatingLike.set(false);
+    }
+  }
+
   #rememberMap(map: MapSummary) {
     this.mapId.set(map.id);
     this.mapName.set(map.name);
+    this.mapDescription.set(map.description ?? '');
     localStorage.setItem(this.#mapIdKey, String(map.id));
   }
 
@@ -220,6 +260,12 @@ export class WorkshopMapPersistenceService {
   #forgetMapId() {
     this.mapId.set(null);
     localStorage.removeItem(this.#mapIdKey);
+  }
+
+  #resetPublishedMapState() {
+    this.publishedMapId.set(null);
+    this.publishedMapLikesCount.set(0);
+    this.isPublishedMapLiked.set(false);
   }
 
   #silentErrors() {

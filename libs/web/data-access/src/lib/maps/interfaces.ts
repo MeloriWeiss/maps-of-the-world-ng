@@ -5,9 +5,11 @@ export interface MapSummary {
   isPublished: boolean;
   likesCount: number;
   commentsCount: number;
+  isLiked?: boolean;
 }
 
 export interface PublishedMapSummary extends MapSummary {
+  isLiked: boolean;
   author: {
     id: number;
     nickname: string;
@@ -19,6 +21,7 @@ export interface StoredMap extends MapSummary {
 }
 
 export interface PublishedStoredMap extends StoredMap {
+  isLiked: boolean;
   author: {
     id: number;
     nickname: string;
@@ -29,4 +32,9 @@ export interface SaveMap {
   name: string;
   description?: string;
   body: string;
+}
+
+export interface LikeState {
+  isLiked: boolean;
+  likesCount: number;
 }

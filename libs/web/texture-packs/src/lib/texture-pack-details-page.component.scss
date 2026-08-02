@@ -74,13 +74,29 @@ h1 {
   margin-top: rem(20);
 
   a,
-  span {
+  span,
+  button {
     padding: rem(5) rem(10);
     border-radius: rem(999);
     background-color: var(--light-primary-color);
     color: var(--dark-primary-color);
     font-size: rem(12);
     font-weight: 700;
+  }
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(5);
+
+  &.active {
+    color: var(--error-color);
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
   }
 }
 

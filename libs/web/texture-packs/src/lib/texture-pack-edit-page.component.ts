@@ -19,6 +19,7 @@ import {
   EmptyStateComponent,
   ModalService,
   SuccessToastComponent,
+  SvgComponent,
   ToastService,
 } from '@wm/web/common-ui';
 import {
@@ -34,7 +35,7 @@ interface TextureCard extends TextureItemView {
 
 @Component({
   selector: 'wm-texture-pack-edit-page',
-  imports: [ReactiveFormsModule, RouterLink, EmptyStateComponent],
+  imports: [ReactiveFormsModule, RouterLink, EmptyStateComponent, SvgComponent],
   templateUrl: './texture-pack-edit-page.component.html',
   styleUrl: './texture-pack-edit-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -88,8 +89,8 @@ export class TexturePackEditPageComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     forkJoin({
-      pack: this.#texturePacksService.get(this.packId),
-      textures: this.#texturePacksService.listTextures(
+      pack: this.#texturePacksService.getOwned(this.packId),
+      textures: this.#texturePacksService.listOwnedTextures(
         this.packId,
         1,
         this.#pageSize,
@@ -190,7 +191,7 @@ export class TexturePackEditPageComponent {
     this.isLoadingMore.set(true);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .listTextures(this.packId, nextPage, this.#pageSize)
+      .listOwnedTextures(this.packId, nextPage, this.#pageSize)
       .pipe(
         finalize(() => this.isLoadingMore.set(false)),
         takeUntilDestroyed(this.#destroyRef),
@@ -224,7 +225,7 @@ export class TexturePackEditPageComponent {
     this.deletingTextureId.set(texture.id);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .removeTexture(this.packId, texture.id)
+      .removeOwnedTexture(this.packId, texture.id)
       .pipe(
         finalize(() => this.deletingTextureId.set(null)),
         takeUntilDestroyed(this.#destroyRef),
@@ -283,7 +284,7 @@ export class TexturePackEditPageComponent {
     this.isDeletingPack.set(true);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .remove(pack.id)
+      .removeOwned(pack.id)
       .pipe(
         finalize(() => this.isDeletingPack.set(false)),
         takeUntilDestroyed(this.#destroyRef),
@@ -301,7 +302,7 @@ export class TexturePackEditPageComponent {
 
   #reloadTextures() {
     this.#texturePacksService
-      .listTextures(this.packId, 1, this.#pageSize)
+      .listOwnedTextures(this.packId, 1, this.#pageSize)
       .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
         next: (result) => {

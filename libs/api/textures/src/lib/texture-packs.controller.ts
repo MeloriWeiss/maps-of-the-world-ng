@@ -14,7 +14,12 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AccessRequest, JwtAccessGuard } from '@wm/api/api-auth';
+import {
+  AccessRequest,
+  JwtAccessGuard,
+  OptionalAccessRequest,
+  OptionalJwtAccessGuard,
+} from '@wm/api/api-auth';
 import {
   CreateTexturePackDto,
   TexturePageQueryDto,
@@ -30,30 +35,50 @@ export class TexturePacksController {
   constructor(private readonly texturePacks: TexturePacksService) {}
 
   @Get()
+  @UseGuards(OptionalJwtAccessGuard)
   @ApiOperation({ summary: 'List published texture packs' })
-  listPublished() {
-    return this.texturePacks.listPublished();
+  texturePacksList(
+    @Req() request: OptionalAccessRequest,
+    @Query('authorId') authorId?: string,
+  ) {
+    return authorId === undefined
+      ? this.texturePacks.listPublicCatalog(request.user?.profileId)
+      : this.texturePacks.listPublicByAuthor(
+          Number(authorId),
+          request.user?.profileId,
+        );
   }
 
   @Get('authors/:userId')
+  @UseGuards(OptionalJwtAccessGuard)
   @ApiOperation({ summary: 'List published texture packs by author' })
-  listByAuthor(@Param('userId') userId: string) {
-    return this.texturePacks.listPublished(Number(userId));
+  listPublicByAuthor(
+    @Param('userId') userId: string,
+    @Req() request: OptionalAccessRequest,
+  ) {
+    return this.texturePacks.listPublicByAuthor(
+      Number(userId),
+      request.user?.profileId,
+    );
   }
 
-  @Get('published/:id')
+  @Get(['public/:id', 'published/:id'])
+  @UseGuards(OptionalJwtAccessGuard)
   @ApiOperation({ summary: 'Read a published texture pack' })
-  getPublished(@Param('id') id: string) {
-    return this.texturePacks.getPublished(id);
+  getPublicPack(
+    @Param('id') id: string,
+    @Req() request: OptionalAccessRequest,
+  ) {
+    return this.texturePacks.getPublicPack(id, request.user?.profileId);
   }
 
-  @Get('published/:id/textures')
+  @Get(['public/:id/textures', 'published/:id/textures'])
   @ApiOperation({ summary: 'Read one page of published pack textures' })
-  listPublishedTextures(
+  listPublicTextures(
     @Param('id') id: string,
     @Query() query: TexturePageQueryDto,
   ) {
-    return this.texturePacks.listPublishedTextures(id, query);
+    return this.texturePacks.listPublicTextures(id, query);
   }
 
   @Get('mine')
@@ -63,22 +88,53 @@ export class TexturePacksController {
     return this.texturePacks.listMine(request.user.profileId);
   }
 
-  @Get(':id')
+  @Get('mine/:id')
   @UseGuards(JwtAccessGuard)
   @ApiOperation({ summary: 'Read an owned texture pack' })
-  get(@Req() request: AccessRequest, @Param('id') id: string) {
-    return this.texturePacks.get(request.user.profileId, id);
+  getOwned(@Req() request: AccessRequest, @Param('id') id: string) {
+    return this.texturePacks.getOwned(request.user.profileId, id);
   }
 
-  @Get(':id/textures')
+  @Get(':id')
+  @UseGuards(OptionalJwtAccessGuard)
+  @ApiOperation({ summary: 'Read a published texture pack' })
+  texturePack(@Param('id') id: string, @Req() request: OptionalAccessRequest) {
+    return this.texturePacks.getPublicPack(id, request.user?.profileId);
+  }
+
+  @Post(':id/like')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Like a published texture pack' })
+  like(@Req() request: AccessRequest, @Param('id') id: string) {
+    return this.texturePacks.like(request.user.profileId, id);
+  }
+
+  @Delete(':id/like')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Remove my like from a texture pack' })
+  unlike(@Req() request: AccessRequest, @Param('id') id: string) {
+    return this.texturePacks.unlike(request.user.profileId, id);
+  }
+
+  @Get('mine/:id/textures')
   @UseGuards(JwtAccessGuard)
   @ApiOperation({ summary: 'Read one page of textures from an owned pack' })
-  listTextures(
+  listOwnedTextures(
     @Req() request: AccessRequest,
     @Param('id') id: string,
     @Query() query: TexturePageQueryDto,
   ) {
-    return this.texturePacks.listTextures(request.user.profileId, id, query);
+    return this.texturePacks.listOwnedTextures(
+      request.user.profileId,
+      id,
+      query,
+    );
+  }
+
+  @Get(':id/textures')
+  @ApiOperation({ summary: 'Read one page of published pack textures' })
+  textures(@Param('id') id: string, @Query() query: TexturePageQueryDto) {
+    return this.texturePacks.listPublicTextures(id, query);
   }
 
   @Post()
@@ -130,12 +186,12 @@ export class TexturePacksController {
   @Delete(':id/textures/:textureId')
   @UseGuards(JwtAccessGuard)
   @ApiOperation({ summary: 'Delete a texture from an owned pack' })
-  removeTexture(
+  removeOwnedTexture(
     @Req() request: AccessRequest,
     @Param('id') id: string,
     @Param('textureId') textureId: string,
   ) {
-    return this.texturePacks.removeTexture(
+    return this.texturePacks.removeOwnedTexture(
       request.user.profileId,
       id,
       textureId,
@@ -145,8 +201,8 @@ export class TexturePacksController {
   @Delete(':id')
   @UseGuards(JwtAccessGuard)
   @ApiOperation({ summary: 'Delete an owned texture pack and its textures' })
-  remove(@Req() request: AccessRequest, @Param('id') id: string) {
-    return this.texturePacks.remove(request.user.profileId, id);
+  removeOwned(@Req() request: AccessRequest, @Param('id') id: string) {
+    return this.texturePacks.removeOwned(request.user.profileId, id);
   }
 
   @Patch(':id/publication')

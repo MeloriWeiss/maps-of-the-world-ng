@@ -3,9 +3,9 @@ import { DateTime } from 'luxon';
 type dateFormats = 'sql' | 'iso';
 
 export class DateUtil {
-  private static baseHours = 'час';
-  private static baseMinutes = 'минут';
-  private static baseSeconds = 'секунд';
+  static #baseHours = 'час';
+  static #baseMinutes = 'минут';
+  static #baseSeconds = 'секунд';
 
   static createCorrectDateString(
     separator: string,
@@ -21,12 +21,12 @@ export class DateUtil {
 
   static getEndOfHoursBack(hours: number): string {
     if (hours > 4 && hours < 21) {
-      return this.baseHours + 'ов';
+      return this.#baseHours + 'ов';
     }
     if (hours > 1 && hours !== 21) {
-      return this.baseHours + 'а';
+      return this.#baseHours + 'а';
     }
-    return this.baseHours;
+    return this.#baseHours;
   }
 
   static getEndOfMinutesBack(minutes: number): string {
@@ -34,12 +34,12 @@ export class DateUtil {
       (minutes > 4 && minutes < 21) ||
       (minutes > 24 && (minutes % 10 > 4 || minutes % 10 === 0))
     ) {
-      return this.baseMinutes;
+      return this.#baseMinutes;
     }
     if (minutes % 10 > 1) {
-      return this.baseMinutes + 'ы';
+      return this.#baseMinutes + 'ы';
     }
-    return this.baseMinutes + 'у';
+    return this.#baseMinutes + 'у';
   }
 
   static getEndOfSecondsBack(seconds: number): string {
@@ -48,12 +48,12 @@ export class DateUtil {
       seconds % 10 === 0 ||
       (seconds > 10 && seconds < 15)
     ) {
-      return this.baseSeconds;
+      return this.#baseSeconds;
     }
     if (seconds % 10 > 1) {
-      return this.baseSeconds + 'ы';
+      return this.#baseSeconds + 'ы';
     }
-    return this.baseSeconds + 'у';
+    return this.#baseSeconds + 'у';
   }
 
   static getFormattedDate(date: string) {

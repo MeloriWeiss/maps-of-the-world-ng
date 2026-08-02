@@ -25,6 +25,26 @@
               {{ pack()!.author.nickname }}
             </a>
             <span>{{ total() }} текстур</span>
+            @if (isAuthorized()) {
+              <button
+                class="like-button"
+                type="button"
+                [class.active]="isLiked()"
+                [disabled]="isUpdatingLike()"
+                [attr.aria-pressed]="isLiked()"
+                (click)="toggleLike()"
+              >
+                <svg
+                  [icon]="isLiked() ? 'heart-filled' : 'heart'"
+                  class="svg16"
+                  aria-hidden="true"
+                ></svg>
+                {{ isLiked() ? 'Понравилось' : 'Нравится' }} ·
+                {{ pack()!.likesCount }}
+              </button>
+            } @else {
+              <span>{{ pack()!.likesCount }} отметок</span>
+            }
           </div>
         </div>
       </header>

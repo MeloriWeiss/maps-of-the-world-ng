@@ -46,6 +46,7 @@ export class ProfilePageMapsComponent {
   readonly isLoading = signal(true);
   readonly publishingMapId = signal<number | null>(null);
   readonly deletingMapId = signal<number | null>(null);
+  readonly updatingLikeId = signal<number | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly draftMaps = computed(() =>
     this.maps().filter((map) => !map.isPublished),
@@ -66,7 +67,7 @@ export class ProfilePageMapsComponent {
     this.errorMessage.set(null);
     const maps$ = this.isOwnProfile
       ? this.#mapsService.listMine()
-      : this.#mapsService.listPublished(Number(this.profileId));
+      : this.#mapsService.listPublicByAuthor(Number(this.profileId));
 
     maps$
       .pipe(
@@ -104,6 +105,31 @@ export class ProfilePageMapsComponent {
       });
   }
 
+  toggleLike(map: MapSummary) {
+    if (this.isOwnProfile || this.updatingLikeId()) return;
+
+    this.updatingLikeId.set(map.id);
+    this.errorMessage.set(null);
+    const request = map.isLiked
+      ? this.#mapsService.unlike(map.id)
+      : this.#mapsService.like(map.id);
+    request
+      .pipe(
+        finalize(() => this.updatingLikeId.set(null)),
+        takeUntilDestroyed(this.#destroyRef),
+      )
+      .subscribe({
+        next: ({ isLiked, likesCount }) =>
+          this.maps.update((maps) =>
+            maps.map((item) =>
+              item.id === map.id ? { ...item, isLiked, likesCount } : item,
+            ),
+          ),
+        error: () =>
+          this.errorMessage.set('Не удалось изменить отметку карты.'),
+      });
+  }
+
   async removeMap(map: MapSummary) {
     const confirmed = await firstValueFrom(
       this.#modalService.show<boolean>(ConfirmationModalComponent, {
@@ -119,7 +145,7 @@ export class ProfilePageMapsComponent {
     this.deletingMapId.set(map.id);
     this.errorMessage.set(null);
     this.#mapsService
-      .remove(map.id)
+      .removeOwned(map.id)
       .pipe(
         finalize(() => this.deletingMapId.set(null)),
         takeUntilDestroyed(this.#destroyRef),

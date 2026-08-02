@@ -8,56 +8,106 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AccessRequest, JwtAccessGuard } from '@wm/api/api-auth';
+import {
+  AccessRequest,
+  JwtAccessGuard,
+  OptionalAccessRequest,
+  OptionalJwtAccessGuard,
+} from '@wm/api/api-auth';
 import { SaveMapDto, UpdateMapPublicationDto } from './maps.dto';
 import { MapsService } from './maps.service';
 
 @Controller('maps')
 @ApiTags('maps')
 export class MapsController {
-  constructor(private readonly maps: MapsService) {}
+  constructor(private readonly mapsService: MapsService) {}
 
-  @Get('published')
+  @Get(['', 'catalog', 'published'])
+  @UseGuards(OptionalJwtAccessGuard)
   @ApiOperation({ summary: 'List published maps' })
-  listCatalog() {
-    return this.maps.listCatalog();
+  maps(
+    @Req() request: OptionalAccessRequest,
+    @Query('authorId') authorId?: string,
+  ) {
+    return authorId === undefined
+      ? this.mapsService.listPublicCatalog(request.user?.profileId)
+      : this.mapsService.listPublicByAuthor(
+          Number(authorId),
+          request.user?.profileId,
+        );
   }
 
-  @Get('published/:id')
+  @Get(['public/:id', 'published/:id'])
+  @UseGuards(OptionalJwtAccessGuard)
   @ApiOperation({ summary: 'Read a published map for viewing' })
-  getPublished(@Param('id', ParseIntPipe) id: number) {
-    return this.maps.getPublished(id);
+  map(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: OptionalAccessRequest,
+  ) {
+    return this.mapsService.getPublicMap(id, request.user?.profileId);
   }
 
   @Get('authors/:userId')
+  @UseGuards(OptionalJwtAccessGuard)
   @ApiOperation({ summary: 'List published maps by author' })
-  listPublished(@Param('userId', ParseIntPipe) userId: number) {
-    return this.maps.listPublished(userId);
+  listPublicByAuthor(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Req() request: OptionalAccessRequest,
+  ) {
+    return this.mapsService.listPublicByAuthor(userId, request.user?.profileId);
   }
 
-  @Get()
+  @Get('mine')
   @UseGuards(JwtAccessGuard)
   @ApiOperation({ summary: 'List maps owned by the current account' })
-  list(@Req() request: AccessRequest) {
-    return this.maps.list(request.user.profileId);
+  listMine(@Req() request: AccessRequest) {
+    return this.mapsService.listMine(request.user.profileId);
+  }
+
+  @Get('mine/:id')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Read an owned map for editing' })
+  getOwned(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: AccessRequest,
+  ) {
+    return this.mapsService.getOwned(id, request.user.profileId);
   }
 
   @Get(':id')
+  @UseGuards(OptionalJwtAccessGuard)
+  @ApiOperation({ summary: 'Read a published map for viewing' })
+  publicMap(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: OptionalAccessRequest,
+  ) {
+    return this.mapsService.getPublicMap(id, request.user?.profileId);
+  }
+
+  @Post(':id/like')
   @UseGuards(JwtAccessGuard)
-  @ApiOperation({ summary: 'Read an owned map for editing' })
-  get(@Param('id', ParseIntPipe) id: number, @Req() request: AccessRequest) {
-    return this.maps.get(id, request.user.profileId);
+  @ApiOperation({ summary: 'Like a published map' })
+  like(@Param('id', ParseIntPipe) id: number, @Req() request: AccessRequest) {
+    return this.mapsService.like(id, request.user.profileId);
+  }
+
+  @Delete(':id/like')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Remove my like from a map' })
+  unlike(@Param('id', ParseIntPipe) id: number, @Req() request: AccessRequest) {
+    return this.mapsService.unlike(id, request.user.profileId);
   }
 
   @Post()
   @UseGuards(JwtAccessGuard)
   @ApiOperation({ summary: 'Create a map' })
   create(@Body() dto: SaveMapDto, @Req() request: AccessRequest) {
-    return this.maps.create(request.user.profileId, dto);
+    return this.mapsService.create(request.user.profileId, dto);
   }
 
   @Put(':id')
@@ -68,7 +118,7 @@ export class MapsController {
     @Body() dto: SaveMapDto,
     @Req() request: AccessRequest,
   ) {
-    return this.maps.update(id, request.user.profileId, dto);
+    return this.mapsService.update(id, request.user.profileId, dto);
   }
 
   @Patch(':id/publication')
@@ -79,7 +129,7 @@ export class MapsController {
     @Body() dto: UpdateMapPublicationDto,
     @Req() request: AccessRequest,
   ) {
-    return this.maps.updatePublication(
+    return this.mapsService.updatePublication(
       id,
       request.user.profileId,
       dto.isPublished,
@@ -89,7 +139,10 @@ export class MapsController {
   @Delete(':id')
   @UseGuards(JwtAccessGuard)
   @ApiOperation({ summary: 'Delete an owned map' })
-  remove(@Param('id', ParseIntPipe) id: number, @Req() request: AccessRequest) {
-    return this.maps.remove(id, request.user.profileId);
+  removeOwned(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: AccessRequest,
+  ) {
+    return this.mapsService.removeOwned(id, request.user.profileId);
   }
 }

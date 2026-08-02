@@ -83,6 +83,79 @@ export class AccountsService {
     return this.#getProfileSummary(account);
   }
 
+  async getMyFavourites(accountId: number) {
+    const [mapLikes, texturePackLikes] = await Promise.all([
+      this.#prisma.mapLike.findMany({
+        where: { accountId, map: { isPublished: true } },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          createdAt: true,
+          map: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              likesCount: true,
+              commentsCount: true,
+              authorAccount: {
+                select: { userId: true, nickname: true },
+              },
+            },
+          },
+        },
+      }),
+      this.#prisma.texturePackLike.findMany({
+        where: { accountId, texturePack: { isPublished: true } },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          createdAt: true,
+          texturePack: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              likesCount: true,
+              owner: { select: { userId: true, nickname: true } },
+              _count: { select: { textures: true } },
+              textures: {
+                orderBy: { createdAt: 'desc' },
+                take: 4,
+                select: {
+                  id: true,
+                  name: true,
+                  mimeType: true,
+                  size: true,
+                  width: true,
+                  height: true,
+                  createdAt: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      maps: mapLikes.map(({ createdAt, map: { authorAccount, ...map } }) => ({
+        ...map,
+        likedAt: createdAt,
+        author: {
+          id: authorAccount.userId,
+          nickname: authorAccount.nickname,
+        },
+      })),
+      texturePacks: texturePackLikes.map(
+        ({ createdAt, texturePack: { owner, textures, ...pack } }) => ({
+          ...pack,
+          likedAt: createdAt,
+          author: { id: owner.userId, nickname: owner.nickname },
+          previewTextures: textures,
+        }),
+      ),
+    };
+  }
+
   async updateAccount(accountId: number, dto: UpdateAccountDto) {
     if (!dto || Object.keys(dto).length === 0)
       throw new BadRequestException('Request body cannot be empty');

@@ -1,4 +1,138 @@
-<wm-empty-state
-  title="Понравившихся работ пока нет"
-  description="Карты и текстур-паки, которые вы отметите, появятся здесь."
-></wm-empty-state>
+<section class="favourites" aria-labelledby="favourites-title">
+  <header class="favourites__header">
+    <div>
+      <h2 id="favourites-title">Понравившееся</h2>
+      <p>Карты и наборы, которые вы хотите сохранить под рукой.</p>
+    </div>
+    @if (!isLoading() && !hasError()) {
+      <span>{{ total() }} сохранено</span>
+    }
+  </header>
+
+  <div class="favourites__filters" aria-label="Тип понравившихся материалов">
+    <button
+      type="button"
+      [class.active]="activeFilter() === 'all'"
+      (click)="selectFilter('all')"
+    >
+      Все
+    </button>
+    <button
+      type="button"
+      [class.active]="activeFilter() === 'maps'"
+      (click)="selectFilter('maps')"
+    >
+      Карты · {{ maps().length }}
+    </button>
+    <button
+      type="button"
+      [class.active]="activeFilter() === 'texture-packs'"
+      (click)="selectFilter('texture-packs')"
+    >
+      Текстур-паки · {{ texturePacks().length }}
+    </button>
+  </div>
+
+  @if (removalError()) {
+    <div class="favourites__error" role="alert">
+      <span>{{ removalError() }}</span>
+      <button type="button" (click)="removalError.set(null)">Закрыть</button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="favourites__state">Загружаем понравившееся…</div>
+  } @else if (hasError()) {
+    <div class="favourites__state">
+      <span>Не удалось загрузить понравившееся.</span>
+      <button type="button" (click)="load()">Повторить</button>
+    </div>
+  } @else if (isActiveFilterEmpty()) {
+    <wm-empty-state
+      [title]="emptyState().title"
+      [description]="emptyState().description"
+    ></wm-empty-state>
+  } @else {
+    @if (showMaps() && maps().length > 0) {
+      <section class="favourites__group" aria-labelledby="liked-maps-title">
+        <h3 id="liked-maps-title">Карты</h3>
+        <div class="favourites__grid">
+          @for (map of maps(); track map.id) {
+            <article class="favourite-card">
+              <button
+                class="favourite-card__remove"
+                type="button"
+                [disabled]="removingFavouriteId() !== null"
+                [attr.aria-label]="
+                  'Убрать карту «' + map.name + '» из понравившегося'
+                "
+                title="Убрать из понравившегося"
+                (click)="removeMap(map)"
+              >
+                <svg icon="heart-off" class="svg20" aria-hidden="true"></svg>
+              </button>
+              <img src="/assets/imgs/old-map-card.png" alt="" />
+              <div class="favourite-card__body">
+                <h4>{{ map.name }}</h4>
+                <a [routerLink]="['/profile', map.author.id, 'maps']">
+                  {{ map.author.nickname }}
+                </a>
+                <p>{{ map.likesCount }} отметок</p>
+                <a
+                  class="favourite-card__open"
+                  [routerLink]="['/workshop']"
+                  [queryParams]="{ viewMapId: map.id }"
+                  >Открыть карту</a
+                >
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (showTexturePacks() && texturePacks().length > 0) {
+      <section class="favourites__group" aria-labelledby="liked-packs-title">
+        <h3 id="liked-packs-title">Текстур-паки</h3>
+        <div class="favourites__grid">
+          @for (pack of texturePacks(); track pack.id) {
+            <article class="favourite-card favourite-card--pack">
+              <button
+                class="favourite-card__remove"
+                type="button"
+                [disabled]="removingFavouriteId() !== null"
+                [attr.aria-label]="
+                  'Убрать текстур-пак «' + pack.name + '» из понравившегося'
+                "
+                title="Убрать из понравившегося"
+                (click)="removeTexturePack(pack)"
+              >
+                <svg icon="heart-off" class="svg20" aria-hidden="true"></svg>
+              </button>
+              <div class="favourite-card__textures">
+                @for (texture of pack.previewTextures; track texture.id) {
+                  <img [src]="texture.fileUrl" [alt]="texture.name" />
+                }
+              </div>
+              <div class="favourite-card__body">
+                <h4>{{ pack.name }}</h4>
+                <a [routerLink]="['/profile', pack.author.id, 'texture-packs']">
+                  {{ pack.author.nickname }}
+                </a>
+                <p>
+                  {{ pack._count.textures }} текстур ·
+                  {{ pack.likesCount }} отметок
+                </p>
+                <a
+                  class="favourite-card__open"
+                  [routerLink]="['/texture-packs', pack.id]"
+                  >Открыть пак</a
+                >
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>

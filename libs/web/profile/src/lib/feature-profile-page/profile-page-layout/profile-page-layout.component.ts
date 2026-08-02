@@ -23,17 +23,23 @@ import {
   SvgComponent,
   ToastService,
 } from '@wm/web/common-ui';
-import { ProfileService } from '@wm/web/data-access/profile';
+import {
+  CurrentAccountStore,
+  ProfileService,
+} from '@wm/web/data-access/profile';
 import { ProfileSummaryDto } from '@wm/shared/accounts';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import {
-  filter,
-  finalize,
-  firstValueFrom,
-  map,
-  startWith,
-  switchMap,
-} from 'rxjs';
+import { filter, finalize, firstValueFrom, map } from 'rxjs';
+
+const emptySummary: ProfileSummaryDto = {
+  nickname: 'Профиль',
+  avatarUrl: null,
+  bio: null,
+  createdAt: '',
+  likesReceived: 0,
+  publishedMapsCount: 0,
+  publishedTexturePacksCount: 0,
+};
 
 @Component({
   selector: 'wm-profile-page-layout',
@@ -52,9 +58,11 @@ export class ProfilePageLayoutComponent {
   #route = inject(ActivatedRoute);
   #router = inject(Router);
   #profileService = inject(ProfileService);
+  #currentAccountStore = inject(CurrentAccountStore);
   #destroyRef = inject(DestroyRef);
   #modalService = inject(ModalService);
   #toastService = inject(ToastService);
+  #publicSummary = signal<ProfileSummaryDto>(emptySummary);
 
   readonly isEditing = toSignal(
     this.#router.events.pipe(
@@ -65,15 +73,11 @@ export class ProfilePageLayoutComponent {
   );
   readonly profileId = this.#route.parent?.snapshot.paramMap.get('id') ?? 'me';
   readonly isOwnProfile = this.profileId === 'me';
-  readonly summary = signal<ProfileSummaryDto>({
-    nickname: 'Профиль',
-    avatarUrl: null,
-    bio: null,
-    createdAt: '',
-    likesReceived: 0,
-    publishedMapsCount: 0,
-    publishedTexturePacksCount: 0,
-  });
+  readonly summary = computed(() =>
+    this.isOwnProfile
+      ? (this.#currentAccountStore.profile() ?? emptySummary)
+      : this.#publicSummary(),
+  );
   readonly isAvatarUpdating = signal(false);
   readonly memberSince = computed(() => {
     const createdAt = this.summary().createdAt;
@@ -98,19 +102,17 @@ export class ProfilePageLayoutComponent {
   });
 
   constructor() {
-    this.#profileService.profileChanges$
-      .pipe(
-        startWith(undefined),
-        switchMap(() =>
-          this.#profileService.getProfileSummary(
-            this.isOwnProfile ? undefined : Number(this.profileId),
-          ),
-        ),
-        takeUntilDestroyed(this.#destroyRef),
-      )
-      .subscribe({
-        next: (summary) => this.summary.set(summary),
-      });
+    if (this.isOwnProfile) {
+      if (!this.#currentAccountStore.profile()) {
+        this.#currentAccountStore.reloadProfile();
+      }
+      return;
+    }
+
+    this.#profileService
+      .getProfileSummary(Number(this.profileId))
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({ next: (summary) => this.#publicSummary.set(summary) });
   }
 
   selectAvatar(event: Event) {
@@ -137,7 +139,7 @@ export class ProfilePageLayoutComponent {
       )
       .subscribe({
         next: ({ avatarUrl }) => {
-          this.summary.update((summary) => ({ ...summary, avatarUrl }));
+          this.#currentAccountStore.updateProfile({ avatarUrl });
           this.#toastService.show(SuccessToastComponent, {
             message: 'Аватар обновлён',
           });
@@ -167,7 +169,7 @@ export class ProfilePageLayoutComponent {
       )
       .subscribe({
         next: () => {
-          this.summary.update((summary) => ({ ...summary, avatarUrl: null }));
+          this.#currentAccountStore.updateProfile({ avatarUrl: null });
           this.#toastService.show(SuccessToastComponent, {
             message: 'Аватар удалён',
           });

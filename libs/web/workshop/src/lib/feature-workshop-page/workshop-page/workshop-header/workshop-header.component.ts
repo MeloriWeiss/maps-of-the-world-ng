@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -16,11 +17,24 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { tap } from 'rxjs';
 import { RouterLink } from '@angular/router';
-import { createTransientMessage } from '@wm/web/common-ui';
+import {
+  createTransientMessage,
+  SearchableSelectComponent,
+  SearchableSelectOption,
+  SvgComponent,
+  PopoverComponent,
+} from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-workshop-header',
-  imports: [DecimalPipe, ReactiveFormsModule, RouterLink],
+  imports: [
+    DecimalPipe,
+    ReactiveFormsModule,
+    RouterLink,
+    SearchableSelectComponent,
+    SvgComponent,
+    PopoverComponent,
+  ],
   templateUrl: './workshop-header.component.html',
   styleUrl: './workshop-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +49,13 @@ export class WorkshopHeaderComponent {
   #generationMessage = createTransientMessage();
   generationStatus = this.#generationMessage.value;
   seed = signal('middle-earth');
+  mapOptions = computed<readonly SearchableSelectOption<number>[]>(() =>
+    this.persistence.maps().map((map) => ({
+      value: map.id,
+      label: map.name,
+      description: map.isPublished ? 'Опубликована' : 'Черновик',
+    })),
+  );
 
   drawSetupForm = new FormGroup({
     strokeColor: new FormControl(this.#workshopDrawService.strokeColor),
@@ -134,19 +155,23 @@ export class WorkshopHeaderComponent {
     void this.persistence.load();
   }
 
-  selectMap(event: Event) {
-    const select = event.target;
-    if (!(select instanceof HTMLSelectElement)) return;
+  createMap() {
+    this.persistence.newMap();
+  }
 
-    const mapId = Number(select.value);
-    void this.persistence.selectMap(
-      Number.isInteger(mapId) && mapId > 0 ? mapId : null,
-    );
+  selectMap(mapId: number | null) {
+    void this.persistence.selectMap(mapId);
   }
 
   updateMapName(event: Event) {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
     this.persistence.mapName.set(input.value);
+  }
+
+  updateMapDescription(event: Event) {
+    const textarea = event.target;
+    if (!(textarea instanceof HTMLTextAreaElement)) return;
+    this.persistence.mapDescription.set(textarea.value);
   }
 }

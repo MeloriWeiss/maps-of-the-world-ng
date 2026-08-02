@@ -37,36 +37,40 @@
 ## Domain
 
 - Prisma schema is at `libs/api/database-main/src/lib/prisma/schema.prisma`.
-- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapComment`, `Forum`, `ForumComment`, `TexturePack`, and `Texture`.
+- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapLike`, `MapComment`, `Forum`, `ForumComment`, `TexturePack`, `TexturePackLike`, and `Texture`.
 - Backend endpoints cover auth, users, accounts/profiles, owned and published maps, texture packs, and texture files; forum endpoints are not implemented yet.
 - Auth uses access/refresh JWT cookies, refresh rotation, session storage, logout, logout-all, and sessions listing.
 - `libs/api/maps` implements map persistence, publication, public viewing, and deletion:
-  - `GET /api/maps/published` lists the public map catalog.
-  - `GET /api/maps/published/:id` returns one published map for read-only viewing.
-  - `GET /api/maps` lists the current account's draft and published maps.
+  - `GET /api/maps` lists the public map catalog. Legacy `catalog` and `published` aliases remain temporarily for backward compatibility.
+  - `GET /api/maps/:id` returns one published map for read-only viewing; `public/:id` and `published/:id` are compatibility aliases.
+  - `GET /api/maps/mine` lists the current account's draft and published maps.
   - `GET /api/maps/authors/:userId` lists an author's published maps.
-  - `GET /api/maps/:id` loads one owned map.
+  - `GET /api/maps/mine/:id` loads one owned map.
   - `POST /api/maps` creates a map.
   - `PUT /api/maps/:id` updates an owned map.
   - `PATCH /api/maps/:id/publication` publishes or unpublishes an owned map.
   - `DELETE /api/maps/:id` deletes only an owned map and its comments.
+  - `POST /api/maps/:id/like` and `DELETE /api/maps/:id/like` add/remove the current account's like and return the new `isLiked`/`likesCount` state.
+  - Public map responses already contain `isLiked` for the optional authenticated account and `likesCount`; clients must not fetch all favourites merely to annotate catalog items.
   - Workshop snapshots are stored in the existing `Map.body` string column.
 - API JSON request bodies accept up to 10 MB to accommodate workshop snapshots.
 - Textures are not standalone user-library entities. Every texture belongs to a `TexturePack`; do not restore a UI or API for creating ungrouped textures.
 - `libs/api/textures` implements texture-pack management:
   - `GET /api/texture-packs` lists published packs for the public catalog.
   - `GET /api/texture-packs/authors/:userId` lists an author's published packs.
-  - `GET /api/texture-packs/published/:id` returns public details of one published pack.
-  - `GET /api/texture-packs/published/:id/textures?page=&pageSize=` returns a paginated public texture page; drafts must return 404.
+  - `GET /api/texture-packs/:id` returns public details of one published pack; `public/:id` and `published/:id` remain compatibility aliases.
+  - `GET /api/texture-packs/:id/textures?page=&pageSize=` returns a paginated public texture page; drafts must return 404.
   - `GET /api/texture-packs/mine` lists all packs owned by the current account.
-  - `GET /api/texture-packs/:id` reads one owned pack.
-  - `GET /api/texture-packs/:id/textures?page=&pageSize=` reads a paginated page of textures from an owned pack; consumers should request individual textures/pages rather than download the whole pack.
+  - `GET /api/texture-packs/mine/:id` reads one owned pack.
+  - `GET /api/texture-packs/mine/:id/textures?page=&pageSize=` reads a paginated page of textures from an owned pack; consumers should request individual textures/pages rather than download the whole pack.
   - `POST /api/texture-packs` creates a draft pack.
   - `PATCH /api/texture-packs/:id` updates an owned pack's name and description.
   - `POST /api/texture-packs/:id/textures` accepts up to 50 multipart PNG/JPEG/WebP files, each up to 5 MB.
   - `DELETE /api/texture-packs/:id/textures/:textureId` deletes an owned texture and its object-storage file. Removing the final texture automatically unpublishes the pack.
   - `DELETE /api/texture-packs/:id` deletes an owned pack, its texture metadata, and all associated object-storage files.
   - `PATCH /api/texture-packs/:id/publication` publishes or unpublishes an owned pack; empty packs cannot be published.
+  - `POST /api/texture-packs/:id/like` and `DELETE /api/texture-packs/:id/like` add/remove a like and return the new state.
+  - Public texture-pack responses contain `isLiked` and `likesCount`, using the optional authenticated account directly in the backend query.
   - `GET /api/textures/:id` reads texture metadata and `GET /api/textures/:id/file` streams one image by opaque UUID.
   - Pack list responses currently include at most eight recent `previewTextures`, not all pack contents.
   - PostgreSQL stores pack/texture metadata, ownership, publication state, like counters, and the unique texture `objectKey`; binary image contents are stored in S3-compatible object storage.
@@ -130,6 +134,13 @@
   - `modal-wrapper` must remain a neutral shrink-to-fit container; each concrete modal owns its width, background, padding, and visual styling.
 - The auth interceptor handles `/auth/refresh` before normal global unauthorized reporting. A failed refresh must not show a transient user-facing `Unauthorized` notification.
 - Empty profile tabs use the shared `EmptyStateComponent`; new empty tabs should follow the same pattern.
+- Shared client state is built without NgRx through `BaseStore<T>` in `libs/web/data-access/src/lib/store` and Angular signals.
+  - `CurrentAccountStore` is the root-scoped authenticated-account store and owns the current `UserResponseDto`, profile summary, avatar URL, and profile-loading state shared by the header and profile pages.
+  - `AuthService` synchronizes it after login, registration, refresh, and session restoration, and clears it on logout.
+  - During `401 -> refresh -> retry`, the same user may be authenticated twice. `CurrentAccountStore.authenticate()` must not invalidate an active profile request for the same user; request versions change only when the account actually changes or is cleared.
+- `SearchableSelectComponent` in `common-ui` accepts generic `{ value, label, description? }` options, supports local search, a scrollable list, outside-click closing, and keyboard navigation.
+  - Search clear content is projected with `wmSearchableSelectClearIcon`; the dropdown indicator can be projected with `wmSearchableSelectIndicator`.
+- `ToggleComponent` (`wm-toggle`) in `common-ui` is the reusable signal-friendly switch. It accepts `checked`, `disabled`, and `ariaLabel`, emits `checkedChange`, and receives its visible label through content projection.
 
 ## Profile and Catalog Notes
 
@@ -142,6 +153,9 @@
   - Deletion uses the shared confirmation modal and immediately restores the placeholder.
   - The avatar popover must escape the profile information card; do not restore `overflow: hidden` on `.profile-header-wrapper`.
 - Profile navigation is a horizontal full-width tab bar for maps, texture packs, and favourites.
+- Favourites combine maps and texture packs under `GET /api/accounts/me/favourites`; the response is grouped by resource type so future types can be added without mixing card contracts.
+- Users can remove an item from favourites directly in the favourites tab. This performs an unlike operation, not entity deletion, and uses the shared confirmation modal plus the crossed-heart action icon.
+- Empty-state handling applies both when the entire favourites collection is empty and when an individual resource group has no items.
 - Own maps and own texture packs are split into separate `Черновики` and `Опубликованные` lists. Other users expose only published content.
 - Every empty list/tab should render a contextual shared empty state rather than a blank region.
 - `/texture-packs` is the public catalog and contains only published packs. Own drafts and published packs are managed from the profile texture-pack section.
@@ -206,7 +220,7 @@
 - Canvas navigation:
   - Middle-button drag pans the world/camera and calls `preventDefault()` to suppress browser auto-scroll.
   - The world background and 100-unit grid are drawn by `WorkshopCanvasManagerService`, so they pan and zoom with shapes.
-  - The bottom “Show grid” checkbox is functional through `WorkshopCanvasManagerService.showGrid`.
+  - The bottom “Показать сетку” control is the shared `wm-toggle`; the state still belongs to `WorkshopCanvasManagerService.showGrid` and the workspace requests a redraw on change.
   - Ctrl+wheel zooms around the pointer. The bottom slider zooms around canvas center.
   - `WorkshopPanningService.zoomPercent` is the shared reactive zoom value; wheel and slider keep each other synchronized.
   - Slider range is currently 10%-400%, while the coordinate service supports 10%-1000%.
@@ -220,14 +234,15 @@
   - `WorkshopPageComponent.ngAfterViewInit()` waits for canvas setup, measures the rendered shell, resizes the canvas, waits for referenced texture images, renders the initial fitted frame, and only then tells the facade to mark the editor ready.
   - Preserve this ordering: the editor must not become interactive before its layout, texture assets, and first frame are ready.
 - Rendering is layer-buffered: the current `WorkshopCanvasManagerService.#renderLayer()` draws layer children into an offscreen canvas and then composites it onto the main canvas even in the branch used when `useOffscreen` is false. The flag changes buffering behavior rather than simply enabling/disabling all offscreen rendering.
-- The workshop header has a generation/persistence toolbar:
+- The workshop header has a generation toolbar plus compact map controls:
   - Seed input and `Сгенерировать` invoke `WorkshopWorldGeneratorService`.
-  - A map selector loads an owned saved map for editing; the current map name is editable.
-  - `Сохранить` and `Перезагрузить` use `WorkshopMapPersistenceService` and `/api/maps`.
+  - The map selector is the shared searchable/scrollable `SearchableSelectComponent` and lists only saved owned maps; creation of a new map is intentionally not an option in this selector.
+  - A burger popover beside the logo contains map metadata and actions: editable name and description, `Новая карта`, `Сохранить`, `Перезагрузить`, `Очистить холст`, and a styled `Вернуться к картам` link.
+  - `WorkshopMapPersistenceService` owns both `mapName` and `mapDescription`; both are restored from loaded maps and included in save payloads.
+  - `Сохранить` and `Перезагрузить` use `WorkshopMapPersistenceService` and `/api/maps`; do not move persistence business logic into the header component.
   - Saving from Workshop creates or updates the map that appears in the current user's profile map lists.
   - Profile map cards link back to Workshop for editing.
   - The current backend map id is remembered in localStorage under `workshop-map-id`.
-  - The native map selector reserves space for a custom-positioned arrow and truncates long labels instead of allowing text to overlap the arrow.
 - Published maps open in Workshop through `viewMapId` as read-only maps:
   - Drawing/editing tools are disabled, but canvas pan and zoom remain available.
   - The canvas keeps its natural aspect ratio and must not stretch to the available width.

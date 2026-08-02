@@ -1,6 +1,5 @@
-import {
+﻿import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -25,19 +24,13 @@ const textureSelect = {
 
 @Injectable()
 export class TexturePacksService {
-  #prisma: PrismaMainService;
-  #textures: TexturesService;
-
   constructor(
-    @Inject(PrismaMainService) prisma: PrismaMainService,
-    @Inject(TexturesService) textures: TexturesService,
-  ) {
-    this.#prisma = prisma;
-    this.#textures = textures;
-  }
+    private readonly prisma: PrismaMainService,
+    private readonly textures: TexturesService,
+  ) {}
 
   async listMine(accountId: number) {
-    const packs = await this.#prisma.texturePack.findMany({
+    const packs = await this.prisma.texturePack.findMany({
       where: { accountId },
       orderBy: { updatedAt: 'desc' },
       select: {
@@ -48,6 +41,7 @@ export class TexturePacksService {
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
+        likesCount: true,
         _count: { select: { textures: true } },
         textures: {
           orderBy: { createdAt: 'desc' },
@@ -62,11 +56,19 @@ export class TexturePacksService {
     }));
   }
 
-  async listPublished(authorUserId?: number) {
+  listPublicCatalog(accountId?: number) {
+    return this.#listPublic(undefined, accountId);
+  }
+
+  listPublicByAuthor(authorUserId: number, accountId?: number) {
+    return this.#listPublic(authorUserId, accountId);
+  }
+
+  async #listPublic(authorUserId?: number, accountId?: number) {
     if (authorUserId !== undefined && !Number.isInteger(authorUserId)) {
       throw new BadRequestException('Invalid author identifier');
     }
-    const packs = await this.#prisma.texturePack.findMany({
+    const packs = await this.prisma.texturePack.findMany({
       where: {
         isPublished: true,
         ...(authorUserId === undefined
@@ -83,13 +85,19 @@ export class TexturePacksService {
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
+        likesCount: true,
         owner: {
           select: {
             nickname: true,
             userId: true,
           },
         },
-        _count: { select: { textures: true } },
+        _count: {
+          select: {
+            textures: true,
+            likes: { where: { accountId: accountId ?? -1 } },
+          },
+        },
         textures: {
           orderBy: { createdAt: 'desc' },
           take: 8,
@@ -97,8 +105,10 @@ export class TexturePacksService {
         },
       },
     });
-    return packs.map(({ textures, owner, ...pack }) => ({
+    return packs.map(({ textures, owner, _count, ...pack }) => ({
       ...pack,
+      isLiked: _count.likes > 0,
+      _count: { textures: _count.textures },
       author: {
         id: owner.userId,
         nickname: owner.nickname,
@@ -107,8 +117,8 @@ export class TexturePacksService {
     }));
   }
 
-  async get(accountId: number, id: string) {
-    const pack = await this.#prisma.texturePack.findFirst({
+  async getOwned(accountId: number, id: string) {
+    const pack = await this.prisma.texturePack.findFirst({
       where: { id, accountId },
       select: {
         id: true,
@@ -118,6 +128,7 @@ export class TexturePacksService {
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
+        likesCount: true,
         _count: { select: { textures: true } },
       },
     });
@@ -125,8 +136,8 @@ export class TexturePacksService {
     return pack;
   }
 
-  async getPublished(id: string) {
-    const pack = await this.#prisma.texturePack.findFirst({
+  async getPublicPack(id: string, accountId?: number) {
+    const pack = await this.prisma.texturePack.findFirst({
       where: { id, isPublished: true },
       select: {
         id: true,
@@ -136,7 +147,13 @@ export class TexturePacksService {
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
-        _count: { select: { textures: true } },
+        likesCount: true,
+        _count: {
+          select: {
+            textures: true,
+            likes: { where: { accountId: accountId ?? -1 } },
+          },
+        },
         owner: {
           select: {
             nickname: true,
@@ -147,14 +164,57 @@ export class TexturePacksService {
     });
     if (!pack) throw new NotFoundException('Published texture pack not found');
 
-    const { owner, ...publishedPack } = pack;
+    const { owner, _count, ...publishedPack } = pack;
     return {
       ...publishedPack,
+      isLiked: _count.likes > 0,
+      _count: { textures: _count.textures },
       author: {
         id: owner.userId,
         nickname: owner.nickname,
       },
     };
+  }
+
+  async like(accountId: number, id: string) {
+    await this.#assertPublished(id);
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const created = await transaction.texturePackLike.createMany({
+        data: { accountId, texturePackId: id },
+        skipDuplicates: true,
+      });
+      if (created.count > 0) {
+        await transaction.texturePack.update({
+          where: { id },
+          data: { likesCount: { increment: 1 } },
+        });
+      }
+      return transaction.texturePack.findUniqueOrThrow({
+        where: { id },
+        select: { likesCount: true },
+      });
+    });
+    return { isLiked: true, likesCount: result.likesCount };
+  }
+
+  async unlike(accountId: number, id: string) {
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const removed = await transaction.texturePackLike.deleteMany({
+        where: { accountId, texturePackId: id },
+      });
+      if (removed.count > 0) {
+        await transaction.texturePack.updateMany({
+          where: { id, likesCount: { gt: 0 } },
+          data: { likesCount: { decrement: 1 } },
+        });
+      }
+      return transaction.texturePack.findUnique({
+        where: { id },
+        select: { likesCount: true },
+      });
+    });
+    if (!result) throw new NotFoundException('Texture pack not found');
+    return { isLiked: false, likesCount: result.likesCount };
   }
 
   async update(accountId: number, id: string, dto: UpdateTexturePackDto) {
@@ -164,7 +224,7 @@ export class TexturePacksService {
       throw new BadRequestException('Texture pack name is required');
     }
 
-    return this.#prisma.texturePack.update({
+    return this.prisma.texturePack.update({
       where: { id },
       data: {
         ...(name === undefined ? {} : { name }),
@@ -180,27 +240,28 @@ export class TexturePacksService {
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
+        likesCount: true,
         _count: { select: { textures: true } },
       },
     });
   }
 
-  async listTextures(
+  async listOwnedTextures(
     accountId: number,
     packId: string,
     query: TexturePageQueryDto,
   ) {
     await this.#assertOwner(accountId, packId);
     const skip = (query.page - 1) * query.pageSize;
-    const [items, total] = await this.#prisma.$transaction([
-      this.#prisma.texture.findMany({
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.texture.findMany({
         where: { packId, accountId },
         orderBy: { createdAt: 'desc' },
         skip,
         take: query.pageSize,
         select: textureSelect,
       }),
-      this.#prisma.texture.count({ where: { packId, accountId } }),
+      this.prisma.texture.count({ where: { packId, accountId } }),
     ]);
     return {
       items,
@@ -210,23 +271,23 @@ export class TexturePacksService {
     };
   }
 
-  async listPublishedTextures(packId: string, query: TexturePageQueryDto) {
-    const pack = await this.#prisma.texturePack.findFirst({
+  async listPublicTextures(packId: string, query: TexturePageQueryDto) {
+    const pack = await this.prisma.texturePack.findFirst({
       where: { id: packId, isPublished: true },
       select: { id: true },
     });
     if (!pack) throw new NotFoundException('Published texture pack not found');
 
     const skip = (query.page - 1) * query.pageSize;
-    const [items, total] = await this.#prisma.$transaction([
-      this.#prisma.texture.findMany({
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.texture.findMany({
         where: { packId },
         orderBy: { createdAt: 'desc' },
         skip,
         take: query.pageSize,
         select: textureSelect,
       }),
-      this.#prisma.texture.count({ where: { packId } }),
+      this.prisma.texture.count({ where: { packId } }),
     ]);
     return {
       items,
@@ -240,7 +301,7 @@ export class TexturePacksService {
     const name = dto.name.trim();
     if (!name) throw new BadRequestException('Texture pack name is required');
 
-    return this.#prisma.texturePack.create({
+    return this.prisma.texturePack.create({
       data: {
         accountId,
         name,
@@ -263,7 +324,7 @@ export class TexturePacksService {
     packId: string,
     isPublished: boolean,
   ) {
-    const pack = await this.#prisma.texturePack.findFirst({
+    const pack = await this.prisma.texturePack.findFirst({
       where: { id: packId, accountId },
       select: {
         id: true,
@@ -276,7 +337,7 @@ export class TexturePacksService {
         'An empty texture pack cannot be published',
       );
     }
-    return this.#prisma.texturePack.update({
+    return this.prisma.texturePack.update({
       where: { id: packId },
       data: {
         isPublished,
@@ -299,12 +360,12 @@ export class TexturePacksService {
       throw new BadRequestException('At least one texture file is required');
     }
     await this.#assertOwner(accountId, packId);
-    for (const file of files) this.#textures.validateFile(file);
+    for (const file of files) this.textures.validateFile(file);
 
     const uploaded = [];
     for (const file of files) {
       uploaded.push(
-        await this.#textures.upload(
+        await this.textures.upload(
           accountId,
           this.#nameFromFile(file.originalname),
           file,
@@ -315,13 +376,17 @@ export class TexturePacksService {
     return uploaded;
   }
 
-  async removeTexture(accountId: number, packId: string, textureId: string) {
-    const result = await this.#textures.remove(accountId, packId, textureId);
-    const texturesCount = await this.#prisma.texture.count({
+  async removeOwnedTexture(
+    accountId: number,
+    packId: string,
+    textureId: string,
+  ) {
+    const result = await this.textures.remove(accountId, packId, textureId);
+    const texturesCount = await this.prisma.texture.count({
       where: { packId, accountId },
     });
     if (texturesCount === 0) {
-      await this.#prisma.texturePack.update({
+      await this.prisma.texturePack.update({
         where: { id: packId },
         data: { isPublished: false, publishedAt: null },
       });
@@ -329,26 +394,32 @@ export class TexturePacksService {
     return result;
   }
 
-  async remove(accountId: number, packId: string) {
+  async removeOwned(accountId: number, packId: string) {
     await this.#assertOwner(accountId, packId);
-    const textures = await this.#prisma.texture.findMany({
+    const textures = await this.prisma.texture.findMany({
       where: { packId, accountId },
       select: { objectKey: true },
     });
 
-    await this.#prisma.texturePack.delete({ where: { id: packId } });
-    await this.#textures.removeFiles(
-      textures.map(({ objectKey }) => objectKey),
-    );
+    await this.prisma.texturePack.delete({ where: { id: packId } });
+    await this.textures.removeFiles(textures.map(({ objectKey }) => objectKey));
     return { id: packId };
   }
 
   async #assertOwner(accountId: number, packId: string) {
-    const pack = await this.#prisma.texturePack.findFirst({
+    const pack = await this.prisma.texturePack.findFirst({
       where: { id: packId, accountId },
       select: { id: true },
     });
     if (!pack) throw new NotFoundException('Texture pack not found');
+  }
+
+  async #assertPublished(packId: string) {
+    const pack = await this.prisma.texturePack.findFirst({
+      where: { id: packId, isPublished: true },
+      select: { id: true },
+    });
+    if (!pack) throw new NotFoundException('Published texture pack not found');
   }
 
   #nameFromFile(fileName: string): string {

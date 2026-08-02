@@ -6,3 +6,7 @@ export interface AccessPayload {
 export interface AccessRequest extends Request {
   user: AccessPayload;
 }
+
+export interface OptionalAccessRequest extends Request {
+  user?: AccessPayload;
+}

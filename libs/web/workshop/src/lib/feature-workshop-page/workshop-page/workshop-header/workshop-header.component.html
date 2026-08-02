@@ -14,6 +14,27 @@
     </div>
     <div class="controls__viewer-actions">
       <a routerLink="/maps">Вернуться к картам</a>
+      @if (persistence.isAuthorized()) {
+        <button
+          class="controls__like-button"
+          type="button"
+          [class.active]="persistence.isPublishedMapLiked()"
+          [disabled]="persistence.isUpdatingLike()"
+          [attr.aria-pressed]="persistence.isPublishedMapLiked()"
+          (click)="persistence.togglePublishedMapLike()"
+        >
+          <svg
+            [icon]="
+              persistence.isPublishedMapLiked() ? 'heart-filled' : 'heart'
+            "
+            class="svg16"
+            aria-hidden="true"
+          ></svg>
+          {{ persistence.publishedMapLikesCount() }}
+        </button>
+      } @else {
+        <span>{{ persistence.publishedMapLikesCount() }} отметок</span>
+      }
       <button
         type="button"
         [disabled]="persistence.busy() || !persistence.canSaveCopy()"
@@ -28,6 +49,71 @@
       }
     </div>
   } @else {
+    <wm-popover
+      alignment="start"
+      ariaLabel="Меню карты"
+      [closeOnContentClick]="false"
+    >
+      <button
+        wmPopoverTrigger
+        class="controls__menu-trigger"
+        type="button"
+        aria-label="Открыть меню карты"
+        title="Меню карты"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <section wmPopoverContent class="controls__map-menu">
+        <h2>Карта</h2>
+
+        <label>
+          <span>Название</span>
+          <input
+            type="text"
+            maxlength="120"
+            [value]="persistence.mapName()"
+            (input)="updateMapName($event)"
+          />
+        </label>
+
+        <label>
+          <span>Описание</span>
+          <textarea
+            maxlength="1000"
+            rows="4"
+            [value]="persistence.mapDescription()"
+            (input)="updateMapDescription($event)"
+          ></textarea>
+        </label>
+
+        <div class="controls__map-menu-actions">
+          <button type="button" (click)="createMap()">Новая карта</button>
+          <button
+            type="button"
+            [disabled]="persistence.busy()"
+            (click)="saveMap()"
+          >
+            Сохранить
+          </button>
+          <button
+            type="button"
+            [disabled]="persistence.busy() || !persistence.mapId()"
+            (click)="loadMap()"
+          >
+            Перезагрузить
+          </button>
+          <button type="button" (click)="clearCanvas()">Очистить холст</button>
+        </div>
+
+        <a routerLink="/maps">Вернуться к картам</a>
+
+        @if (persistence.status()) {
+          <p class="controls__map-menu-status">{{ persistence.status() }}</p>
+        }
+      </section>
+    </wm-popover>
+
     <div class="controls__history">
       <button type="button" aria-label="Отменить" title="Отменить">↶</button>
       <button type="button" aria-label="Повторить" title="Повторить">↷</button>
@@ -36,27 +122,19 @@
     <span class="controls__divider"></span>
 
     <div class="controls__map">
-      <select
-        aria-label="Выбрать карту для редактирования"
-        [value]="persistence.mapId() ?? ''"
+      <wm-searchable-select
+        ariaLabel="Выбрать карту для редактирования"
+        searchPlaceholder="Поиск карты"
+        emptyText="Карты не найдены"
+        [options]="mapOptions()"
+        [value]="persistence.mapId()"
         [disabled]="persistence.busy()"
-        (change)="selectMap($event)"
+        (valueChange)="selectMap($event)"
       >
-        <option value="">Новая карта</option>
-        @for (map of persistence.maps(); track map.id) {
-          <option [value]="map.id">
-            {{ map.name
-            }}{{ map.isPublished ? ' · опубликована' : ' · черновик' }}
-          </option>
-        }
-      </select>
-      <input
-        type="text"
-        maxlength="120"
-        aria-label="Название карты"
-        [value]="persistence.mapName()"
-        (input)="updateMapName($event)"
-      />
+        <span wmSearchableSelectClearIcon class="controls__select-clear"
+          >×</span
+        >
+      </wm-searchable-select>
     </div>
 
     <div class="controls__generator">
@@ -70,18 +148,6 @@
       <button type="button" (click)="generateWorld()">Сгенерировать</button>
       @if (generationStatus()) {
         <span class="controls__status">{{ generationStatus() }}</span>
-      }
-    </div>
-
-    <div class="controls__persistence">
-      <button type="button" [disabled]="persistence.busy()" (click)="saveMap()">
-        Сохранить
-      </button>
-      <button type="button" [disabled]="persistence.busy()" (click)="loadMap()">
-        Перезагрузить
-      </button>
-      @if (persistence.status()) {
-        <span class="controls__status">{{ persistence.status() }}</span>
       }
     </div>
 
@@ -118,14 +184,5 @@
     <input type="hidden" formControlName="shadowBlur" />
     <input type="hidden" formControlName="shadowOffsetX" />
     <input type="hidden" formControlName="shadowOffsetY" />
-
-    <button
-      class="controls__clear"
-      (click)="clearCanvas()"
-      type="button"
-      title="Очистить холст"
-    >
-      Очистить
-    </button>
   }
 </form>

@@ -1,4 +1,4 @@
-:host {
+﻿:host {
   padding-top: 34px;
   transition: width 0.2s ease;
 
@@ -36,7 +36,7 @@
 
   &.selected,
   &:hover {
-    background-color: #aaa397;
+    background-color: var(--light-gray-color);
   }
 
   &:hover {
@@ -48,11 +48,11 @@
   position: relative;
   width: 202px;
   padding: 0;
-  color: #f3f1ed;
-  background: #4b4842;
-  border: 1px solid #8c8880;
+  color: var(--light-primary-color);
+  background: var(--dark-primary-bright-color);
+  border: 1px solid var(--primary-color);
   border-radius: 6px;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  box-shadow: 0 10px 30px rgb(from var(--dark-color) r g b / 35%);
 
   &__title {
     display: flex;
@@ -62,10 +62,10 @@
     padding: 0 8px 0 78px;
     font-weight: 600;
     text-transform: capitalize;
-    border-bottom: 1px solid #77736d;
+    border-bottom: 1px solid var(--primary-color);
 
     button {
-      color: #d4d1cc;
+      color: var(--light-primary-color);
       font-size: 18px;
     }
   }
@@ -79,7 +79,7 @@
 
     input[type='range'] {
       width: 100%;
-      accent-color: #b7b2aa;
+      accent-color: var(--light-gray-color);
     }
   }
 
@@ -119,19 +119,19 @@
   width: 27px;
   padding-top: 6px;
   gap: 10px;
-  background: #34312d;
-  border-right: 1px solid #77736d;
+  background: var(--semi-dark-font-color);
+  border-right: 1px solid var(--primary-color);
 
   span {
     display: grid;
     place-items: center;
     width: 20px;
     height: 20px;
-    color: #fff;
+    color: var(--light-color);
     font-size: 13px;
 
     &.active {
-      background: #a49e93;
+      background: var(--light-gray-color);
       border-radius: 50%;
     }
   }
@@ -156,13 +156,13 @@
     height: 48px;
     overflow: hidden;
     cursor: pointer;
-    background: #36332f;
-    border: 1px solid #817d76;
+    background: var(--semi-dark-font-color);
+    border: 1px solid var(--primary-color);
     border-radius: 4px;
 
     &:hover,
     &.selected {
-      border-color: #fff;
+      border-color: var(--light-color);
     }
   }
 
@@ -193,11 +193,11 @@
   }
 
   &__status {
-    color: #d1cdc6;
+    color: var(--light-primary-color);
   }
 
   &__error {
-    color: #ffaca5;
+    color: var(--light-error-color);
   }
 
   &__more {
@@ -233,7 +233,7 @@
 .texture-preview {
   height: 60px;
   margin-top: 12px;
-  background-color: #34312d;
+  background-color: var(--semi-dark-font-color);
   background-repeat: repeat;
-  border: 1px solid #c8c2b9;
+  border: 1px solid var(--light-gray-color);
 }

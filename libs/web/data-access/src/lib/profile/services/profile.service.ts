@@ -1,39 +1,53 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { UserResponseDto } from '@wm/shared/users';
 import {
   AccountResponseDto,
   ProfileSummaryDto,
   UpdateAccountRequestDto,
 } from '@wm/shared/accounts';
-import { AuthService } from '../../auth/services';
-import { catchError, Subject, tap, throwError } from 'rxjs';
+import { map } from 'rxjs';
 import { API_CONFIG } from '../../shared';
+import { PublishedMapSummary } from '../../maps';
+import {
+  TextureItem,
+  TextureItemView,
+  TexturePackAuthor,
+} from '../../texture-packs';
+
+export interface FavouriteMap extends PublishedMapSummary {
+  likedAt: string;
+}
+
+export interface FavouriteTexturePack {
+  id: string;
+  name: string;
+  description: string | null;
+  likesCount: number;
+  likedAt: string;
+  author: TexturePackAuthor;
+  previewTextures: TextureItemView[];
+  _count: { textures: number };
+}
+
+export interface Favourites {
+  maps: FavouriteMap[];
+  texturePacks: FavouriteTexturePack[];
+}
+
+interface FavouritesResponse extends Omit<Favourites, 'texturePacks'> {
+  texturePacks: Array<
+    Omit<FavouriteTexturePack, 'previewTextures'> & {
+      previewTextures: TextureItem[];
+    }
+  >;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProfileService {
   #http = inject(HttpClient);
-  #authService = inject(AuthService);
   #apiConfig = inject(API_CONFIG);
-  #profileChanged = new Subject<void>();
-
-  readonly profileChanges$ = this.#profileChanged.asObservable();
-
-  getMe() {
-    return this.#http
-      .get<UserResponseDto>(`${this.#apiConfig.baseUrl}users/me`)
-      .pipe(
-        tap(() => {
-          this.#authService.isAuthorized$.next(true);
-        }),
-        catchError((error) => {
-          this.#authService.isAuthorized$.next(false);
-          return throwError(() => error);
-        }),
-      );
-  }
 
   getProfileSummary(userId?: number) {
     const path =
@@ -51,30 +65,45 @@ export class ProfileService {
     );
   }
 
-  updateMyAccount(account: UpdateAccountRequestDto) {
+  getMyFavourites() {
     return this.#http
-      .patch<AccountResponseDto>(
-        `${this.#apiConfig.baseUrl}accounts/me`,
-        account,
+      .get<FavouritesResponse>(
+        `${this.#apiConfig.baseUrl}accounts/me/favourites`,
       )
-      .pipe(tap(() => this.#profileChanged.next()));
+      .pipe(
+        map(
+          (favourites): Favourites => ({
+            ...favourites,
+            texturePacks: favourites.texturePacks.map((pack) => ({
+              ...pack,
+              previewTextures: pack.previewTextures.map((texture) => ({
+                ...texture,
+                fileUrl: `${this.#apiConfig.baseUrl}textures/${texture.id}/file`,
+              })),
+            })),
+          }),
+        ),
+      );
+  }
+
+  updateMyAccount(account: UpdateAccountRequestDto) {
+    return this.#http.patch<AccountResponseDto>(
+      `${this.#apiConfig.baseUrl}accounts/me`,
+      account,
+    );
   }
 
   uploadAvatar(file: File) {
     const body = new FormData();
     body.append('file', file);
-    return this.#http
-      .post<{
-        avatarUrl: string;
-      }>(`${this.#apiConfig.baseUrl}accounts/me/avatar`, body)
-      .pipe(tap(() => this.#profileChanged.next()));
+    return this.#http.post<{
+      avatarUrl: string;
+    }>(`${this.#apiConfig.baseUrl}accounts/me/avatar`, body);
   }
 
   removeAvatar() {
-    return this.#http
-      .delete<{
-        avatarUrl: null;
-      }>(`${this.#apiConfig.baseUrl}accounts/me/avatar`)
-      .pipe(tap(() => this.#profileChanged.next()));
+    return this.#http.delete<{
+      avatarUrl: null;
+    }>(`${this.#apiConfig.baseUrl}accounts/me/avatar`);
   }
 }
