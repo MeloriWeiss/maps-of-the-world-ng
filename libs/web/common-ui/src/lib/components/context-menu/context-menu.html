@@ -1,0 +1,9 @@
+<div
+  class="context-menu__container"
+  wmClickOutside
+  (clickOutside)="onClose()"
+  [ngStyle]="{'left.px': adjustedX(),'top.px': adjustedY()}"
+  #mainContainer
+>
+  <ng-container [ngTemplateOutlet]="template"></ng-container>
+</div>
