@@ -1,0 +1,9 @@
+@if (option().icon; as icon) {
+<svg [icon]="icon" class="menu-item__icon svg16"></svg>
+}
+
+<span class="menu-item__label">{{ option().label }}</span>
+
+@if (option().extra; as extra) {
+<span class="menu-item__extra">{{ option().extra }}</span>
+}
