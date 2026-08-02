@@ -21,6 +21,9 @@ import { ToastService } from './toasts/toast.service';
 import { SuccessToastComponent } from './toasts/success-toast/success-toast.component';
 import { InfoToastComponent } from './toasts/info-toast/info-toast.component';
 import { ErrorToastComponent } from './toasts/error-toast/error-toast.component';
+import { ContextMenuService } from './context-menu/context-menu.service';
+import { ContextMenuHostComponent } from './context-menu/context-menu-host/context-menu-host';
+import { ContextMenuItemComponent } from './context-menu/context-menu-item/context-menu-item';
 
 export {
   FormInputComponent,
@@ -46,4 +49,7 @@ export {
   SuccessToastComponent,
   InfoToastComponent,
   ErrorToastComponent,
+  ContextMenuService,
+  ContextMenuHostComponent,
+  ContextMenuItemComponent,
 };

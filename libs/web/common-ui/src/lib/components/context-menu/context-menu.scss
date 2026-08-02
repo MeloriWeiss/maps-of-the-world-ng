@@ -1,0 +1,10 @@
+@use 'functions' as *;
+
+.context-menu__container {
+  position: fixed;
+  z-index: 100;
+  background-color: var(--light-color);
+  border: var(--dark-color) solid rem(1);
+  padding: rem(10);
+  box-sizing: border-box;
+}

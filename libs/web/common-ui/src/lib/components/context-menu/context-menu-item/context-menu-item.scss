@@ -1,0 +1,38 @@
+@use 'functions' as *;
+
+:host {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: rem(8) rem(12);
+  font-size: rem(14);
+  color: var(--dark-color);
+  cursor: pointer;
+  text-align: left;
+  gap: rem(8);
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--light-gray-color);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: context-menu;
+  }
+}
+
+.menu-item__icon {
+  flex-shrink: 0;
+  width: rem(16);
+}
+
+.menu-item__label {
+  flex-grow: 1;
+}
+
+.menu-item__extra {
+  flex-shrink: 0;
+  color: var(--dark-gray-font-color);
+  margin-left: rem(16);
+}
