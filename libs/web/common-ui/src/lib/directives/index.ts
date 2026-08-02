@@ -1,3 +1,4 @@
+import { ClickOutsideDirective } from './click-outside.directive';
 import { CollapsibleDirective } from './collapsible.directive';
 
-export { CollapsibleDirective };
+export { CollapsibleDirective, ClickOutsideDirective };
