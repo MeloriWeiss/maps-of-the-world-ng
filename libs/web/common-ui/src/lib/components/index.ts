@@ -22,6 +22,7 @@ import { SuccessToastComponent } from './toasts/success-toast/success-toast.comp
 import { InfoToastComponent } from './toasts/info-toast/info-toast.component';
 import { ErrorToastComponent } from './toasts/error-toast/error-toast.component';
 import { ContextMenuService } from './context-menu/context-menu.service';
+import { ContextMenuHostComponent } from './context-menu/context-menu-host/context-menu-host';
 
 export {
   FormInputComponent,
@@ -48,4 +49,5 @@ export {
   InfoToastComponent,
   ErrorToastComponent,
   ContextMenuService,
+  ContextMenuHostComponent,
 };

@@ -1,7 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavigationManagerComponent } from '@wm/web/web-shared';
-import { ModalHostComponent, ToastHostComponent } from '@wm/web/common-ui';
+import {
+  ContextMenuHostComponent,
+  ModalHostComponent,
+  ToastHostComponent,
+} from '@wm/web/common-ui';
 
 @Component({
   selector: 'app-root',
@@ -10,6 +14,7 @@ import { ModalHostComponent, ToastHostComponent } from '@wm/web/common-ui';
     NavigationManagerComponent,
     ModalHostComponent,
     ToastHostComponent,
+    ContextMenuHostComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
