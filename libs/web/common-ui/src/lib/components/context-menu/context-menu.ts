@@ -23,6 +23,7 @@ import { ContextMenuConfig } from '@wm/web/data-access/shared';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContextMenuComponent implements OnDestroy {
+  #contextMenuService = inject(ContextMenuService);
   #r2 = inject(Renderer2);
 
   menuContainer = viewChild<ElementRef<HTMLDivElement>>('mainContainer');
@@ -128,6 +129,10 @@ export class ContextMenuComponent implements OnDestroy {
         window.removeEventListener('resize', resizeHandler),
       );
     }
+  }
+
+  onClose() {
+    this.#contextMenuService.close();
   }
 
   ngOnDestroy() {
