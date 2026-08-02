@@ -2,6 +2,7 @@ import { ApiConfig } from './api-config.interface';
 import { BaseObject } from './base-object.interface';
 import { CommentItem } from './comment-item.interface';
 import { ConfirmModalInputs } from './confirm-modal-inputs.interface';
+import { ContextMenuConfig, ContextMenuOption } from './context-menu.interface';
 import { ModalClose } from './modal-close.interface';
 import { SliderItemInterface } from './slider-item.interface';
 
@@ -12,4 +13,6 @@ export type {
   SliderItemInterface,
   CommentItem,
   ApiConfig,
+  ContextMenuConfig,
+  ContextMenuOption,
 };
