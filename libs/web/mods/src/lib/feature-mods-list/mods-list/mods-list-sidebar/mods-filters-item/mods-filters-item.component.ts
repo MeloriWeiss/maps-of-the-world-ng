@@ -6,6 +6,20 @@ import {
 } from '@angular/core';
 import { CollapsibleDirective, SvgComponent } from '@wm/web/common-ui';
 
+interface ModsFilterExtra {
+  name: string;
+  value: string;
+  count: number;
+  selected: boolean;
+}
+
+interface ModsFilter {
+  name: string;
+  value: string;
+  count: number;
+  extras: ModsFilterExtra[];
+}
+
 @Component({
   selector: 'wm-mods-filters-item',
   imports: [CollapsibleDirective, SvgComponent],
@@ -14,7 +28,7 @@ import { CollapsibleDirective, SvgComponent } from '@wm/web/common-ui';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModsFiltersItemComponent {
-  filter = input.required<any>();
+  filter = input.required<ModsFilter>();
 
   isOpened = signal(false);
   isActive = signal(false);

@@ -16,12 +16,7 @@
     <button type="button" (click)="fitWorld()">Весь мир</button>
   </div>
 
-  <label class="workspace-status__grid">
-    <input
-      type="checkbox"
-      [checked]="showGrid()"
-      (change)="toggleGrid($event)"
-    />
+  <wm-toggle [checked]="showGrid()" (checkedChange)="toggleGrid($event)">
     Показать сетку
-  </label>
+  </wm-toggle>
 </div>

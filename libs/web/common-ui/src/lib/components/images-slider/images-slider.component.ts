@@ -13,4 +13,5 @@ import { SliderItemInterface } from '@wm/web/data-access/shared';
 export class ImagesSliderComponent {
   options = input.required<OwlOptions>();
   slides = input.required<SliderItemInterface[]>();
+  showNavigation = input(true);
 }

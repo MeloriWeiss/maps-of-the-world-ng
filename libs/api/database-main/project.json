@@ -15,6 +15,9 @@
     "migrate": {
       "command": "prisma migrate dev --config=libs/api/database-main/src/lib/prisma.config.ts"
     },
+    "deploy": {
+      "command": "prisma migrate deploy --config=libs/api/database-main/src/lib/prisma.config.ts"
+    },
     "generate": {
       "command": "prisma generate --config=libs/api/database-main/src/lib/prisma.config.ts"
     },

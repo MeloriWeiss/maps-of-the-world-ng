@@ -22,6 +22,8 @@ import {
   WorkshopCanvasSetupFacade,
   WorkshopWorldGeneratorService,
   WorkshopMapPersistenceService,
+  WorkshopTexturesService,
+  WorkshopModeService,
 } from '../../services';
 import { WorkshopSceneGraphStorageService } from '../../services';
 import { WorkshopWorkspaceComponent } from './workshop-workspace/workshop-workspace.component';
@@ -58,12 +60,21 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
     WorkshopCanvasSetupFacade,
     WorkshopWorldGeneratorService,
     WorkshopMapPersistenceService,
+    WorkshopTexturesService,
+    WorkshopModeService,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkshopPageComponent implements AfterViewInit {
   #canvasSizeService = inject(WorkshopCanvasSizeService);
   #panningService = inject(WorkshopPanningService);
+  #canvasManagerService = inject(WorkshopCanvasManagerService);
+  #canvasSetupFacade = inject(WorkshopCanvasSetupFacade);
+  #mapPersistence = inject(WorkshopMapPersistenceService);
+
+  isReady = this.#canvasSetupFacade.isReady;
+  loadingMessage = this.#canvasSetupFacade.loadingMessage;
+  isReadOnly = this.#mapPersistence.isReadOnly;
 
   header = viewChild.required(WorkshopHeaderComponent, { read: ElementRef });
   leftSidebar = viewChild.required(WorkshopLeftSidebarComponent, {
@@ -73,7 +84,9 @@ export class WorkshopPageComponent implements AfterViewInit {
     read: ElementRef,
   });
 
-  ngAfterViewInit() {
+  async ngAfterViewInit() {
+    await this.#canvasSetupFacade.waitUntilCanvasSetup();
+
     this.#canvasSizeService.headerHeight = (
       this.header().nativeElement as HTMLElement
     ).getBoundingClientRect().height;
@@ -87,9 +100,21 @@ export class WorkshopPageComponent implements AfterViewInit {
     ).getBoundingClientRect().width;
 
     this.#canvasSizeService.resizeCanvas();
+    await this.#canvasSetupFacade.waitUntilMapReady();
+    await this.#mapPersistence.initializeFromRoute();
 
-    requestAnimationFrame(() => {
-      this.#panningService.fitContent();
+    await this.#renderInitialFrame();
+    this.#canvasSetupFacade.finishInitialization();
+  }
+
+  #renderInitialFrame(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        this.#panningService.fitContent();
+        this.#canvasManagerService.redraw();
+
+        requestAnimationFrame(() => resolve());
+      });
     });
   }
 }

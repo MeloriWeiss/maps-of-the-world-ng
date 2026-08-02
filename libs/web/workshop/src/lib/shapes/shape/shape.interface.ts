@@ -4,6 +4,7 @@ import { Point, Bounds } from '../../interfaces';
 
 export interface BaseShape {
   id: string;
+  name?: string;
   strokeColor: string;
   opacity: number;
   strokeWidth: number;
@@ -22,6 +23,7 @@ export type CreateBaseShape = Omit<BaseShape, 'id'>;
 
 export interface ShapeActions {
   draw: (ctx: CanvasRenderingContext2D) => void;
+  whenReady: () => Promise<void>;
   clickOn: (point: Point) => boolean;
   selectByClick: (point: Point) => boolean;
   selectByDraw: (selectionRect: SelectionRect) => boolean;

@@ -42,6 +42,8 @@ export class WorkshopSettingsService {
   };
 
   textureStyle = {
+    textureId: null as string | null,
+    textureUrl: null as string | null,
     textureColor: '#c4a574',
     textureScale: 1,
     textureRotation: 0,

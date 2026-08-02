@@ -21,6 +21,11 @@ import { ToastService } from './toasts/toast.service';
 import { SuccessToastComponent } from './toasts/success-toast/success-toast.component';
 import { InfoToastComponent } from './toasts/info-toast/info-toast.component';
 import { ErrorToastComponent } from './toasts/error-toast/error-toast.component';
+import { VirtualListComponent } from './virtual-list/virtual-list.component';
+import { PopoverComponent } from './popover/popover.component';
+import { EmptyStateComponent } from './empty-state/empty-state.component';
+import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
+import { ToggleComponent } from './toggle/toggle.component';
 
 export {
   FormInputComponent,
@@ -46,4 +51,17 @@ export {
   SuccessToastComponent,
   InfoToastComponent,
   ErrorToastComponent,
+  VirtualListComponent,
+  PopoverComponent,
+  EmptyStateComponent,
+  SearchableSelectComponent,
+  ToggleComponent,
 };
+
+export type { VirtualListItemContext } from './virtual-list/virtual-list.component';
+export type { PopoverAlignment } from './popover/popover.component';
+export type { SearchableSelectOption } from './searchable-select/searchable-select.component';
+export type {
+  PopoverAppearance,
+  PopoverPosition,
+} from './popover/popover.component';

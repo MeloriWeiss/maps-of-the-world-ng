@@ -1,7 +1,15 @@
 import { Injectable, signal } from '@angular/core';
 import { NodesTypes, ShapesTypes } from '../consts';
 import { GraphNode, GroupNode, LayerNode, ShapeNode } from '../nodes';
-import { Line, LineShape, Rectangle, RectangleShape, Shape } from '../shapes';
+import {
+  Line,
+  LineShape,
+  Rectangle,
+  RectangleShape,
+  Shape,
+  TextureStroke,
+  TextureStrokeShape,
+} from '../shapes';
 
 interface SerializedBaseNode {
   id: string;
@@ -33,6 +41,7 @@ type SerializedNode =
 
 interface SerializedBaseShape {
   id: string;
+  name?: string;
   type: ShapesTypes;
   strokeColor: string;
   opacity: number;
@@ -62,7 +71,20 @@ interface SerializedRectangleShape extends SerializedBaseShape {
   fillColor: string;
 }
 
-type SerializedShape = SerializedLineShape | SerializedRectangleShape;
+interface SerializedTextureShape extends SerializedBaseShape {
+  type: ShapesTypes.TEXTURE;
+  points: TextureStroke['points'];
+  textureId: string | null;
+  textureUrl: string | null;
+  textureScale: number;
+  textureRotation: number;
+  textureColor: string;
+}
+
+type SerializedShape =
+  | SerializedLineShape
+  | SerializedRectangleShape
+  | SerializedTextureShape;
 
 interface WorkshopSnapshot {
   version: 1;
@@ -229,6 +251,7 @@ export class WorkshopSceneGraphStorageService {
   #serializeShape(shape: Shape): SerializedShape {
     const baseShape = {
       id: shape.id,
+      name: shape.name,
       type: shape.type,
       strokeColor: shape.strokeColor,
       opacity: shape.opacity,
@@ -254,7 +277,6 @@ export class WorkshopSceneGraphStorageService {
           points: (shape as Line).points,
         };
       case ShapesTypes.RECTANGLE:
-      default:
         return {
           ...baseShape,
           type: ShapesTypes.RECTANGLE,
@@ -264,6 +286,21 @@ export class WorkshopSceneGraphStorageService {
           height: (shape as Rectangle).height,
           fillColor: (shape as Rectangle).fillColor,
         };
+      case ShapesTypes.TEXTURE: {
+        const texture = shape as TextureStroke;
+        return {
+          ...baseShape,
+          type: ShapesTypes.TEXTURE,
+          points: texture.points,
+          textureId: texture.textureId,
+          textureUrl: texture.textureUrl,
+          textureScale: texture.textureScale,
+          textureRotation: texture.textureRotation,
+          textureColor: texture.textureColor,
+        };
+      }
+      default:
+        throw new Error(`Unsupported shape type: ${shape.type}`);
     }
   }
 
@@ -306,6 +343,25 @@ export class WorkshopSceneGraphStorageService {
             shadowOffsetY: shape.shadowOffsetY,
           });
           break;
+        case ShapesTypes.TEXTURE:
+          restoredShape = new TextureStrokeShape({
+            type: ShapesTypes.TEXTURE,
+            points: shape.points,
+            textureId: shape.textureId,
+            textureUrl: shape.textureUrl,
+            textureScale: shape.textureScale,
+            textureRotation: shape.textureRotation,
+            textureColor: shape.textureColor,
+            strokeColor: shape.strokeColor,
+            opacity: shape.opacity,
+            strokeWidth: shape.strokeWidth,
+            layerId: shape.layerId,
+            shadowColor: shape.shadowColor,
+            shadowBlur: shape.shadowBlur,
+            shadowOffsetX: shape.shadowOffsetX,
+            shadowOffsetY: shape.shadowOffsetY,
+          });
+          break;
         default:
           break;
       }
@@ -314,6 +370,7 @@ export class WorkshopSceneGraphStorageService {
 
       this.#setReadonlyId(restoredShape, shape.id);
       restoredShape.selected = shape.selected;
+      restoredShape.name = shape.name;
       restoredShape.layerId = shape.layerId;
       restoredShape.shadowColor = shape.shadowColor;
       restoredShape.shadowBlur = shape.shadowBlur;

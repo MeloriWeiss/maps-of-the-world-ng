@@ -90,7 +90,7 @@ export class FormInputComponent implements ControlValueAccessor {
     this.passwordVisible.update((value) => !value);
   }
 
-  onChange(value: string | null) {}
+  onChange: (value: string | null) => void = () => undefined;
 
-  onTouched() {}
+  onTouched: VoidFunction = () => undefined;
 }

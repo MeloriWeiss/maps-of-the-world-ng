@@ -3,19 +3,22 @@ import {
   Component,
   ElementRef,
   HostBinding,
-  HostListener,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { WorkshopTools } from '../../../consts';
 import {
   WorkshopSettingsService,
   WorkshopCanvasSizeService,
   WorkshopToolsService,
+  WorkshopTexture,
+  WorkshopTexturesService,
 } from '../../../services';
-import { SvgComponent } from '@wm/web/common-ui';
+import { PopoverComponent, SvgComponent } from '@wm/web/common-ui';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 interface ToolButton {
   name: WorkshopTools;
@@ -32,7 +35,13 @@ interface ContextMenuState {
 
 @Component({
   selector: 'wm-workshop-left-sidebar',
-  imports: [DecimalPipe, FormsModule, SvgComponent],
+  imports: [
+    DecimalPipe,
+    FormsModule,
+    PopoverComponent,
+    RouterLink,
+    SvgComponent,
+  ],
   templateUrl: './workshop-left-sidebar.component.html',
   styleUrl: './workshop-left-sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,11 +50,19 @@ export class WorkshopLeftSidebarComponent {
   #workshopToolsService = inject(WorkshopToolsService);
   #canvasSizeService = inject(WorkshopCanvasSizeService);
   #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  #texturesService = inject(WorkshopTexturesService);
   workshopSettingsService = inject(WorkshopSettingsService);
 
   currentToolName = this.#workshopToolsService.currentToolName;
+  textures = this.#texturesService.textures;
+  texturePacks = this.#texturesService.packs;
+  selectedTexturePackId = this.#texturesService.selectedPackId;
+  texturesLoading = this.#texturesService.loading;
+  hasMoreTextures = this.#texturesService.hasMore;
+  textureError = this.#texturesService.error;
   WorkshopTools = WorkshopTools;
   contextMenu: ContextMenuState | null = null;
+  toolPopover = viewChild(PopoverComponent);
   collapsed = signal(false);
 
   @HostBinding('class.collapsed')
@@ -92,8 +109,13 @@ export class WorkshopLeftSidebarComponent {
     },
   ];
 
-  setCurrentTool(newTool: WorkshopTools) {
-    this.#workshopToolsService.setCurrentTool(newTool);
+  setCurrentTool(tool: ToolButton, event: MouseEvent): void {
+    this.#workshopToolsService.setCurrentTool(tool.name);
+    if (tool.name === WorkshopTools.TEXTURE) {
+      this.openContextMenu(event, tool);
+      this.#texturesService.load();
+      return;
+    }
     this.closeContextMenu();
   }
 
@@ -120,8 +142,8 @@ export class WorkshopLeftSidebarComponent {
 
     const target = event.currentTarget as HTMLElement;
     const targetRect = target.getBoundingClientRect();
-    const menuWidth = 202;
-    const menuHeight = 440;
+    const menuWidth = tool.name === WorkshopTools.TEXTURE ? 286 : 202;
+    const menuHeight = tool.name === WorkshopTools.TEXTURE ? 590 : 440;
     this.contextMenu = {
       tool: tool.name,
       x: Math.min(targetRect.right + 5, window.innerWidth - menuWidth - 8),
@@ -130,6 +152,7 @@ export class WorkshopLeftSidebarComponent {
         Math.min(targetRect.top - 20, window.innerHeight - menuHeight - 8),
       ),
     };
+    this.toolPopover()?.setOpenState(true);
   }
 
   updateStrokeWidth(tool: WorkshopTools, value: number): void {
@@ -163,19 +186,33 @@ export class WorkshopLeftSidebarComponent {
     this.workshopSettingsService.textureStyle.textureRotation = Number(value);
   }
 
+  selectTexture(texture: WorkshopTexture): void {
+    this.workshopSettingsService.textureStyle.textureId = texture.id;
+    this.workshopSettingsService.textureStyle.textureUrl = texture.imageUrl;
+  }
+
+  selectTexturePack(event: Event) {
+    const select = event.target;
+    if (!(select instanceof HTMLSelectElement)) return;
+    this.#texturesService.loadPack(select.value);
+  }
+
+  loadMoreTextures() {
+    this.#texturesService.loadMore();
+  }
+
   #applyStyleIfCurrent(tool: WorkshopTools): void {
     if (this.currentToolName() === tool) {
       this.workshopSettingsService.applyToolStyle(tool);
     }
   }
 
-  @HostListener('document:mousedown')
-  closeContextMenu(): void {
+  closeContextMenu() {
     this.contextMenu = null;
+    this.toolPopover()?.close();
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    this.closeContextMenu();
+  onPopoverOpenChange(open: boolean) {
+    if (!open) this.contextMenu = null;
   }
 }

@@ -1,83 +1,149 @@
 <div class="container profile-container">
   <div class="profile-header-wrapper">
     <div class="profile-header">
-      <div class="profile-stats">
-        <div class="stat-card">
-          <h3 class="stat-card__title">Карты</h3>
-          <p class="stat-card__item">
-            Создано: <span>{{ 3 }}</span>
-          </p>
-          <p class="stat-card__item">
-            Опубликовано: <span>{{ 2 }}</span>
-          </p>
-        </div>
-
-        <div class="stat-card">
-          <h3 class="stat-card__title">Текстур-паки</h3>
-          <p class="stat-card__item">
-            Создано: <span>{{ 4 }}</span>
-          </p>
-          <p class="stat-card__item">
-            Опубликовано: <span>{{ 3 }}</span>
-          </p>
-        </div>
-      </div>
-
       <div class="profile__user">
+        @if (isOwnProfile && isEditing()) {
+          <wm-popover
+            #avatarMenu
+            alignment="start"
+            ariaLabel="Действия с аватаром"
+          >
+            <button
+              wmPopoverTrigger
+              class="profile__avatar-button"
+              type="button"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="avatarMenu.isOpen()"
+              [disabled]="isAvatarUpdating()"
+            >
+              @if (summary().avatarUrl) {
+                <img
+                  class="profile__avatar"
+                  [src]="summary().avatarUrl"
+                  alt="Текущий аватар"
+                />
+              } @else {
+                <svg icon="avatar-light" class="svg120"></svg>
+              }
+              <span class="profile__avatar-edit">
+                {{ isAvatarUpdating() ? 'Обновляем…' : 'Изменить' }}
+              </span>
+            </button>
+
+            <div wmPopoverContent class="profile__avatar-menu">
+              <button
+                type="button"
+                role="menuitem"
+                (click)="avatarInput.click()"
+              >
+                Загрузить изображение
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                [disabled]="!summary().avatarUrl"
+                (click)="removeAvatar()"
+              >
+                Удалить изображение
+              </button>
+            </div>
+          </wm-popover>
+          <input
+            #avatarInput
+            class="profile__avatar-input"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="selectAvatar($event)"
+          />
+        } @else if (summary().avatarUrl) {
+          <img class="profile__avatar" [src]="summary().avatarUrl" alt="" />
+        } @else {
+          <svg icon="avatar-light" class="svg120"></svg>
+        }
+
         <div class="profile__user-info">
-          <p class="profile__username">{{ 'Username' }}</p>
-
-          <div class="metrics">
-            <a class="metrics__item">
-              <svg icon="heart" class="svg28"></svg>
-              {{ 209 }}
-            </a>
-
-            <a class="metrics__item">
-              <svg icon="share" class="svg28"></svg>
-              {{ 102 }}
-            </a>
+          <div class="profile__username-row">
+            <p class="profile__username">{{ summary().nickname }}</p>
+            @if (isOwnProfile && !isEditing()) {
+              <a
+                class="profile__edit-link"
+                [routerLink]="['edit']"
+                aria-label="Редактировать профиль"
+              >
+                <span aria-hidden="true">✎</span>
+                Редактировать
+              </a>
+            }
           </div>
-        </div>
 
-        <svg icon="avatar-light" class="svg120"></svg>
+          @if (summary().bio) {
+            <p class="profile__bio">{{ summary().bio }}</p>
+          } @else if (isOwnProfile) {
+            <a class="profile__bio-empty" [routerLink]="['edit']">
+              Расскажите о себе
+            </a>
+          }
+
+          @if (memberSince()) {
+            <p class="profile__member-since">На сайте с {{ memberSince() }}</p>
+          }
+
+          <dl class="profile-summary">
+            <div class="profile-summary__item">
+              <dt>Карт опубликовано</dt>
+              <dd>{{ summary().publishedMapsCount }}</dd>
+            </div>
+            <div class="profile-summary__item">
+              <dt>Паков опубликовано</dt>
+              <dd>{{ summary().publishedTexturePacksCount }}</dd>
+            </div>
+            <div class="profile-summary__item">
+              <dt>Лайков получено</dt>
+              <dd>{{ summary().likesReceived }}</dd>
+            </div>
+          </dl>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="profile-body">
-    <nav class="profile__nav">
+  @if (!isEditing()) {
+    <nav class="profile__nav" aria-label="Разделы профиля">
       <ul class="profile__tabs-list">
         <li class="profile__tabs-item">
-          <button
+          <a
             [routerLink]="['maps']"
             routerLinkActive="active"
-            class="profile__tabs-btn"
+            class="profile__tabs-link"
           >
             Карты
-          </button>
+          </a>
         </li>
         <li class="profile__tabs-item">
-          <button
+          <a
             [routerLink]="['texture-packs']"
             routerLinkActive="active"
-            class="profile__tabs-btn"
+            class="profile__tabs-link"
           >
             Текстур-паки
-          </button>
+          </a>
         </li>
-        <li class="profile__tabs-item">
-          <button
-            [routerLink]="['favourite']"
-            routerLinkActive="active"
-            class="profile__tabs-btn"
-          >
-            Понравилось
-          </button>
-        </li>
+        @if (isOwnProfile) {
+          <li class="profile__tabs-item">
+            <a
+              [routerLink]="['favourite']"
+              routerLinkActive="active"
+              class="profile__tabs-link"
+            >
+              Понравилось
+            </a>
+          </li>
+        }
       </ul>
     </nav>
+  }
 
+  <div class="profile-body">
     <div class="page-content">
       <router-outlet></router-outlet>
     </div>

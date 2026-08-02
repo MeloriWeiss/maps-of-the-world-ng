@@ -1,18 +1,15 @@
 :host {
   position: fixed;
+  z-index: 1000;
   inset: 0;
-  background-color: var(--dark-transparent-color);
   display: grid;
+  padding: 1rem;
   place-content: center;
+  background-color: var(--dark-primary-transparent-color);
+  backdrop-filter: blur(0.25rem);
 }
 
 .modal-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: var(--dark-color);
-  background: var(--light-color);
-  border-radius: 6px;
-  padding: 12px 14px;
-  box-shadow: 0 8px 24px var(--dark-transparent-color);
+  width: fit-content;
+  max-width: 100%;
 }

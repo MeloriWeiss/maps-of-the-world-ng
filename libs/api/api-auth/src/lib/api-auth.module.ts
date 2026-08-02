@@ -8,6 +8,7 @@ import {
   JwtAccessGuard,
   JwtAccessStrategy,
   JwtRefreshGuard,
+  OptionalJwtAccessGuard,
   JwtRefreshStrategy,
   jwtStrategies,
 } from './jwt';
@@ -27,7 +28,13 @@ import { PassportModule } from '@nestjs/passport';
     JwtRefreshStrategy,
     JwtAccessGuard,
     JwtRefreshGuard,
+    OptionalJwtAccessGuard,
   ],
-  exports: [PassportModule, JwtAccessGuard, JwtRefreshGuard],
+  exports: [
+    PassportModule,
+    JwtAccessGuard,
+    JwtRefreshGuard,
+    OptionalJwtAccessGuard,
+  ],
 })
 export class ApiAuthModule {}

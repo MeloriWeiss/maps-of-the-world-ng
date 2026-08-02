@@ -1,4 +1,4 @@
-@use '../../../../../common-ui/src/lib/styles/functions' as *;
+﻿@use '../../../../../common-ui/src/lib/styles/functions' as *;
 @use '../../../../../common-ui/src/lib/styles/media' as *;
 @use '../../../../../common-ui/src/lib/styles/mixins' as *;
 
@@ -11,7 +11,7 @@
   align-items: center;
   font-family: 'Platypi', serif;
   font-weight: 400;
-  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgba(0, 0, 0, 0.25);
+  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgb(from var(--dark-color) r g b / 25%);
 }
 
 .header {

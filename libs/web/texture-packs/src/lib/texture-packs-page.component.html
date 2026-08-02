@@ -1,0 +1,190 @@
+<main class="texture-packs" [class.texture-packs--embedded]="embedded()">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Личная библиотека</p>
+        <h1>Мои текстур-паки</h1>
+        <p class="page-description">
+          Собирайте связанные текстуры в наборы и загружайте их сразу группой.
+        </p>
+      </div>
+      <div class="format-note">PNG · JPEG · WebP<br />до 5 МБ на файл</div>
+    </header>
+
+    <section class="create-card" aria-labelledby="create-pack-title">
+      <div class="create-card__intro">
+        <span class="step-number">01</span>
+        <div>
+          <h2 id="create-pack-title">Создать новый пак</h2>
+          <p>
+            Задайте понятное название, чтобы быстро найти набор в мастерской.
+          </p>
+        </div>
+      </div>
+
+      <form
+        [formGroup]="createForm"
+        (ngSubmit)="createPack()"
+        class="create-form"
+      >
+        <label>
+          <span>Название</span>
+          <input
+            formControlName="name"
+            maxlength="120"
+            placeholder="Например, Каменные стены"
+          />
+        </label>
+        <label>
+          <span>Описание <small>необязательно</small></span>
+          <textarea
+            formControlName="description"
+            maxlength="500"
+            rows="3"
+            placeholder="Для каких карт и сцен подходит этот набор"
+          ></textarea>
+        </label>
+        <button class="primary-button" type="submit" [disabled]="isCreating()">
+          @if (isCreating()) {
+            Создаём…
+          } @else {
+            Создать текстур-пак
+          }
+        </button>
+      </form>
+    </section>
+
+    @if (errorMessage()) {
+      <div class="error-message" role="alert">
+        <span>{{ errorMessage() }}</span>
+        <button type="button" (click)="loadPacks()">Повторить</button>
+      </div>
+    }
+
+    <section class="packs-section" aria-labelledby="packs-title">
+      <div class="section-heading">
+        <div>
+          <span class="step-number">02</span>
+          <h2 id="packs-title">Мои текстур-паки</h2>
+        </div>
+        <span class="pack-total">{{ packs().length }} наборов</span>
+      </div>
+
+      <div
+        class="pack-list-tabs"
+        role="tablist"
+        aria-label="Состояние текстур-паков"
+      >
+        <button
+          class="pack-list-tab"
+          type="button"
+          role="tab"
+          [class.pack-list-tab--active]="activeList() === 'drafts'"
+          [attr.aria-selected]="activeList() === 'drafts'"
+          (click)="selectList('drafts')"
+        >
+          Черновики
+          <span class="pack-list-tab__count">{{ draftPacks().length }}</span>
+        </button>
+        <button
+          class="pack-list-tab"
+          type="button"
+          role="tab"
+          [class.pack-list-tab--active]="activeList() === 'published'"
+          [attr.aria-selected]="activeList() === 'published'"
+          (click)="selectList('published')"
+        >
+          Опубликованные
+          <span class="pack-list-tab__count">{{
+            publishedPacks().length
+          }}</span>
+        </button>
+      </div>
+
+      @if (isLoading()) {
+        <div class="state-card">Загружаем ваши наборы…</div>
+      } @else if (packs().length === 0) {
+        <wm-empty-state
+          title="Здесь пока пусто"
+          description="Создайте первый пак выше — после этого в него можно загрузить текстуры."
+        ></wm-empty-state>
+      } @else if (visiblePacks().length === 0) {
+        <wm-empty-state
+          [title]="
+            activeList() === 'drafts'
+              ? 'Черновиков пока нет'
+              : 'Опубликованных паков пока нет'
+          "
+          [description]="
+            activeList() === 'drafts'
+              ? 'Создайте новый пак или снимите опубликованный с публикации.'
+              : 'Добавьте текстуры в черновик и опубликуйте его.'
+          "
+        ></wm-empty-state>
+      } @else {
+        <div
+          class="pack-grid"
+          role="tabpanel"
+          [attr.aria-label]="
+            activeList() === 'drafts'
+              ? 'Черновики текстур-паков'
+              : 'Опубликованные текстур-паки'
+          "
+        >
+          @for (pack of visiblePacks(); track pack.id) {
+            <article class="pack-card">
+              <div class="pack-card__top">
+                <div>
+                  <div class="pack-title">
+                    <h3>{{ pack.name }}</h3>
+                    <span
+                      class="publication-badge"
+                      [class.publication-badge--published]="pack.isPublished"
+                    >
+                      {{ pack.isPublished ? 'Опубликован' : 'Черновик' }}
+                    </span>
+                  </div>
+                  <p>{{ pack.description || 'Описание пока не добавлено' }}</p>
+                </div>
+                <span class="texture-count">{{ pack._count.textures }}</span>
+              </div>
+
+              @if (pack.previewTextures.length > 0) {
+                <wm-texture-pack-preview-slider
+                  [textures]="pack.previewTextures"
+                ></wm-texture-pack-preview-slider>
+              } @else {
+                <div class="empty-preview">
+                  <span>+</span>
+                  <p>Добавьте первые файлы</p>
+                </div>
+              }
+
+              <a
+                class="upload-button"
+                [routerLink]="['/texture-packs', pack.id, 'edit']"
+              >
+                Редактировать
+              </a>
+              <button
+                class="publication-button"
+                type="button"
+                [disabled]="
+                  publishingPackId() !== null ||
+                  (!pack.isPublished && pack._count.textures === 0)
+                "
+                (click)="togglePublication(pack)"
+              >
+                @if (publishingPackId() === pack.id) {
+                  Обновляем…
+                } @else {
+                  {{ pack.isPublished ? 'Снять с публикации' : 'Опубликовать' }}
+                }
+              </button>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</main>

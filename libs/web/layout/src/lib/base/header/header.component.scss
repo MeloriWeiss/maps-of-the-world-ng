@@ -1,4 +1,4 @@
-@use 'functions' as *;
+﻿@use 'functions' as *;
 @use 'mixins' as *;
 @use 'media' as *;
 
@@ -18,7 +18,7 @@
   @include mobile {
     flex-direction: column;
     align-items: stretch;
-    box-shadow: 0 rem(4) rem(4) 0 rgba(0, 0, 0, 0.25);
+    box-shadow: 0 rem(4) rem(4) 0 rgb(from var(--dark-color) r g b / 25%);
   }
 }
 
@@ -83,8 +83,82 @@
     }
   }
 
+  wm-popover.library-active .library-trigger {
+    background-color: var(--light-transparent-color);
+  }
+
   .avatar-link {
     color: var(--light-color);
+
+    &__image {
+      width: rem(40);
+      height: rem(40);
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+}
+
+.library-trigger {
+  align-items: center;
+  border: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.library-menu {
+  display: grid;
+  width: rem(310);
+  padding: rem(8);
+
+  a {
+    display: grid;
+    gap: rem(3);
+    padding: rem(11) rem(12);
+    border-radius: rem(8);
+    color: var(--dark-gray-font-color);
+
+    &:hover,
+    &:focus-visible,
+    &.active {
+      background-color: var(--light-primary-color);
+    }
+  }
+
+  strong {
+    font-size: rem(15);
+  }
+
+  span {
+    color: var(--light-gray-font-color);
+    font-size: rem(12);
+  }
+}
+
+.profile-menu {
+  display: grid;
+  padding: rem(6);
+
+  &__item {
+    width: 100%;
+    padding: rem(10) rem(12);
+    border-radius: rem(8);
+    color: var(--dark-gray-font-color);
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--light-primary-color);
+    }
+
+    &--separated {
+      margin-top: rem(6);
+      padding-top: rem(12);
+      border-top: rem(1) solid var(--light-primary-color);
+      border-radius: 0 0 rem(8) rem(8);
+    }
   }
 }
 
@@ -96,8 +170,8 @@ body.header-right-side.is-open {
   overflow: hidden;
 }
 
-.is-open .active,
-.is-open .active:hover {
+.header-right-side.is-open .header-nav-list > li > a.active,
+.header-right-side.is-open .header-nav-list > li > a.active:hover {
   @include flex-center();
   padding: rem(10) rem(60);
   border-radius: rem(10);
@@ -158,7 +232,7 @@ body.header-right-side.is-open {
   top: 0;
   left: 0;
   @include square(100%);
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgb(from var(--dark-color) r g b / 50%);
   z-index: 10;
   opacity: 0;
   pointer-events: none;

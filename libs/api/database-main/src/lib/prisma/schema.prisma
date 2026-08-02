@@ -32,8 +32,49 @@ model Map {
   // relations
   authorAccount PersonalAccount @relation(fields: [accountId], references: [id])
   comments      MapComment[]
+  likes         MapLike[]
 
   @@map("maps")
+}
+
+model Texture {
+  id        String   @id @default(uuid())
+  name      String
+  objectKey String   @unique @map("object_key")
+  mimeType  String   @map("mime_type")
+  size      Int
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  accountId Int             @map("account_id")
+  owner     PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  packId    String          @map("pack_id")
+  pack      TexturePack     @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, createdAt])
+  @@index([packId, createdAt])
+  @@map("textures")
+}
+
+model TexturePack {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  isPublished Boolean   @default(false) @map("is_published")
+  likesCount  Int       @default(0) @map("likes_count")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  accountId Int               @map("account_id")
+  owner     PersonalAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  textures  Texture[]
+  likes     TexturePackLike[]
+
+  @@index([accountId, updatedAt])
+  @@index([isPublished, publishedAt])
+  @@map("texture_packs")
 }
 
 model MapComment {
@@ -50,6 +91,32 @@ model MapComment {
   authorAccount PersonalAccount @relation(fields: [authorId], references: [id])
 
   @@map("map_comments")
+}
+
+model MapLike {
+  accountId Int      @map("account_id")
+  mapId     Int      @map("map_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  account PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  map     Map             @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, mapId])
+  @@index([accountId, createdAt])
+  @@map("map_likes")
+}
+
+model TexturePackLike {
+  accountId     Int      @map("account_id")
+  texturePackId String   @map("texture_pack_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  account     PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  texturePack TexturePack     @relation(fields: [texturePackId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, texturePackId])
+  @@index([accountId, createdAt])
+  @@map("texture_pack_likes")
 }
 
 model Forum {
@@ -109,10 +176,14 @@ model PersonalAccount {
   userId Int  @unique @map("user_id")
   user   User @relation("UserPersonalAccount", fields: [userId], references: [id], onDelete: Cascade)
 
-  maps          Map[]
-  mapComments   MapComment[]
-  forums        Forum[]
-  forumComments ForumComment[]
+  maps              Map[]
+  mapComments       MapComment[]
+  forums            Forum[]
+  forumComments     ForumComment[]
+  textures          Texture[]
+  texturePacks      TexturePack[]
+  likedMaps         MapLike[]
+  likedTexturePacks TexturePackLike[]
 
   @@map("accounts")
 }

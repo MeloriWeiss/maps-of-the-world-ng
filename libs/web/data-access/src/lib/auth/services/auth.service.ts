@@ -6,6 +6,7 @@ import { LoginData, RegisterData } from '../interfaces';
 import { DefaultResponseDto } from '@wm/shared/common';
 import { Router } from '@angular/router';
 import { API_CONFIG, BYPASS_GLOBAL_ERROR } from '../../shared';
+import { CurrentAccountStore } from '../../profile';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,7 @@ export class AuthService {
   #http = inject(HttpClient);
   #router = inject(Router);
   #apiConfig = inject(API_CONFIG);
+  #currentAccountStore = inject(CurrentAccountStore);
 
   isAuthorized$ = new BehaviorSubject(false);
 
@@ -21,8 +23,9 @@ export class AuthService {
     return this.#http
       .post<UserResponseDto>(`${this.#apiConfig.baseUrl}auth/register`, data)
       .pipe(
-        tap(() => {
+        tap((user) => {
           this.isAuthorized$.next(true);
+          this.#currentAccountStore.authenticate(user);
         }),
       );
   }
@@ -31,8 +34,9 @@ export class AuthService {
     return this.#http
       .post<UserResponseDto>(`${this.#apiConfig.baseUrl}auth/login`, data)
       .pipe(
-        tap(() => {
+        tap((user) => {
           this.isAuthorized$.next(true);
+          this.#currentAccountStore.authenticate(user);
         }),
       );
   }
@@ -45,8 +49,9 @@ export class AuthService {
         { context: new HttpContext().set(BYPASS_GLOBAL_ERROR, true) },
       )
       .pipe(
-        tap(() => {
+        tap((user) => {
           this.isAuthorized$.next(true);
+          this.#currentAccountStore.authenticate(user);
         }),
       );
   }
@@ -61,6 +66,7 @@ export class AuthService {
       .pipe(
         tap(() => {
           this.isAuthorized$.next(false);
+          this.#currentAccountStore.clear();
           this.#router.navigate(['login']).then();
         }),
       );
@@ -72,6 +78,7 @@ export class AuthService {
       .pipe(
         tap(() => {
           this.isAuthorized$.next(false);
+          this.#currentAccountStore.clear();
           this.#router.navigate(['login']).then();
         }),
       );
@@ -79,5 +86,22 @@ export class AuthService {
 
   getSessions() {
     return this.#http.get<unknown>(`${this.#apiConfig.baseUrl}auth/sessions`);
+  }
+
+  restoreSession() {
+    return this.#http
+      .get<UserResponseDto>(`${this.#apiConfig.baseUrl}users/me`)
+      .pipe(
+        tap({
+          next: (user) => {
+            this.isAuthorized$.next(true);
+            this.#currentAccountStore.authenticate(user);
+          },
+          error: () => {
+            this.isAuthorized$.next(false);
+            this.#currentAccountStore.clear();
+          },
+        }),
+      );
   }
 }

@@ -3,7 +3,6 @@ import {
   Component,
   input,
   output,
-  signal,
   viewChild,
 } from '@angular/core';
 import {

@@ -106,6 +106,14 @@ export class WorkshopSceneGraphService {
     return of(void 0);
   }
 
+  waitUntilShapesReady(): Promise<void> {
+    return Promise.all(
+      Array.from(this.#shapesStorageService.shapes.values()).map((shape) =>
+        shape.whenReady(),
+      ),
+    ).then(() => undefined);
+  }
+
   saveNodes() {
     this.#nodesChanges$.next();
   }

@@ -103,3 +103,51 @@ export class AccountDto {
   })
   updatedAt!: string;
 }
+
+export class ProfileSummaryDto {
+  @ApiProperty({
+    example: 'CryptoKnight',
+    description: 'Public display name',
+  })
+  nickname!: string;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'https://company.com/avatar.webp',
+    description: 'Public profile avatar URL',
+  })
+  avatarUrl!: string | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'Создаю фэнтезийные карты и текстуры',
+    description: 'Public author biography',
+  })
+  bio!: string | null;
+
+  @ApiProperty({
+    example: '2026-07-24T20:55:32.105Z',
+    description: 'Account registration timestamp',
+  })
+  createdAt!: string;
+
+  @ApiProperty({
+    example: 209,
+    description: 'Total likes received by all supported user publications',
+  })
+  likesReceived!: number;
+
+  @ApiProperty({
+    example: 12,
+    description: 'Number of published maps',
+  })
+  publishedMapsCount!: number;
+
+  @ApiProperty({
+    example: 4,
+    description: 'Number of published texture packs',
+  })
+  publishedTexturePacksCount!: number;
+}

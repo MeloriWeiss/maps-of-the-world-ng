@@ -14,13 +14,12 @@ import {
   selector: '[wmCollapsible]',
 })
 export class CollapsibleDirective implements AfterViewInit, OnDestroy {
-  #elementRef = inject(ElementRef);
+  #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   #r2 = inject(Renderer2);
   #injector = inject(Injector);
+  #stopListeningToResize: (() => void) | null = null;
 
   isOpened = input(false);
-
-  private onResize = () => this.syncHeight();
 
   ngAfterViewInit() {
     const element = this.#elementRef.nativeElement;
@@ -30,21 +29,23 @@ export class CollapsibleDirective implements AfterViewInit, OnDestroy {
 
     effect(
       () => {
-        this.syncHeight();
+        this.#syncHeight();
       },
       { injector: this.#injector },
     );
 
-    window.addEventListener('resize', this.onResize);
+    this.#stopListeningToResize = this.#r2.listen('window', 'resize', () =>
+      this.#syncHeight(),
+    );
   }
 
-  private syncHeight() {
-    const element: HTMLElement = this.#elementRef.nativeElement;
+  #syncHeight() {
+    const element = this.#elementRef.nativeElement;
     const nextHeight = this.isOpened() ? `${element.scrollHeight}px` : '0px';
     this.#r2.setStyle(element, 'height', nextHeight);
   }
 
   ngOnDestroy() {
-    window.removeEventListener('resize', this.onResize);
+    this.#stopListeningToResize?.();
   }
 }

@@ -1,75 +1,188 @@
 <form class="controls__header" [formGroup]="drawSetupForm">
-  <img
-    class="controls__logo"
-    src="/assets/imgs/new-logo.png"
-    alt="GameMaster Helper"
-  />
-
-  <div class="controls__history">
-    <button type="button" aria-label="Отменить" title="Отменить">↶</button>
-    <button type="button" aria-label="Повторить" title="Повторить">↷</button>
-  </div>
-
-  <span class="controls__divider"></span>
-
-  <div class="controls__generator">
-    <input
-      type="text"
-      aria-label="Seed мира"
-      title="Одинаковый seed создаёт одинаковый мир"
-      [value]="seed()"
-      (input)="seed.set($any($event.target).value)"
+  <a routerLink="/" title="На главную">
+    <img
+      class="controls__logo"
+      src="/assets/imgs/new-logo.png"
+      alt="GameMaster Helper"
     />
-    <button type="button" (click)="generateWorld()">Сгенерировать</button>
-    @if (generationStatus()) {
-      <span class="controls__status">{{ generationStatus() }}</span>
-    }
-  </div>
+  </a>
 
-  <div class="controls__persistence">
-    <button type="button" [disabled]="persistence.busy()" (click)="saveMap()">
-      Сохранить
-    </button>
-    <button type="button" [disabled]="persistence.busy()" (click)="loadMap()">
-      Загрузить
-    </button>
-    @if (persistence.status()) {
-      <span class="controls__status">{{ persistence.status() }}</span>
-    }
-  </div>
+  @if (persistence.isReadOnly()) {
+    <div class="controls__viewer">
+      <span class="controls__viewer-badge">Только просмотр</span>
+      <strong>{{ persistence.mapName() }}</strong>
+    </div>
+    <div class="controls__viewer-actions">
+      <a routerLink="/maps">Вернуться к картам</a>
+      @if (persistence.isAuthorized()) {
+        <button
+          class="controls__like-button"
+          type="button"
+          [class.active]="persistence.isPublishedMapLiked()"
+          [disabled]="persistence.isUpdatingLike()"
+          [attr.aria-pressed]="persistence.isPublishedMapLiked()"
+          (click)="persistence.togglePublishedMapLike()"
+        >
+          <svg
+            [icon]="
+              persistence.isPublishedMapLiked() ? 'heart-filled' : 'heart'
+            "
+            class="svg16"
+            aria-hidden="true"
+          ></svg>
+          {{ persistence.publishedMapLikesCount() }}
+        </button>
+      } @else {
+        <span>{{ persistence.publishedMapLikesCount() }} отметок</span>
+      }
+      <button
+        type="button"
+        [disabled]="persistence.busy() || !persistence.canSaveCopy()"
+        (click)="saveCopy()"
+      >
+        {{
+          persistence.busy() ? 'Сохраняем…' : 'Сохранить копию в мои черновики'
+        }}
+      </button>
+      @if (persistence.status()) {
+        <span class="controls__status">{{ persistence.status() }}</span>
+      }
+    </div>
+  } @else {
+    <wm-popover
+      alignment="start"
+      ariaLabel="Меню карты"
+      [closeOnContentClick]="false"
+    >
+      <button
+        wmPopoverTrigger
+        class="controls__menu-trigger"
+        type="button"
+        aria-label="Открыть меню карты"
+        title="Меню карты"
+      >
+        <span></span><span></span><span></span>
+      </button>
 
-  <label class="controls__setting">
-    <span>Размер: {{ drawSetupForm.controls.lineWidth.value }}</span>
-    <input type="range" min="1" max="20" formControlName="lineWidth" />
-    <input
-      class="controls__color"
-      type="color"
-      formControlName="strokeColor"
-      title="Цвет линии"
-    />
-  </label>
+      <section wmPopoverContent class="controls__map-menu">
+        <h2>Карта</h2>
 
-  <label class="controls__setting">
-    <span>
-      Непрозрачность:
-      {{ (drawSetupForm.controls.opacity.value || 0) * 100 | number: '1.0-0' }}
-    </span>
-    <input type="range" min="0" max="1" step="0.01" formControlName="opacity" />
-    <span class="controls__drop">◒</span>
-  </label>
+        <label>
+          <span>Название</span>
+          <input
+            type="text"
+            maxlength="120"
+            [value]="persistence.mapName()"
+            (input)="updateMapName($event)"
+          />
+        </label>
 
-  <input type="hidden" formControlName="fillColor" />
-  <input type="hidden" formControlName="shadowColor" />
-  <input type="hidden" formControlName="shadowBlur" />
-  <input type="hidden" formControlName="shadowOffsetX" />
-  <input type="hidden" formControlName="shadowOffsetY" />
+        <label>
+          <span>Описание</span>
+          <textarea
+            maxlength="1000"
+            rows="4"
+            [value]="persistence.mapDescription()"
+            (input)="updateMapDescription($event)"
+          ></textarea>
+        </label>
 
-  <button
-    class="controls__clear"
-    (click)="clearCanvas()"
-    type="button"
-    title="Очистить холст"
-  >
-    Очистить
-  </button>
+        <div class="controls__map-menu-actions">
+          <button type="button" (click)="createMap()">Новая карта</button>
+          <button
+            type="button"
+            [disabled]="persistence.busy()"
+            (click)="saveMap()"
+          >
+            Сохранить
+          </button>
+          <button
+            type="button"
+            [disabled]="persistence.busy() || !persistence.mapId()"
+            (click)="loadMap()"
+          >
+            Перезагрузить
+          </button>
+          <button type="button" (click)="clearCanvas()">Очистить холст</button>
+        </div>
+
+        <a routerLink="/maps">Вернуться к картам</a>
+
+        @if (persistence.status()) {
+          <p class="controls__map-menu-status">{{ persistence.status() }}</p>
+        }
+      </section>
+    </wm-popover>
+
+    <div class="controls__history">
+      <button type="button" aria-label="Отменить" title="Отменить">↶</button>
+      <button type="button" aria-label="Повторить" title="Повторить">↷</button>
+    </div>
+
+    <span class="controls__divider"></span>
+
+    <div class="controls__map">
+      <wm-searchable-select
+        ariaLabel="Выбрать карту для редактирования"
+        searchPlaceholder="Поиск карты"
+        emptyText="Карты не найдены"
+        [options]="mapOptions()"
+        [value]="persistence.mapId()"
+        [disabled]="persistence.busy()"
+        (valueChange)="selectMap($event)"
+      >
+        <span wmSearchableSelectClearIcon class="controls__select-clear"
+          >×</span
+        >
+      </wm-searchable-select>
+    </div>
+
+    <div class="controls__generator">
+      <input
+        type="text"
+        aria-label="Seed мира"
+        title="Одинаковый seed создаёт одинаковый мир"
+        [value]="seed()"
+        (input)="seed.set($any($event.target).value)"
+      />
+      <button type="button" (click)="generateWorld()">Сгенерировать</button>
+      @if (generationStatus()) {
+        <span class="controls__status">{{ generationStatus() }}</span>
+      }
+    </div>
+
+    <label class="controls__setting">
+      <span>Размер: {{ drawSetupForm.controls.lineWidth.value }}</span>
+      <input type="range" min="1" max="20" formControlName="lineWidth" />
+      <input
+        class="controls__color"
+        type="color"
+        formControlName="strokeColor"
+        title="Цвет линии"
+      />
+    </label>
+
+    <label class="controls__setting">
+      <span>
+        Непрозрачность:
+        {{
+          (drawSetupForm.controls.opacity.value || 0) * 100 | number: '1.0-0'
+        }}
+      </span>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        formControlName="opacity"
+      />
+      <span class="controls__drop">◒</span>
+    </label>
+
+    <input type="hidden" formControlName="fillColor" />
+    <input type="hidden" formControlName="shadowColor" />
+    <input type="hidden" formControlName="shadowBlur" />
+    <input type="hidden" formControlName="shadowOffsetX" />
+    <input type="hidden" formControlName="shadowOffsetY" />
+  }
 </form>

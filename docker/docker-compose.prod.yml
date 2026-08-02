@@ -1,16 +1,91 @@
 services:
+  migrate:
+    container_name: api-migrate-prod
+    build:
+      context: ..
+      dockerfile: ./apps/api/prod.Dockerfile
+      target: migrator
+    env_file:
+      - .env.prod
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: "no"
+
   api:
     container_name: api-prod
     build:
       context: ..
       dockerfile: ./apps/api/prod.Dockerfile
     env_file:
-      - ./docker/.env.prod
+      - .env.prod
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+        required: false
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     restart: unless-stopped
+
+  minio:
+    profiles: ["minio"]
+    container_name: minio-prod
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address ":9001"
+    env_file:
+      - .env.minio.prod
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  minio-init:
+    profiles: ["minio"]
+    container_name: minio-init-prod
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    env_file:
+      - .env.prod
+      - .env.minio.prod
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000
+      \"$${MINIO_ROOT_USER}\"
+      \"$${MINIO_ROOT_PASSWORD}\";
+      mc mb --ignore-existing
+      \"local/$${OBJECT_STORAGE_BUCKET}\";
+      mc admin user add local
+      \"$${OBJECT_STORAGE_ACCESS_KEY}\"
+      \"$${OBJECT_STORAGE_SECRET_KEY}\" || true;
+      mc admin policy attach local readwrite
+      --user \"$${OBJECT_STORAGE_ACCESS_KEY}\";
+      "
+
+volumes:
+  minio_data:

@@ -14,15 +14,19 @@ export class RectangleShape extends BaseShapeShape implements Rectangle {
   y: number;
 
   constructor(rect: RectangleCreateData) {
-    super({
-      strokeColor: rect.strokeColor,
-      strokeWidth: rect.strokeWidth,
-      opacity: rect.opacity,
-      shadowColor: rect.shadowColor,
-      shadowBlur: rect.shadowBlur,
-      shadowOffsetX: rect.shadowOffsetX,
-      shadowOffsetY: rect.shadowOffsetY,
-    });
+    super(
+      {
+        name: rect.name,
+        strokeColor: rect.strokeColor,
+        strokeWidth: rect.strokeWidth,
+        opacity: rect.opacity,
+        shadowColor: rect.shadowColor,
+        shadowBlur: rect.shadowBlur,
+        shadowOffsetX: rect.shadowOffsetX,
+        shadowOffsetY: rect.shadowOffsetY,
+      },
+      'Прямоугольник',
+    );
 
     this.width = rect.width;
     this.height = rect.height;

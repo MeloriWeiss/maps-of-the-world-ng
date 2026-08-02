@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -15,10 +16,25 @@ import {
 } from '../../../services';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { tap } from 'rxjs';
+import { RouterLink } from '@angular/router';
+import {
+  createTransientMessage,
+  SearchableSelectComponent,
+  SearchableSelectOption,
+  SvgComponent,
+  PopoverComponent,
+} from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-workshop-header',
-  imports: [DecimalPipe, ReactiveFormsModule],
+  imports: [
+    DecimalPipe,
+    ReactiveFormsModule,
+    RouterLink,
+    SearchableSelectComponent,
+    SvgComponent,
+    PopoverComponent,
+  ],
   templateUrl: './workshop-header.component.html',
   styleUrl: './workshop-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,8 +46,16 @@ export class WorkshopHeaderComponent {
   #worldGenerator = inject(WorkshopWorldGeneratorService);
   persistence = inject(WorkshopMapPersistenceService);
 
-  generationStatus = signal('');
+  #generationMessage = createTransientMessage();
+  generationStatus = this.#generationMessage.value;
   seed = signal('middle-earth');
+  mapOptions = computed<readonly SearchableSelectOption<number>[]>(() =>
+    this.persistence.maps().map((map) => ({
+      value: map.id,
+      label: map.name,
+      description: map.isPublished ? 'Опубликована' : 'Черновик',
+    })),
+  );
 
   drawSetupForm = new FormGroup({
     strokeColor: new FormControl(this.#workshopDrawService.strokeColor),
@@ -114,7 +138,7 @@ export class WorkshopHeaderComponent {
     const result = this.#worldGenerator.generate(
       this.seed().trim() || undefined,
     );
-    this.generationStatus.set(
+    this.#generationMessage.show(
       `Seed ${result.seed}: ${result.objects.toLocaleString('ru-RU')} объектов`,
     );
   }
@@ -123,7 +147,31 @@ export class WorkshopHeaderComponent {
     void this.persistence.save();
   }
 
+  saveCopy() {
+    void this.persistence.saveCopy();
+  }
+
   loadMap() {
     void this.persistence.load();
+  }
+
+  createMap() {
+    this.persistence.newMap();
+  }
+
+  selectMap(mapId: number | null) {
+    void this.persistence.selectMap(mapId);
+  }
+
+  updateMapName(event: Event) {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+    this.persistence.mapName.set(input.value);
+  }
+
+  updateMapDescription(event: Event) {
+    const textarea = event.target;
+    if (!(textarea instanceof HTMLTextAreaElement)) return;
+    this.persistence.mapDescription.set(textarea.value);
   }
 }

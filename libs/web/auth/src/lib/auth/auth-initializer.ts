@@ -1,13 +1,13 @@
 import { inject } from '@angular/core';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { ProfileService } from '@wm/web/data-access/profile';
+import { AuthService } from '@wm/web/data-access/auth';
 
 export const authInitializer = async () => {
-  const profileService = inject(ProfileService);
+  const authService = inject(AuthService);
 
   return firstValueFrom(
-    profileService.getMe().pipe(
+    authService.restoreSession().pipe(
       catchError(() => {
         return of(null);
       }),

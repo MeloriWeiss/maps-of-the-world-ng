@@ -1,9 +1,40 @@
-<wm-workshop-header></wm-workshop-header>
+<wm-workshop-header [attr.inert]="isReady() ? null : ''"></wm-workshop-header>
 
-<div class="workshop__body">
-  <wm-workshop-left-sidebar
-    class="workshop__left-sidebar"
-  ></wm-workshop-left-sidebar>
+<div
+  class="workshop__body"
+  [class.workshop__body--viewer]="isReadOnly()"
+  [attr.inert]="isReady() ? null : ''"
+>
+  @if (!isReadOnly()) {
+    <wm-workshop-left-sidebar
+      class="workshop__left-sidebar"
+    ></wm-workshop-left-sidebar>
+  }
   <wm-workshop-workspace></wm-workshop-workspace>
-  <wm-workshop-right-sidebar></wm-workshop-right-sidebar>
+  @if (!isReadOnly()) {
+    <wm-workshop-right-sidebar></wm-workshop-right-sidebar>
+  }
 </div>
+
+@if (!isReady()) {
+  <div
+    class="workshop-loader"
+    role="progressbar"
+    aria-label="Загрузка редактора карт"
+    aria-live="polite"
+  >
+    <div class="workshop-loader__map" aria-hidden="true">
+      <span class="workshop-loader__orbit"></span>
+      <span class="workshop-loader__orbit workshop-loader__orbit--inner"></span>
+      <span class="workshop-loader__marker"></span>
+      <span class="workshop-loader__pulse"></span>
+    </div>
+
+    <p class="workshop-loader__title">Открываем ваш мир</p>
+    <p class="workshop-loader__status">{{ loadingMessage() }}</p>
+
+    <div class="workshop-loader__progress" aria-hidden="true">
+      <span></span>
+    </div>
+  </div>
+}

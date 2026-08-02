@@ -1,0 +1,15 @@
+<svg id="heart-off" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M20.84 4.61A5.5 5.5 0 0 0 13.06 4.6L12 5.66L10.94 4.6A5.5 5.5 0 0 0 3.16 12.38L12 21.23L20.84 12.38A5.5 5.5 0 0 0 20.84 4.61Z"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M3 3L21 21"
+    stroke="currentColor"
+    stroke-width="2.2"
+    stroke-linecap="round"
+  />
+</svg>

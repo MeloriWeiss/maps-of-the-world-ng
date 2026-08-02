@@ -14,27 +14,42 @@ export class TextureStrokeShape
   type = ShapesTypes.TEXTURE;
 
   points: Point[] = [];
+  textureId: string | null;
+  textureUrl: string | null;
   textureScale: number;
   textureRotation: number;
   textureColor: string;
 
   #selectThreshold = 6;
+  #textureImage: HTMLImageElement | null = null;
+  #textureReady: Promise<void>;
 
   constructor(data: TextureStrokeCreateData) {
-    super({
-      strokeColor: data.strokeColor,
-      strokeWidth: data.strokeWidth,
-      opacity: data.opacity,
-      shadowColor: data.shadowColor,
-      shadowBlur: data.shadowBlur,
-      shadowOffsetX: data.shadowOffsetX,
-      shadowOffsetY: data.shadowOffsetY,
-    });
+    super(
+      {
+        name: data.name,
+        strokeColor: data.strokeColor,
+        strokeWidth: data.strokeWidth,
+        opacity: data.opacity,
+        shadowColor: data.shadowColor,
+        shadowBlur: data.shadowBlur,
+        shadowOffsetX: data.shadowOffsetX,
+        shadowOffsetY: data.shadowOffsetY,
+      },
+      'Текстура',
+    );
 
     this.points = data.points;
+    this.textureId = data.textureId;
+    this.textureUrl = data.textureUrl;
     this.textureScale = data.textureScale;
     this.textureRotation = data.textureRotation;
     this.textureColor = data.textureColor;
+    this.#textureReady = this.#loadTexture();
+  }
+
+  override whenReady(): Promise<void> {
+    return this.#textureReady;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -42,7 +57,7 @@ export class TextureStrokeShape
 
     ctx.save();
     ctx.globalAlpha = this.opacity;
-    ctx.lineWidth = this.strokeWidth * this.textureScale;
+    ctx.lineWidth = this.strokeWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -142,35 +157,32 @@ export class TextureStrokeShape
   }
 
   #createPattern(ctx: CanvasRenderingContext2D) {
-    const size = Math.max(8, Math.round(16 * this.textureScale));
-    const tile = document.createElement('canvas');
-    tile.width = size;
-    tile.height = size;
-    const tileCtx = tile.getContext('2d');
-    if (!tileCtx) return null;
-
-    tileCtx.fillStyle = this.textureColor;
-    tileCtx.fillRect(0, 0, size, size);
-    tileCtx.fillStyle = 'rgba(255,255,255,0.25)';
-    for (let i = 0; i < 6; i++) {
-      tileCtx.beginPath();
-      tileCtx.arc(
-        Math.random() * size,
-        Math.random() * size,
-        Math.random() * size * 0.3,
-        0,
-        Math.PI * 2,
-      );
-      tileCtx.fill();
+    if (!this.#textureImage?.complete || !this.#textureImage.naturalWidth) {
+      return null;
     }
 
-    const pattern = ctx.createPattern(tile, 'repeat');
-    if (pattern && this.textureRotation) {
+    const pattern = ctx.createPattern(this.#textureImage, 'repeat');
+    if (pattern) {
       pattern.setTransform(
-        new DOMMatrix().rotate(this.textureRotation * (Math.PI / 180)),
+        new DOMMatrix()
+          .rotate(this.textureRotation)
+          .scale(this.textureScale, this.textureScale),
       );
     }
     return pattern;
+  }
+
+  #loadTexture(): Promise<void> {
+    if (!this.textureUrl) return Promise.resolve();
+
+    const image = new Image();
+    this.#textureImage = image;
+
+    return new Promise((resolve) => {
+      image.addEventListener('load', () => resolve(), { once: true });
+      image.addEventListener('error', () => resolve(), { once: true });
+      image.src = this.textureUrl ?? '';
+    });
   }
 
   #distanceToSegment(

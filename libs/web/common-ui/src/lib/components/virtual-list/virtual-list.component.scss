@@ -1,0 +1,22 @@
+:host {
+  position: relative;
+  display: block;
+  min-height: 0;
+  overflow: auto;
+  contain: strict;
+}
+
+.virtual-list__spacer {
+  width: 1px;
+  pointer-events: none;
+}
+
+.virtual-list__items {
+  position: absolute;
+  inset: 0 0 auto;
+  will-change: transform;
+}
+
+.virtual-list__item {
+  overflow: hidden;
+}

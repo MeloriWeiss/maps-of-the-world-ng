@@ -1,0 +1,62 @@
+@use 'functions' as *;
+
+:host {
+  display: inline-flex;
+}
+
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: rem(9);
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    position: absolute;
+    width: rem(1);
+    height: rem(1);
+    overflow: hidden;
+    opacity: 0;
+
+    &:checked + .toggle__track {
+      background-color: var(--primary-color);
+
+      &::after {
+        transform: translateX(rem(16));
+      }
+    }
+  }
+}
+
+.toggle--disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.toggle__label:empty {
+  display: none;
+}
+
+.toggle__track {
+  position: relative;
+  width: rem(38);
+  height: rem(22);
+  flex: 0 0 auto;
+  border-radius: rem(11);
+  background-color: var(--light-primary-color);
+  transition: background-color 150ms ease;
+
+  &::after {
+    position: absolute;
+    top: rem(3);
+    left: rem(3);
+    width: rem(16);
+    height: rem(16);
+    border-radius: 50%;
+    background-color: var(--light-color);
+    box-shadow: 0 rem(1) rem(3) rgb(from var(--dark-color) r g b / 28%);
+    content: '';
+    transition: transform 150ms ease;
+  }
+}

@@ -6,6 +6,7 @@ import { DatabaseMainModule } from '@wm/api/database-main';
 import { ApiLogger, validateEnv } from '@wm/api/api-shared';
 import { AccountsModule } from '@wm/api/accounts';
 import { MapsModule } from '@wm/api/maps';
+import { TexturesModule } from '@wm/api/textures';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MapsModule } from '@wm/api/maps';
     UsersModule,
     AccountsModule,
     MapsModule,
+    TexturesModule,
     ConfigModule.forRoot({
       isGlobal: true,
       expandVariables: true,

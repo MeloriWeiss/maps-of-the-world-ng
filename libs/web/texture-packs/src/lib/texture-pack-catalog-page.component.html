@@ -1,0 +1,100 @@
+<main class="catalog" [class.catalog--embedded]="embedded()">
+  <div class="container">
+    <header class="catalog-header">
+      <p class="eyebrow">
+        {{
+          authorUserId() === undefined
+            ? 'Открытая библиотека'
+            : 'Витрина автора'
+        }}
+      </p>
+      <h1>
+        {{
+          authorUserId() === undefined
+            ? 'Текстур-паки сообщества'
+            : 'Опубликованные текстур-паки'
+        }}
+      </h1>
+      <p>
+        Здесь находятся только опубликованные наборы. Черновики видны лишь их
+        владельцам.
+      </p>
+    </header>
+
+    @if (isLoading()) {
+      <div class="catalog-state">Загружаем опубликованные паки…</div>
+    } @else if (hasError()) {
+      <div class="catalog-state">
+        <span>Не удалось загрузить каталог.</span>
+        <button type="button" (click)="load()">Повторить</button>
+      </div>
+    } @else if (packs().length === 0) {
+      <wm-empty-state
+        title="Опубликованных текстур-паков пока нет"
+        description="Когда авторы опубликуют свои наборы, они появятся здесь."
+      ></wm-empty-state>
+    } @else {
+      <div class="catalog-grid">
+        @for (pack of packs(); track pack.id) {
+          <article class="catalog-card">
+            <div class="catalog-card__preview">
+              <wm-texture-pack-preview-slider
+                size="large"
+                [textures]="pack.previewTextures"
+              ></wm-texture-pack-preview-slider>
+            </div>
+            <div class="catalog-card__body">
+              <div>
+                <h2>
+                  <a
+                    class="catalog-card__title-link"
+                    [routerLink]="['/texture-packs', pack.id]"
+                  >
+                    {{ pack.name }}
+                  </a>
+                </h2>
+                <a
+                  class="catalog-card__author-link"
+                  [routerLink]="['/profile', pack.author.id, 'texture-packs']"
+                >
+                  {{ pack.author.nickname }}
+                </a>
+              </div>
+              <div class="catalog-card__metrics">
+                <span>{{ pack._count.textures }} текстур</span>
+                @if (isAuthorized()) {
+                  <button
+                    type="button"
+                    [class.active]="pack.isLiked"
+                    [disabled]="updatingLikeId() !== null"
+                    [attr.aria-pressed]="pack.isLiked"
+                    (click)="toggleLike(pack)"
+                  >
+                    <svg
+                      [icon]="pack.isLiked ? 'heart-filled' : 'heart'"
+                      class="svg16"
+                      aria-hidden="true"
+                    ></svg>
+                    {{ pack.likesCount }}
+                  </button>
+                } @else {
+                  <span>{{ pack.likesCount }} отметок</span>
+                }
+              </div>
+            </div>
+            @if (pack.description) {
+              <p>{{ pack.description }}</p>
+            }
+            <a
+              class="catalog-card__details-link"
+              [routerLink]="['/texture-packs', pack.id]"
+            >
+              Подробнее о паке
+              <span aria-hidden="true">→</span>
+            </a>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</main>

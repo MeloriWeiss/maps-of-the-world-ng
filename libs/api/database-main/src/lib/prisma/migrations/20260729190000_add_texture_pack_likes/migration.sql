@@ -1,0 +1,2 @@
+ALTER TABLE "texture_packs"
+ADD COLUMN "likes_count" INTEGER NOT NULL DEFAULT 0;

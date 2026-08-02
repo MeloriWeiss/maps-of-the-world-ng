@@ -6,6 +6,10 @@ dist/
 !dist/apps/api/**
 
 documentation
+.data
+.env
+.env.*
+docker/.env*
 .tmp
 .tmp.*
 .nx
@@ -15,5 +19,6 @@ documentation
 .vscode
 .husky
 .angular
+.yarn
 *Dockerfile
 docker-compose*.yml

@@ -32,9 +32,6 @@
     <nav>
       <ul class="header-nav-list">
         <li>
-          <button (click)="logout()">Выйти</button>
-        </li>
-        <li>
           <a
             [routerLink]="['workshop']"
             routerLinkActive="active"
@@ -52,14 +49,53 @@
             >Форум</a
           >
         </li>
-        <li>
-          <a
-            [routerLink]="['mods']"
-            routerLinkActive="active"
-            class="header-nav-link"
-            (click)="closeMenu()"
-            >Моды</a
+        <li class="library-nav-item">
+          <wm-popover
+            #libraryMenu
+            alignment="center"
+            ariaLabel="Разделы библиотеки"
+            routerLinkActive="library-active"
           >
+            <button
+              wmPopoverTrigger
+              type="button"
+              class="header-nav-link library-trigger"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="libraryMenu.isOpen()"
+            >
+              Библиотека
+            </button>
+
+            <nav wmPopoverContent class="library-menu" aria-label="Библиотека">
+              <a
+                [routerLink]="['maps']"
+                routerLinkActive="active"
+                role="menuitem"
+                (click)="closeMenu()"
+              >
+                <strong>Карты</strong>
+                <span>Миры, созданные сообществом</span>
+              </a>
+              <a
+                [routerLink]="['texture-packs']"
+                routerLinkActive="active"
+                role="menuitem"
+                (click)="closeMenu()"
+              >
+                <strong>Текстур-паки</strong>
+                <span>Наборы материалов для карт</span>
+              </a>
+              <a
+                [routerLink]="['mods']"
+                routerLinkActive="active"
+                role="menuitem"
+                (click)="closeMenu()"
+              >
+                <strong>Моды</strong>
+                <span>Расширения возможностей</span>
+              </a>
+            </nav>
+          </wm-popover>
         </li>
         <li>
           <a
@@ -73,12 +109,40 @@
       </ul>
     </nav>
 
-    <a
-      (click)="closeMenu()"
-      [routerLink]="['profile', 'me']"
-      class="linked-block avatar-link"
-    >
-      <svg icon="avatar" class="svg40"></svg>
-    </a>
+    <wm-popover #profileMenu ariaLabel="Меню профиля">
+      <button
+        wmPopoverTrigger
+        type="button"
+        class="linked-block avatar-link"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="profileMenu.isOpen()"
+        aria-label="Открыть меню профиля"
+      >
+        @if (currentAccount.avatarUrl(); as avatarUrl) {
+          <img class="avatar-link__image" [src]="avatarUrl" alt="" />
+        } @else {
+          <svg icon="avatar" class="svg40"></svg>
+        }
+      </button>
+
+      <nav wmPopoverContent class="profile-menu" aria-label="Профиль">
+        <a
+          [routerLink]="['profile', 'me']"
+          (click)="closeMenu()"
+          role="menuitem"
+          class="profile-menu__item"
+        >
+          Профиль
+        </a>
+        <button
+          (click)="logout()"
+          type="button"
+          role="menuitem"
+          class="profile-menu__item profile-menu__item--separated"
+        >
+          Выйти
+        </button>
+      </nav>
+    </wm-popover>
   </div>
 </header>

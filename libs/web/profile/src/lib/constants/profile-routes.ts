@@ -4,6 +4,7 @@ import {
   ProfilePageFavouriteComponent,
   ProfilePageLayoutComponent,
   ProfilePageTexturePacksComponent,
+  ProfilePageEditComponent,
 } from '../feature-profile-page/index';
 
 export const profileRoutes: Routes = [
@@ -15,6 +16,10 @@ export const profileRoutes: Routes = [
         path: '',
         redirectTo: 'maps',
         pathMatch: 'full',
+      },
+      {
+        path: 'edit',
+        component: ProfilePageEditComponent,
       },
       {
         path: 'maps',

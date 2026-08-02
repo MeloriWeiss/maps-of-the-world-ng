@@ -1,0 +1,181 @@
+<main class="pack-editor">
+  <div class="container">
+    <a class="back-button" [routerLink]="['/profile', 'me', 'texture-packs']">
+      <span aria-hidden="true">←</span>
+      Назад к моим пакам
+    </a>
+
+    @if (isLoading()) {
+      <div class="page-state">Загружаем текстур-пак…</div>
+    } @else if (!pack()) {
+      <div class="page-state page-state--error">
+        <p>{{ errorMessage() }}</p>
+        <a [routerLink]="['/profile', 'me', 'texture-packs']">
+          Вернуться к моим пакам
+        </a>
+      </div>
+    } @else {
+      <header class="editor-header">
+        <div>
+          <p class="eyebrow">Управление паком</p>
+          <h1>{{ pack()!.name }}</h1>
+          <p>
+            {{ total() }} текстур ·
+            {{ pack()!.isPublished ? 'опубликован' : 'черновик' }}
+          </p>
+        </div>
+        <button
+          class="publication-button"
+          type="button"
+          [disabled]="isPublishing() || (!pack()!.isPublished && total() === 0)"
+          (click)="togglePublication()"
+        >
+          @if (isPublishing()) {
+            Обновляем…
+          } @else {
+            {{
+              pack()!.isPublished ? 'Снять с публикации' : 'Опубликовать пак'
+            }}
+          }
+        </button>
+      </header>
+
+      @if (errorMessage()) {
+        <div class="error-message" role="alert">
+          <span>{{ errorMessage() }}</span>
+          <button type="button" (click)="errorMessage.set(null)">
+            Закрыть
+          </button>
+        </div>
+      }
+
+      <section class="details-card" aria-labelledby="pack-details-title">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">01</span>
+            <h2 id="pack-details-title">Название и описание</h2>
+          </div>
+          @if (form.dirty) {
+            <span class="unsaved-badge">Есть несохранённые изменения</span>
+          }
+        </div>
+
+        <form
+          class="details-form"
+          [formGroup]="form"
+          (ngSubmit)="saveDetails()"
+        >
+          <label>
+            <span>Название</span>
+            <input formControlName="name" maxlength="120" />
+          </label>
+          <label>
+            <span>Описание</span>
+            <textarea
+              formControlName="description"
+              maxlength="500"
+              rows="4"
+            ></textarea>
+          </label>
+          <button type="submit" [disabled]="form.invalid || isSaving()">
+            {{ isSaving() ? 'Сохраняем…' : 'Сохранить изменения' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="textures-card" aria-labelledby="pack-textures-title">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">02</span>
+            <h2 id="pack-textures-title">Все текстуры</h2>
+          </div>
+          <span class="texture-total">
+            Показано {{ textures().length }} из {{ total() }}
+          </span>
+        </div>
+
+        <label class="upload-zone" [class.is-uploading]="isUploading()">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            [disabled]="isUploading()"
+            (change)="uploadTextures($event)"
+          />
+          <strong>
+            {{ isUploading() ? 'Загружаем файлы…' : 'Добавить текстуры' }}
+          </strong>
+          <span>PNG, JPEG или WebP · до 5 МБ · до 50 файлов за раз</span>
+        </label>
+
+        @if (textures().length === 0) {
+          <wm-empty-state
+            title="В паке пока нет текстур"
+            description="Добавьте изображения через область загрузки выше."
+          ></wm-empty-state>
+        } @else {
+          <div class="texture-grid">
+            @for (texture of textures(); track texture.id) {
+              <article class="texture-card">
+                <div class="texture-card__preview">
+                  <img [src]="texture.fileUrl" [alt]="texture.name" />
+                  <button
+                    class="texture-card__delete"
+                    type="button"
+                    [disabled]="deletingTextureId() !== null"
+                    (click)="removeTexture(texture)"
+                    [attr.aria-label]="
+                      'Удалить текстуру «' + texture.name + '»'
+                    "
+                    title="Удалить текстуру"
+                  >
+                    <svg icon="trash" class="svg20" aria-hidden="true"></svg>
+                  </button>
+                </div>
+                <div class="texture-card__body">
+                  <div>
+                    <h3 [title]="texture.name">{{ texture.name }}</h3>
+                    <p>
+                      {{ texture.displaySize }}
+                      @if (texture.width && texture.height) {
+                        · {{ texture.width }}×{{ texture.height }}
+                      }
+                    </p>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+
+          @if (hasMore()) {
+            <button
+              class="load-more-button"
+              type="button"
+              [disabled]="isLoadingMore()"
+              (click)="loadMore()"
+            >
+              {{ isLoadingMore() ? 'Загружаем…' : 'Показать ещё' }}
+            </button>
+          }
+        }
+      </section>
+
+      <section class="danger-zone" aria-labelledby="delete-pack-title">
+        <div>
+          <h2 id="delete-pack-title">Удаление пака</h2>
+          <p>
+            Пак и все загруженные в него текстуры будут удалены без возможности
+            восстановления.
+          </p>
+        </div>
+        <button
+          type="button"
+          [disabled]="isDeletingPack()"
+          (click)="removePack()"
+        >
+          {{ isDeletingPack() ? 'Удаляем…' : 'Удалить текстур-пак' }}
+        </button>
+      </section>
+    }
+  </div>
+</main>

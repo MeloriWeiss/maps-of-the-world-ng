@@ -38,9 +38,20 @@ export const routes: Routes = [
               import('@wm/web/forum').then((m) => m.forumRoutes),
           },
           {
+            path: 'maps',
+            loadComponent: () =>
+              import('@wm/web/maps').then((m) => m.MapsCatalogPageComponent),
+            title: 'Maps of the world: Карты',
+          },
+          {
             path: 'mods',
             loadChildren: () =>
               import('@wm/web/mods').then((m) => m.modsRoutes),
+          },
+          {
+            path: 'texture-packs',
+            loadChildren: () =>
+              import('@wm/web/texture-packs').then((m) => m.texturePacksRoutes),
           },
         ],
       },

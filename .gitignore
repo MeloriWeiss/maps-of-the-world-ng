@@ -8,6 +8,7 @@
 
 # Node
 /node_modules
+/.data
 npm-debug.log
 yarn-error.log
 
@@ -70,4 +71,6 @@ package-lock.json
 .env
 .env.*
 !.env.example
-!docker/.env.prod.example
+!docker/examples/
+!docker/examples/.env.prod.example
+!docker/examples/.env.minio.prod.example
