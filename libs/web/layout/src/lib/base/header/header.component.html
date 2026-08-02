@@ -73,12 +73,24 @@
       </ul>
     </nav>
 
-    <a
+    <button
       (click)="closeMenu()"
-      [routerLink]="['profile', 'me']"
+      [wmContextMenuTrigger]="contextMenuTemplate"
+      wmMenuMode="static"
+      wmMenuEvent="click"
       class="linked-block avatar-link"
     >
       <svg icon="avatar" class="svg40"></svg>
-    </a>
+    </button>
   </div>
 </header>
+
+<ng-template #contextMenuTemplate>
+  @for (item of menuOptions; track item.label) {
+    <button
+      wm-menu-item
+      [option]="item"
+      [attr.aria-label]="item.label"
+    ></button>
+  }
+</ng-template>
