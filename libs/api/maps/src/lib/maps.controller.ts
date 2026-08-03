@@ -19,7 +19,11 @@ import {
   OptionalAccessRequest,
   OptionalJwtAccessGuard,
 } from '@wm/api/api-auth';
-import { SaveMapDto, UpdateMapPublicationDto } from './maps.dto';
+import {
+  MapCatalogQueryDto,
+  SaveMapDto,
+  UpdateMapPublicationDto,
+} from './maps.dto';
 import { MapsService } from './maps.service';
 
 @Controller('maps')
@@ -32,14 +36,9 @@ export class MapsController {
   @ApiOperation({ summary: 'List published maps' })
   maps(
     @Req() request: OptionalAccessRequest,
-    @Query('authorId') authorId?: string,
+    @Query() query: MapCatalogQueryDto,
   ) {
-    return authorId === undefined
-      ? this.mapsService.listPublicCatalog(request.user?.profileId)
-      : this.mapsService.listPublicByAuthor(
-          Number(authorId),
-          request.user?.profileId,
-        );
+    return this.mapsService.listPublicCatalog(query, request.user?.profileId);
   }
 
   @Get(['public/:id', 'published/:id'])

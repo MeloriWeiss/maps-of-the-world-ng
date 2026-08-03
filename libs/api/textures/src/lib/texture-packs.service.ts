@@ -3,9 +3,10 @@
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaMainService } from '@wm/api/database-main';
+import { Prisma, PrismaMainService } from '@wm/api/database-main';
 import {
   CreateTexturePackDto,
+  TexturePackCatalogQueryDto,
   TexturePageQueryDto,
   UpdateTexturePackDto,
 } from './texture-pack.dto';
@@ -21,6 +22,39 @@ const textureSelect = {
   height: true,
   createdAt: true,
 } as const;
+
+const publicTexturePackSelect = (accountId?: number) =>
+  ({
+    id: true,
+    name: true,
+    description: true,
+    isPublished: true,
+    publishedAt: true,
+    createdAt: true,
+    updatedAt: true,
+    likesCount: true,
+    owner: {
+      select: {
+        nickname: true,
+        userId: true,
+      },
+    },
+    _count: {
+      select: {
+        textures: true,
+        likes: { where: { accountId: accountId ?? -1 } },
+      },
+    },
+    textures: {
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+      select: textureSelect,
+    },
+  }) as const;
+
+type PublicTexturePack = Prisma.TexturePackGetPayload<{
+  select: ReturnType<typeof publicTexturePackSelect>;
+}>;
 
 @Injectable()
 export class TexturePacksService {
@@ -56,8 +90,24 @@ export class TexturePacksService {
     }));
   }
 
-  listPublicCatalog(accountId?: number) {
-    return this.#listPublic(undefined, accountId);
+  async listPublicCatalog(
+    query: TexturePackCatalogQueryDto,
+    accountId?: number,
+  ) {
+    const where = { isPublished: true };
+    const [packs, total] = await this.prisma.$transaction([
+      this.#findPublic(where, accountId, {
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.prisma.texturePack.count({ where }),
+    ]);
+    return {
+      items: this.#toPublicPacks(packs),
+      total,
+      page: query.page,
+      pageSize: query.pageSize,
+    };
   }
 
   listPublicByAuthor(authorUserId: number, accountId?: number) {
@@ -68,43 +118,32 @@ export class TexturePacksService {
     if (authorUserId !== undefined && !Number.isInteger(authorUserId)) {
       throw new BadRequestException('Invalid author identifier');
     }
-    const packs = await this.prisma.texturePack.findMany({
-      where: {
+    const packs = await this.#findPublic(
+      {
         isPublished: true,
         ...(authorUserId === undefined
           ? {}
           : { owner: { userId: authorUserId } }),
       },
+      accountId,
+    );
+    return this.#toPublicPacks(packs);
+  }
+
+  #findPublic(
+    where: Prisma.TexturePackWhereInput,
+    accountId?: number,
+    pagination: { skip: number; take: number } = { skip: 0, take: 50 },
+  ) {
+    return this.prisma.texturePack.findMany({
+      where,
       orderBy: { publishedAt: 'desc' },
-      take: 50,
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        isPublished: true,
-        publishedAt: true,
-        createdAt: true,
-        updatedAt: true,
-        likesCount: true,
-        owner: {
-          select: {
-            nickname: true,
-            userId: true,
-          },
-        },
-        _count: {
-          select: {
-            textures: true,
-            likes: { where: { accountId: accountId ?? -1 } },
-          },
-        },
-        textures: {
-          orderBy: { createdAt: 'desc' },
-          take: 8,
-          select: textureSelect,
-        },
-      },
+      ...pagination,
+      select: publicTexturePackSelect(accountId),
     });
+  }
+
+  #toPublicPacks(packs: PublicTexturePack[]) {
     return packs.map(({ textures, owner, _count, ...pack }) => ({
       ...pack,
       isLiked: _count.likes > 0,

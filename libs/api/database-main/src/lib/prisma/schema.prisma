@@ -120,19 +120,37 @@ model TexturePackLike {
 }
 
 model Forum {
-  id       Int    @id @default(autoincrement())
-  title    String
-  post     String
-  authorId Int    @map("author_id")
+  id            Int    @id @default(autoincrement())
+  title         String
+  post          String
+  likesCount    Int    @default(0) @map("likes_count")
+  commentsCount Int    @default(0) @map("comments_count")
+  authorId      Int    @map("author_id")
+  categoryId    Int    @map("category_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
   authorAccount PersonalAccount @relation(fields: [authorId], references: [id])
+  category      ForumCategory   @relation(fields: [categoryId], references: [id])
   comments      ForumComment[]
+  likes         ForumLike[]
 
+  @@index([categoryId, createdAt])
   @@map("forums")
+}
+
+model ForumCategory {
+  id          Int    @id @default(autoincrement())
+  slug        String @unique
+  title       String
+  description String?
+  sortOrder   Int    @default(0) @map("sort_order")
+
+  discussions Forum[]
+
+  @@map("forum_categories")
 }
 
 model ForumComment {
@@ -140,15 +158,33 @@ model ForumComment {
   comment  String
   forumId  Int    @map("forum_id")
   authorId Int    @map("author_id")
+  parentId Int?   @map("parent_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
-  forum         Forum           @relation(fields: [forumId], references: [id])
+  forum         Forum           @relation(fields: [forumId], references: [id], onDelete: Cascade)
   authorAccount PersonalAccount @relation(fields: [authorId], references: [id])
+  parent        ForumComment?   @relation("ForumCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       ForumComment[]  @relation("ForumCommentReplies")
 
+  @@index([forumId, createdAt])
+  @@index([parentId])
   @@map("forum_comments")
+}
+
+model ForumLike {
+  accountId Int      @map("account_id")
+  forumId   Int      @map("forum_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  account PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  forum   Forum           @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, forumId])
+  @@index([accountId, createdAt])
+  @@map("forum_likes")
 }
 
 model PersonalAccount {
@@ -180,6 +216,7 @@ model PersonalAccount {
   mapComments       MapComment[]
   forums            Forum[]
   forumComments     ForumComment[]
+  forumLikes        ForumLike[]
   textures          Texture[]
   texturePacks      TexturePack[]
   likedMaps         MapLike[]

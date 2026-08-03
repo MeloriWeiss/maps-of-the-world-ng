@@ -6,6 +6,9 @@
       } @else {
         <h1 class="desk-title">{{ crumbs() }}</h1>
       }
+      @if (pageable() && paginationInHeader()) {
+        <wm-pagination class="pagination-header light"></wm-pagination>
+      }
       <ng-content select="[searchControl]"></ng-content>
     </div>
 

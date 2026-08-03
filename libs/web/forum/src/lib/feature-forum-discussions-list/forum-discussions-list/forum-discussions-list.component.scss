@@ -12,3 +12,37 @@
   width: fluid(236, 142);
   min-width: rem(142);
 }
+
+.create-discussion {
+  display: grid;
+  gap: rem(12);
+  padding: rem(20);
+  border-radius: rem(10);
+  background: var(--light-color);
+
+  input,
+  select,
+  textarea {
+    padding: rem(10);
+    border: 1px solid var(--primary-color);
+    border-radius: rem(6);
+    font: inherit;
+  }
+}
+
+.create-discussion__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: rem(10);
+
+  button {
+    padding: rem(8) rem(16);
+    border-radius: rem(6);
+    background: var(--primary-color);
+    color: var(--light-color);
+  }
+}
+
+.form-error {
+  color: var(--error-color);
+}

@@ -10,6 +10,7 @@ describe('TexturePacksService', () => {
       create: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
     },
@@ -116,9 +117,10 @@ describe('TexturePacksService', () => {
 
   it('never includes drafts in the public catalog', async () => {
     prisma.texturePack.findMany.mockResolvedValue([]);
+    prisma.$transaction.mockResolvedValue([[], 0]);
     const service = await createService();
 
-    await service.listPublicCatalog();
+    await service.listPublicCatalog({ page: 1, pageSize: 9 });
 
     expect(prisma.texturePack.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

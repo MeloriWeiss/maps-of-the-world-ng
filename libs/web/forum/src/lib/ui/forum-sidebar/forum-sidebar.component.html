@@ -1,11 +1,17 @@
 <div class="forum-sidebar">
   <div class="sidebar-actions">
     <div class="sidebar-mobile">
-      <span class="sidebar-active-category">{{ getActiveLabel() }}</span>
+      <span class="sidebar-active-category">Выберите форум...</span>
       <svg class="svg15" icon="arrow-tailless" />
     </div>
 
-    <button class="new-action-btn">Новое обсуждение</button>
+    <button
+      class="new-action-btn"
+      type="button"
+      (click)="createRequested.emit()"
+    >
+      Новое обсуждение
+    </button>
   </div>
 
   <div class="sidebar">
@@ -16,16 +22,18 @@
 
     <nav>
       <ul class="discussions-forums-list">
-        @for (forum of forums; track forum) {
+        @for (category of categories(); track category.id) {
           <li>
-            <button
-              [routerLink]="[forum.link]"
-              routerLinkActive="active"
+            <a
+              [routerLink]="['/forum']"
+              [queryParams]="{ category: category.slug, page: 1 }"
+              queryParamsHandling="merge"
+              [class.active]="selectedCategory() === category.slug"
               class="discussions-forums-btn"
             >
-              <span>{{ forum.label }}</span>
-              <span>{{ forum.count }}</span>
-            </button>
+              <span>{{ category.title }}</span>
+              <span>{{ category.discussionsCount }}</span>
+            </a>
           </li>
         }
       </ul>

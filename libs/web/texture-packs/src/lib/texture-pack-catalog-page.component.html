@@ -1,24 +1,29 @@
 <main class="catalog" [class.catalog--embedded]="embedded()">
   <div class="container">
     <header class="catalog-header">
-      <p class="eyebrow">
-        {{
-          authorUserId() === undefined
-            ? 'Открытая библиотека'
-            : 'Витрина автора'
-        }}
-      </p>
-      <h1>
-        {{
-          authorUserId() === undefined
-            ? 'Текстур-паки сообщества'
-            : 'Опубликованные текстур-паки'
-        }}
-      </h1>
-      <p>
-        Здесь находятся только опубликованные наборы. Черновики видны лишь их
-        владельцам.
-      </p>
+      <div>
+        <p class="eyebrow">
+          {{
+            authorUserId() === undefined
+              ? 'Открытая библиотека'
+              : 'Витрина автора'
+          }}
+        </p>
+        <h1>
+          {{
+            authorUserId() === undefined
+              ? 'Текстур-паки сообщества'
+              : 'Опубликованные текстур-паки'
+          }}
+        </h1>
+        <p>
+          Здесь находятся только опубликованные наборы. Черновики видны лишь их
+          владельцам.
+        </p>
+      </div>
+      @if (!embedded() && total() > pageSize) {
+        <wm-pagination class="catalog-pagination--header"></wm-pagination>
+      }
     </header>
 
     @if (isLoading()) {
@@ -95,6 +100,9 @@
           </article>
         }
       </div>
+      @if (!embedded() && total() > pageSize) {
+        <wm-pagination class="catalog-pagination"></wm-pagination>
+      }
     }
   </div>
 </main>

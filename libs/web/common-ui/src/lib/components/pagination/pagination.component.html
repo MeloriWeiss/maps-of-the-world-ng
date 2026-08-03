@@ -1,5 +1,9 @@
 @if (currentPage(); as currentPage) {
-  <button class="arrow-btn" (click)="changePage(currentPage - 1)">
+  <button
+    class="arrow-btn"
+    [disabled]="currentPage === 1"
+    (click)="changePage(currentPage - 1)"
+  >
     <svg icon="arrow" class="svg20 svg prev-page-icon"></svg>
   </button>
   <div class="pagination-numbers">
@@ -13,7 +17,11 @@
       </button>
     }
   </div>
-  <button class="arrow-btn" (click)="changePage(currentPage + 1)">
+  <button
+    class="arrow-btn"
+    [disabled]="currentPage === maxPage()"
+    (click)="changePage(currentPage + 1)"
+  >
     <svg icon="arrow" class="svg20 svg next-page-icon"></svg>
   </button>
 }

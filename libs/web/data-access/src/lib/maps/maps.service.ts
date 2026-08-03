@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { API_CONFIG } from '../shared';
 import {
   MapSummary,
-  PublishedMapSummary,
+  PublishedMapPage,
   PublishedStoredMap,
   SaveMap,
   StoredMap,
@@ -22,15 +22,15 @@ export class MapsService {
   }
 
   listPublicByAuthor(authorUserId: number) {
-    return this.#http.get<MapSummary[]>(`${this.#apiConfig.baseUrl}maps`, {
-      params: { authorId: authorUserId },
-    });
+    return this.#http.get<MapSummary[]>(
+      `${this.#apiConfig.baseUrl}maps/authors/${authorUserId}`,
+    );
   }
 
-  listCatalog() {
-    return this.#http.get<PublishedMapSummary[]>(
-      `${this.#apiConfig.baseUrl}maps`,
-    );
+  listCatalog(page: number, pageSize: number) {
+    return this.#http.get<PublishedMapPage>(`${this.#apiConfig.baseUrl}maps`, {
+      params: { page, pageSize },
+    });
   }
 
   getPublicMap(mapId: number, context?: HttpContext) {

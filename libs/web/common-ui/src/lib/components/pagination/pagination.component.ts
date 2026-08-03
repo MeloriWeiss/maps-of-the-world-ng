@@ -13,6 +13,7 @@ export class PaginationComponent {
   #paginationService = inject(PaginationService);
 
   currentPage = this.#paginationService.currentPage;
+  maxPage = this.#paginationService.maxPage;
   visiblePages = this.#paginationService.visiblePages;
 
   changePage(page: number | '...') {

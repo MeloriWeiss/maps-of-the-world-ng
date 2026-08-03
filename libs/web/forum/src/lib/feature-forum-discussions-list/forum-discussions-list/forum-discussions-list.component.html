@@ -1,19 +1,60 @@
-<wm-desk-list [title]="'Активные темы 1-21 из 138'">
-  <wm-search-input
-    class="search-input"
-    [formControl]="searchControl"
-    searchControl
+@if (page$ | async; as page) {
+  <wm-desk-list
+    [title]="'Активные темы — ' + page.total"
+    [paginationInHeader]="true"
   >
-    <svg icon="search" class="svg20"></svg>
-  </wm-search-input>
+    <wm-search-input
+      class="search-input"
+      [formControl]="searchControl"
+      searchControl
+    >
+      <svg icon="search" class="svg20"></svg>
+    </wm-search-input>
 
-  <ng-template #sidebar>
-    <wm-forum-sidebar></wm-forum-sidebar>
-  </ng-template>
+    <ng-template #sidebar>
+      <wm-forum-sidebar
+        [categories]="(categories$ | async) ?? []"
+        [selectedCategory]="selectedCategory()"
+        (createRequested)="openCreateForm()"
+      ></wm-forum-sidebar>
+    </ng-template>
 
-  <ng-container cards>
-    @for (discussion of discussions$ | async; track discussion.id) {
-      <wm-discussion-card [discussion]="discussion"></wm-discussion-card>
-    }
-  </ng-container>
-</wm-desk-list>
+    <ng-container cards>
+      @if (showCreateForm()) {
+        <form
+          class="create-discussion"
+          [formGroup]="createForm"
+          (ngSubmit)="createDiscussion()"
+        >
+          <h2>Новое обсуждение</h2>
+          <input formControlName="title" placeholder="Название темы" />
+          <select formControlName="category">
+            <option value="" disabled>Выберите форум</option>
+            @for (category of (categories$ | async) ?? []; track category.id) {
+              <option [value]="category.slug">{{ category.title }}</option>
+            }
+          </select>
+          <textarea
+            formControlName="post"
+            rows="8"
+            placeholder="Текст публикации"
+          ></textarea>
+          @if (createError()) {
+            <p class="form-error">{{ createError() }}</p>
+          }
+          <div class="create-discussion__actions">
+            <button type="button" (click)="cancelCreate()">Отмена</button>
+            <button type="submit" [disabled]="isCreating()">
+              Опубликовать
+            </button>
+          </div>
+        </form>
+      }
+      @for (discussion of page.items; track discussion.id) {
+        <wm-discussion-card [discussion]="discussion"></wm-discussion-card>
+      } @empty {
+        <p class="empty-state">Обсуждений пока нет.</p>
+      }
+    </ng-container>
+  </wm-desk-list>
+}

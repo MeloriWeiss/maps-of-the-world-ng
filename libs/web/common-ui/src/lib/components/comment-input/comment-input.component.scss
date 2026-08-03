@@ -65,3 +65,11 @@
     margin-top: rem(8);
   }
 }
+
+.comment-input__submit {
+  align-self: center;
+  padding: rem(8) rem(12);
+  border-radius: rem(7);
+  background-color: var(--dark-primary-color);
+  color: var(--light-color);
+}

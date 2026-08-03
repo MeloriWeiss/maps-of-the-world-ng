@@ -1,31 +1,28 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import {
-  DiscussionCardComponent,
-  MapCardComponent,
-  ModeCardComponent,
-  SvgComponent,
-} from '@wm/web/common-ui';
-import { RouterLink } from '@angular/router';
-import { MockService } from '@wm/web/data-access/mock';
 import { AsyncPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SvgComponent } from '@wm/web/common-ui';
+import { MapsService, PublishedMapPage } from '@wm/web/data-access/maps';
+import { catchError, of } from 'rxjs';
+
+const EMPTY_MAP_PAGE: PublishedMapPage = {
+  items: [],
+  total: 0,
+  page: 1,
+  pageSize: 3,
+};
 
 @Component({
   selector: 'wm-home-page',
-  imports: [
-    SvgComponent,
-    RouterLink,
-    MapCardComponent,
-    ModeCardComponent,
-    AsyncPipe,
-    DiscussionCardComponent,
-  ],
+  imports: [AsyncPipe, RouterLink, SvgComponent],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePageComponent {
-  #mockService = inject(MockService);
+  #mapsService = inject(MapsService);
 
-  modes = this.#mockService.getModsData();
-  discussions = this.#mockService.getDiscussions({ page: 1, search: '' });
+  protected readonly featuredMaps$ = this.#mapsService
+    .listCatalog(1, 3)
+    .pipe(catchError(() => of(EMPTY_MAP_PAGE)));
 }

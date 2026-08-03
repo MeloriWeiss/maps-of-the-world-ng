@@ -39,6 +39,11 @@
   cursor: pointer;
   padding: rem(5);
   margin: rem(-5);
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.35;
+  }
 }
 
 .svg {

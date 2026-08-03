@@ -48,6 +48,19 @@ export class TexturePageQueryDto {
   pageSize = 24;
 }
 
+export class TexturePackCatalogQueryDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page = 1;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  pageSize = 9;
+}
+
 export class UpdateTexturePackPublicationDto {
   @IsBoolean()
   isPublished!: boolean;

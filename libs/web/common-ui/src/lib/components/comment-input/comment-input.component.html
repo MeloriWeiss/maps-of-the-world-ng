@@ -9,5 +9,9 @@
       type="text"
       [placeholder]="placeholder()"
     ></textarea>
+    <button class="comment-input__submit" type="button" (click)="submit()">
+      Отправить
+    </button>
   </div>
 </div>
+(keydown.control.enter)="submit()"

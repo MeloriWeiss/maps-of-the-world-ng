@@ -21,7 +21,11 @@
       <p class="comment__content">{{ comment().text }}</p>
 
       <div class="comment__actions">
-        <button class="comment__reply-btn">
+        <button
+          class="comment__reply-btn"
+          type="button"
+          (click)="replyRequested.emit(comment().id)"
+        >
           <svg icon="messages" class="svg10"></svg>
           <p>Ответить</p>
         </button>
@@ -31,7 +35,11 @@
 
   <div class="comment__replies">
     @for (reply of comment().replies; track reply.id) {
-      <wm-comment [comment]="reply" [depth]="depth() + 1"></wm-comment>
+      <wm-comment
+        [comment]="reply"
+        [depth]="depth() + 1"
+        (replyRequested)="replyRequested.emit($event)"
+      ></wm-comment>
     }
   </div>
 </div>

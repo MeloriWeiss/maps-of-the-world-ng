@@ -1,17 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaMainService } from '@wm/api/database-main';
-import { SaveMapDto } from './maps.dto';
+import { MapCatalogQueryDto, SaveMapDto } from './maps.dto';
 
 @Injectable()
 export class MapsService {
   constructor(private readonly prisma: PrismaMainService) {}
 
-  listPublicCatalog(accountId?: number) {
-    return this.prisma.map
-      .findMany({
+  async listPublicCatalog(query: MapCatalogQueryDto, accountId?: number) {
+    const where = { isPublished: true };
+    const [maps, total] = await this.prisma.$transaction([
+      this.prisma.map.findMany({
         where: { isPublished: true },
         orderBy: { id: 'desc' },
-        take: 50,
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
         select: {
           id: true,
           name: true,
@@ -31,17 +33,22 @@ export class MapsService {
             },
           },
         },
-      })
-      .then((maps) =>
-        maps.map(({ authorAccount, _count, ...map }) => ({
-          ...map,
-          isLiked: _count.likes > 0,
-          author: {
-            id: authorAccount.userId,
-            nickname: authorAccount.nickname,
-          },
-        })),
-      );
+      }),
+      this.prisma.map.count({ where }),
+    ]);
+    return {
+      items: maps.map(({ authorAccount, _count, ...map }) => ({
+        ...map,
+        isLiked: _count.likes > 0,
+        author: {
+          id: authorAccount.userId,
+          nickname: authorAccount.nickname,
+        },
+      })),
+      total,
+      page: query.page,
+      pageSize: query.pageSize,
+    };
   }
 
   async getPublicMap(id: number, accountId?: number) {

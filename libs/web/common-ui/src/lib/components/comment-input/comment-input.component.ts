@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   input,
+  output,
   Renderer2,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -18,6 +19,7 @@ import { SvgComponent } from '../svg/svg.component';
 export class CommentInputComponent {
   commentControl = new FormControl('');
   placeholder = input.required<string>();
+  submitted = output<string>();
 
   #r2 = inject(Renderer2);
 
@@ -26,5 +28,12 @@ export class CommentInputComponent {
 
     this.#r2.setStyle(textarea, 'height', 'auto');
     this.#r2.setStyle(textarea, 'height', textarea.scrollHeight + 'px');
+  }
+
+  submit() {
+    const comment = this.commentControl.value?.trim();
+    if (!comment) return;
+    this.submitted.emit(comment);
+    this.commentControl.setValue('');
   }
 }

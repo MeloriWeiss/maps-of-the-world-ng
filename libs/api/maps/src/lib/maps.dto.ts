@@ -1,10 +1,27 @@
 import {
   IsBoolean,
+  IsInt,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
+  Max,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class MapCatalogQueryDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page = 1;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  pageSize = 9;
+}
 
 export class SaveMapDto {
   @IsString()

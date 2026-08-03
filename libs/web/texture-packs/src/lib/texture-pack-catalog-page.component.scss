@@ -1,4 +1,5 @@
 @use 'functions' as *;
+@use 'media' as *;
 
 :host {
   display: block;
@@ -21,8 +22,15 @@
 }
 
 .catalog-header {
-  max-width: rem(700);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: rem(24);
   margin-bottom: rem(32);
+
+  > div {
+    max-width: rem(700);
+  }
 
   h1 {
     color: var(--semi-dark-font-color);
@@ -30,10 +38,15 @@
     font-size: rem(36);
   }
 
-  > p:last-child {
+  > div > p:last-child {
     margin-top: rem(10);
     color: var(--light-gray-font-color);
     line-height: 1.5;
+  }
+
+  @include mobile {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
@@ -50,6 +63,15 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: rem(24);
+}
+
+.catalog-pagination {
+  margin-top: rem(32);
+}
+
+.catalog-pagination--header {
+  flex: 0 0 auto;
+  margin-bottom: rem(6);
 }
 
 .catalog-card,

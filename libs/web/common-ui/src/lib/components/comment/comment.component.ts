@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+} from '@angular/core';
 import { SvgComponent } from '../index';
 import { CommentItem } from '@wm/web/data-access/shared';
 import { DatePipe } from '@angular/common';
@@ -13,4 +18,5 @@ import { DatePipe } from '@angular/common';
 export class CommentComponent {
   comment = input.required<CommentItem>();
   depth = input.required<number>();
+  replyRequested = output<number>();
 }

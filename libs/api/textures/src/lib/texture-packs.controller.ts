@@ -22,6 +22,7 @@ import {
 } from '@wm/api/api-auth';
 import {
   CreateTexturePackDto,
+  TexturePackCatalogQueryDto,
   TexturePageQueryDto,
   UpdateTexturePackDto,
   UpdateTexturePackPublicationDto,
@@ -39,14 +40,9 @@ export class TexturePacksController {
   @ApiOperation({ summary: 'List published texture packs' })
   texturePacksList(
     @Req() request: OptionalAccessRequest,
-    @Query('authorId') authorId?: string,
+    @Query() query: TexturePackCatalogQueryDto,
   ) {
-    return authorId === undefined
-      ? this.texturePacks.listPublicCatalog(request.user?.profileId)
-      : this.texturePacks.listPublicByAuthor(
-          Number(authorId),
-          request.user?.profileId,
-        );
+    return this.texturePacks.listPublicCatalog(query, request.user?.profileId);
   }
 
   @Get('authors/:userId')

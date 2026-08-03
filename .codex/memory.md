@@ -37,11 +37,11 @@
 ## Domain
 
 - Prisma schema is at `libs/api/database-main/src/lib/prisma/schema.prisma`.
-- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapLike`, `MapComment`, `Forum`, `ForumComment`, `TexturePack`, `TexturePackLike`, and `Texture`.
-- Backend endpoints cover auth, users, accounts/profiles, owned and published maps, texture packs, and texture files; forum endpoints are not implemented yet.
+- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapLike`, `MapComment`, `ForumCategory`, `Forum`, `ForumComment`, `ForumLike`, `TexturePack`, `TexturePackLike`, and `Texture`.
+- Backend endpoints cover auth, users, accounts/profiles, owned and published maps, texture packs/files, and the working forum.
 - Auth uses access/refresh JWT cookies, refresh rotation, session storage, logout, logout-all, and sessions listing.
 - `libs/api/maps` implements map persistence, publication, public viewing, and deletion:
-  - `GET /api/maps` lists the public map catalog. Legacy `catalog` and `published` aliases remain temporarily for backward compatibility.
+  - `GET /api/maps?page=&pageSize=` returns the server-paginated public catalog as `{ items, total, page, pageSize }`; default page size is 9. Legacy `catalog` and `published` aliases remain temporarily for backward compatibility.
   - `GET /api/maps/:id` returns one published map for read-only viewing; `public/:id` and `published/:id` are compatibility aliases.
   - `GET /api/maps/mine` lists the current account's draft and published maps.
   - `GET /api/maps/authors/:userId` lists an author's published maps.
@@ -56,7 +56,7 @@
 - API JSON request bodies accept up to 10 MB to accommodate workshop snapshots.
 - Textures are not standalone user-library entities. Every texture belongs to a `TexturePack`; do not restore a UI or API for creating ungrouped textures.
 - `libs/api/textures` implements texture-pack management:
-  - `GET /api/texture-packs` lists published packs for the public catalog.
+  - `GET /api/texture-packs?page=&pageSize=` returns the server-paginated public catalog as `{ items, total, page, pageSize }`; default page size is 9.
   - `GET /api/texture-packs/authors/:userId` lists an author's published packs.
   - `GET /api/texture-packs/:id` returns public details of one published pack; `public/:id` and `published/:id` remain compatibility aliases.
   - `GET /api/texture-packs/:id/textures?page=&pageSize=` returns a paginated public texture page; drafts must return 404.
@@ -81,6 +81,13 @@
   - Switching providers does not migrate existing objects; preserve all `objectKey` values when copying a bucket.
   - The former one-time import from `.data/textures` has been removed and must not be restored.
   - `TexturesModule` imports `DatabaseMainModule`, `ApiAuthModule`, and the shared `ObjectStorageModule`; importing them only in root `AppModule` does not expose their providers in the feature module.
+- `libs/api/forum` implements the working forum API:
+  - `GET /api/forum-categories` lists categories.
+  - `GET /api/forum-discussions?page=&pageSize=&search=&category=` returns a paginated/searchable/category-filtered list.
+  - `GET /api/forum-discussions/:id` returns one discussion with its nested comment tree and optional authenticated like state.
+  - `POST /api/forum-discussions` creates a discussion for an authenticated account.
+  - `POST /api/forum-discussions/:id/comments` creates a top-level comment or reply through optional `parentId`.
+  - `POST /api/forum-discussions/:id/likes` and `DELETE /api/forum-discussions/:id/likes` update the current account's like.
 - Profile avatars also use the existing object-storage abstraction; PostgreSQL stores only `PersonalAccount.avatarUrl`, not image bytes.
   - `POST /api/accounts/me/avatar` immediately uploads or replaces the current avatar.
   - `DELETE /api/accounts/me/avatar` clears the database reference and removes the stored image.
@@ -88,6 +95,9 @@
 ## Docker and Object Storage
 
 - Root `.env` is development-only and is created from `.env.example`.
+- Development Docker Compose currently runs infrastructure only; it does not build or run the NestJS API container.
+- Run the development API locally with `yarn start:api` after starting its dependencies with `yarn start:api-deps:docker`.
+- There is no `apps/api/dev.Dockerfile`, `start:api:docker` script, development API healthcheck, Compose Watch source synchronization, or Docker-based API hot reload in the current revision.
 - `yarn start:api-deps:docker` runs Docker Compose in attached mode and always starts PostgreSQL, MinIO, `minio-init`, and pgAdmin.
   - Logs remain in the terminal.
   - `Ctrl+C` stops the development services.
@@ -112,13 +122,27 @@
 ## Angular Routing
 
 - Routes are in `apps/web/src/app/app.routes.ts`.
+- `apps/web/src/app/app.config.ts` enables `withInMemoryScrolling` with browser-history scroll restoration and anchor scrolling.
 - Authenticated area uses `BaseLayoutComponent` and `canActivateAuth`.
 - Lazy/feature routes include `home`, `profile/:id`, `forum`, `mods`, `/maps`, and the `/texture-packs` catalog.
 - `/texture-packs/:id` is the read-only public pack details page; `/texture-packs/:id/edit` is the separate owner editor. Keep the `/edit` route before the generic `/:id` route.
 - `workshop` loads `WorkshopPageComponent` directly.
 - `login` and `register` use `AuthLayoutComponent` and `canActivateNonAuth`.
 
+## SEO
+
+- SEO requirements are part of root `AGENTS.md`; apply them to every public route and route/content change.
+- `SeoService` in `libs/web/shared/src/lib/seo` is the single metadata service and Angular `TitleStrategy`.
+- Route data supplies static `title`, description, canonical path, indexing and page type; dynamic detail pages update metadata from loaded entities.
+- The service owns title, meta description, robots, canonical, Open Graph, and Twitter Card tags. Canonical URLs strip query parameters by default, including pagination/search parameters.
+- `apps/web/src/index.html` contains safe initial metadata for crawlers and social previews; do not let it drift from runtime defaults.
+- Public route changes must also consider `public/robots.txt`, `public/sitemap.xml`, semantic headings, internal links, and redirects.
+
 ## UI Notes
+
+- The current public home page is a live HTML/CSS composition rather than a canvas-only experience. It has an interactive atlas hero, a three-step story section, three featured maps loaded through `MapsService`, and a final manifesto CTA.
+- Hovering the circular atlas map replaces the cursor with a route-point marker; featured-map previews currently keep their normal cursor behavior.
+- The public About page contains intro, mission, principles, ecosystem navigation, and invitation sections. It intentionally has no authors/founders section; its adjacent sections use distinct backgrounds.
 
 - Shared input component: `libs/web/common-ui/src/lib/components/form-input`.
 - `wm-form-input` is a ControlValueAccessor and supports `type`, `placeholder`, and optional `[showPasswordToggle]="true"`.
@@ -141,6 +165,9 @@
 - `SearchableSelectComponent` in `common-ui` accepts generic `{ value, label, description? }` options, supports local search, a scrollable list, outside-click closing, and keyboard navigation.
   - Search clear content is projected with `wmSearchableSelectClearIcon`; the dropdown indicator can be projected with `wmSearchableSelectIndicator`.
 - `ToggleComponent` (`wm-toggle`) in `common-ui` is the reusable signal-friendly switch. It accepts `checked`, `disabled`, and `ariaLabel`, emits `checkedChange`, and receives its visible label through content projection.
+- `PaginationService` and `PaginationComponent` in `common-ui` are the shared query-parameter pagination implementation. `visiblePages` is computed reactively from both `currentPage` and `maxPage`; do not restore the former `untracked(maxPage)` effect because it hid pagination on initial async loads.
+- `DeskListComponent` supports `paginationInHeader`. The forum uses it so pagination sits in the brown header between the discussion count and search; a second paginator remains below the list.
+- Public maps and texture-pack catalogs show pagination at the right side of their heading and below the cards. The maps catalog intentionally has no `Создать карту` button in its heading.
 
 ## Profile and Catalog Notes
 
@@ -159,6 +186,7 @@
 - Own maps and own texture packs are split into separate `Черновики` and `Опубликованные` lists. Other users expose only published content.
 - Every empty list/tab should render a contextual shared empty state rather than a blank region.
 - `/texture-packs` is the public catalog and contains only published packs. Own drafts and published packs are managed from the profile texture-pack section.
+- `/maps` and `/texture-packs` use backend pagination with 9 cards per page and keep the current page in the `page` query parameter.
 - Public catalog cards link by title and `Подробнее о паке` to `/texture-packs/:id`.
 - `/texture-packs/:id` displays public pack metadata, author link, description, and all textures through paginated loading; it never exposes editing controls.
 - `/texture-packs/:id/edit` is the detailed owner editor for name, description, upload, individual texture deletion, publication, and full-pack deletion.
@@ -279,16 +307,22 @@
 - Test all: `yarn test`.
 - Generate docs: `yarn docs:gen`.
 
+## Development Seed
+
+- `yarn db:main:seed` is destructive by design: it truncates the local main database, resets identities, and recreates the complete deterministic development dataset.
+- The current seed creates 8 users/accounts, 36 maps (30 published), 15 texture packs (12 published), 192 textures, 55 forum discussions with nested comments, likes, and sessions.
+- All demo accounts use the shared `SEED_PASSWORD` constant from `seed/users.ts`: `Admin123`. Primary credentials are `admin@example.com / Admin123` and `user@example.com / Admin123`.
+- Generated texture sources live in `libs/api/database-main/src/lib/prisma/seed/assets/texture-packs`.
+- There are 12 thematic top-down fantasy materials and four orientation variants per theme. Packs keep their own theme; variants are repeated as needed to preserve the 62-texture pagination scenario in the first pack.
+- `uploadSeedImages()` uploads the real PNG source files to configured S3/MinIO and uploads only the small placeholder for seed avatars.
+- Seed texture object keys and deterministic UUIDs are versioned (`v2` / `22...`) because `/api/textures/:id/file` is cached for one year as immutable. Change the seed version whenever the bytes behind deterministic seed texture URLs change.
+- The seed requires PostgreSQL; object-storage failures leave metadata populated but images unavailable. A successful current run reports `Object storage seed images: 200`.
+
 ## Caveats
 
 - PowerShell displayed `README.md` and some Russian strings as mojibake during inspection; be careful with file encoding.
-- The working tree is not clean. Existing user changes include `.husky/post-merge`, the tool factory/disposal work in `WorkshopToolsService`, and optional `Tool.dispose()`. Preserve them.
-- Workshop changes are currently uncommitted and span layout, sidebars, context settings, zoom/panning, selection transforms, shapes, and settings services. Preserve them as one ongoing body of user work.
-- Current production checks pass: `yarn build:web` and `yarn build:api`.
-- Relevant lint checks pass for `profile`, `texture-packs`, `textures`, and `common-ui`; `common-ui` still reports pre-existing warnings in unrelated components.
-- `yarn nx test textures --runInBand` currently passes 14 tests covering uploads, ownership, individual/full-pack deletion, and public-pack visibility.
-- The authenticated map API was smoke-tested end-to-end: login, create, read, and update succeeded; the temporary test map was removed.
-- `git diff --check` succeeds; Git only reports expected LF-to-CRLF conversion warnings on Windows.
+- Snapshot refreshed after the user reset to commit `38334e8` (`feat(frontend): доработать дизайн страниц [главная] и [о нас]`) on 2026-08-03; the working tree was clean at refresh time.
+- Build, lint, test, smoke-test, and Docker-runtime results recorded before that reset are historical and must be rerun before relying on them.
 - Prefer existing Nx project patterns and standalone Angular conventions.
 - Before implementing a feature, identify which entity owns the state and behavior.
 - Prefer encapsulation and polymorphism over central switches or mappings that must change whenever a new subtype is introduced.
@@ -300,9 +334,9 @@
 
 - The local PostgreSQL database originally contained legacy PascalCase tables while Prisma expected snake_case tables. This caused login to fail with a Prisma error and HTTP 500.
 - The migration chain is now registered and applied locally. The refactor migration preserves legacy data by renaming/converting tables and foreign keys instead of dropping them.
-- The migration chain currently contains ten migrations through `20260729190000_add_texture_pack_likes`, including texture packs, publication, and pack-like counters.
+- The migration chain currently contains twelve migrations through `20260803180000_add_forum_functionality`, including content likes and the forum schema.
 - The local database previously matched the Prisma schema but had no `_prisma_migrations` table because it had been created outside the migration chain. The six pre-texture migrations were safely baselined after `prisma migrate diff` confirmed that the only schema delta was `textures`; the texture migration was then deployed.
-- The invalid historical seed bcrypt placeholder was replaced. Demo credentials are `admin@example.com` / `admin123`.
+- The invalid historical seed bcrypt placeholder was replaced. Demo credentials are `admin@example.com` / `Admin123`.
 - Login validation intentionally does not enforce registration password-strength rules; invalid credentials return 401.
 - `GlobalExceptionFilter` now sends the status calculated for Prisma errors, maps common database failures, and does not expose unexpected internal error messages.
 - API bootstrap failures are caught and logged.

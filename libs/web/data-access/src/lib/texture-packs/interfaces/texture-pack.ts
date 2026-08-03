@@ -48,6 +48,18 @@ export interface PublishedTexturePackView
   previewTextures: TextureItemView[];
 }
 
+export interface PublishedTexturePackPage {
+  items: PublishedTexturePack[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface PublishedTexturePackPageView
+  extends Omit<PublishedTexturePackPage, 'items'> {
+  items: PublishedTexturePackView[];
+}
+
 export type PublishedTexturePackDetails = Omit<
   PublishedTexturePack,
   'previewTextures'

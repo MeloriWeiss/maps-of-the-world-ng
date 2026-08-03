@@ -36,6 +36,20 @@ export const routes: Routes = [
               import('@wm/web/home').then((m) => m.HomeRoutes),
           },
           {
+            path: 'about',
+            loadComponent: () =>
+              import('@wm/web/home').then((m) => m.AboutPageComponent),
+            data: {
+              seo: {
+                title: 'О проекте',
+                description:
+                  'История, миссия и команда GameMaster Helper — платформы для создания карт и миров настольных ролевых игр.',
+                index: true,
+                canonicalPath: '/about',
+              },
+            },
+          },
+          {
             path: 'profile/:id',
             loadChildren: () =>
               import('@wm/web/profile').then((m) => m.profileRoutes),

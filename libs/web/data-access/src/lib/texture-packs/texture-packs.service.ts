@@ -5,6 +5,8 @@ import { API_CONFIG } from '../shared';
 import {
   CreateTexturePack,
   PublishedTexturePack,
+  PublishedTexturePackPage,
+  PublishedTexturePackPageView,
   PublishedTexturePackDetails,
   PublishedTexturePackView,
   TextureItem,
@@ -31,19 +33,29 @@ export class TexturePacksService {
       .pipe(map((packs) => packs.map((pack) => this.#toView(pack))));
   }
 
-  listPublicCatalog() {
-    return this.#listPublic('texture-packs');
+  listPublicCatalog(page: number, pageSize: number) {
+    return this.#http
+      .get<PublishedTexturePackPage>(
+        `${this.#apiConfig.baseUrl}texture-packs`,
+        { params: { page, pageSize } },
+      )
+      .pipe(
+        map(
+          (result): PublishedTexturePackPageView => ({
+            ...result,
+            items: result.items.map((pack) => this.#toPublishedView(pack)),
+          }),
+        ),
+      );
   }
 
   listPublicByAuthor(authorUserId: number) {
-    return this.#listPublic('texture-packs', authorUserId);
+    return this.#listPublic(`texture-packs/authors/${authorUserId}`);
   }
 
-  #listPublic(path: string, authorId?: number) {
+  #listPublic(path: string) {
     return this.#http
-      .get<PublishedTexturePack[]>(`${this.#apiConfig.baseUrl}${path}`, {
-        params: authorId === undefined ? {} : { authorId },
-      })
+      .get<PublishedTexturePack[]>(`${this.#apiConfig.baseUrl}${path}`)
       .pipe(map((packs) => packs.map((pack) => this.#toPublishedView(pack))));
   }
 

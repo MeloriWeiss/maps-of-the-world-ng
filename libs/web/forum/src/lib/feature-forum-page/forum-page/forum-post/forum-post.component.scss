@@ -67,3 +67,20 @@
 .svg34 {
   @include square(fluid(34, 21));
 }
+
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: rem(16);
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: rem(6);
+    color: var(--dark-primary-color);
+
+    &.active {
+      color: var(--error-pastel-color);
+    }
+  }
+}

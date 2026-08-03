@@ -25,6 +25,8 @@ export class MockService {
           createdAt: '2025-12-01T12:41:06+03:00',
           commentsCount: 9,
           likes: 12,
+          isLiked: false,
+          category: { slug: 'maps', title: 'Карты' },
         },
         {
           id: 2,
@@ -33,6 +35,8 @@ export class MockService {
           createdAt: '2025-11-01T12:41:06+03:00',
           commentsCount: 9,
           likes: 12,
+          isLiked: false,
+          category: { slug: 'maps', title: 'Карты' },
         },
         {
           id: 3,
@@ -41,6 +45,8 @@ export class MockService {
           createdAt: '2025-10-02T12:41:06+03:00',
           commentsCount: 9,
           likes: 12,
+          isLiked: false,
+          category: { slug: 'maps', title: 'Карты' },
         },
         {
           id: 4,
@@ -49,6 +55,8 @@ export class MockService {
           createdAt: '2025-11-28T12:41:06+03:00',
           commentsCount: 9,
           likes: 12,
+          isLiked: false,
+          category: { slug: 'maps', title: 'Карты' },
         },
         {
           id: 5,
@@ -57,6 +65,8 @@ export class MockService {
           createdAt: '2025-07-04T12:41:06+03:00',
           commentsCount: 9,
           likes: 12,
+          isLiked: false,
+          category: { slug: 'maps', title: 'Карты' },
         },
       ]
         .filter((discussion) =>

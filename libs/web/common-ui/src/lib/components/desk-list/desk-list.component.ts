@@ -21,6 +21,7 @@ export class DeskListComponent {
   sidebarTemplate: TemplateRef<unknown> | null = null;
 
   pageable = input(true);
+  paginationInHeader = input(false);
   title = input<string>('');
   crumbs = input<string>();
 }

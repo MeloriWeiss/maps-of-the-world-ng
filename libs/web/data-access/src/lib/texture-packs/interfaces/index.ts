@@ -13,4 +13,6 @@ export type {
   PublishedTexturePack,
   PublishedTexturePackView,
   PublishedTexturePackDetails,
+  PublishedTexturePackPage,
+  PublishedTexturePackPageView,
 } from './texture-pack';

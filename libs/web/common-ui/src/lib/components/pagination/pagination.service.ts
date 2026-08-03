@@ -1,11 +1,4 @@
-import {
-  computed,
-  effect,
-  inject,
-  Injectable,
-  signal,
-  untracked,
-} from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Injectable()
@@ -19,7 +12,7 @@ export class PaginationService {
   pagesList = computed(() => {
     const maxPage = this.maxPage();
 
-    if (!maxPage) return;
+    if (!maxPage) return [];
 
     const result = [];
     for (let i = 1; i <= maxPage; i++) {
@@ -27,21 +20,15 @@ export class PaginationService {
     }
     return result;
   });
-  visiblePages = signal<Array<number | '...'>>([]);
+  visiblePages = computed<Array<number | '...'>>(() => {
+    const currentPage = this.currentPage();
+    const maxPage = this.maxPage();
+    const pagesList = this.pagesList();
 
-  constructor() {
-    effect(() => {
-      const currentPage = this.currentPage();
-      const maxPage = untracked(this.maxPage);
-      const pagesList = untracked(this.pagesList);
+    if (!currentPage || !maxPage) return [];
 
-      if (!currentPage || !maxPage || !pagesList) return;
-
-      this.visiblePages.set(
-        this.calculateVisiblePages(currentPage, maxPage, pagesList),
-      );
-    });
-  }
+    return this.calculateVisiblePages(currentPage, maxPage, pagesList);
+  });
 
   calculateVisiblePages(
     currentPage: number,

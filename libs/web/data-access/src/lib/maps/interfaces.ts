@@ -16,6 +16,13 @@ export interface PublishedMapSummary extends MapSummary {
   };
 }
 
+export interface PublishedMapPage {
+  items: PublishedMapSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface StoredMap extends MapSummary {
   body: string;
 }
