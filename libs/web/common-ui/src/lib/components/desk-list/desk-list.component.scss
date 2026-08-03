@@ -20,6 +20,10 @@
   @include fluid-text(22, 14);
   line-height: rem(25);
   gap: rem(30);
+
+  h1 {
+    font: inherit;
+  }
 }
 
 .pagination-bottom {

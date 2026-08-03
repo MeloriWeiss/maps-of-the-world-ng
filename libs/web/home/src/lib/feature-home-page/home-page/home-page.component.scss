@@ -8,6 +8,10 @@
   padding-bottom: fluid(173, 158);
 }
 
+.visually-hidden {
+  @include visually-hidden;
+}
+
 .home__hero {
   @include flex-center();
   flex-direction: column;

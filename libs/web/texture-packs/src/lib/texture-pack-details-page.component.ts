@@ -17,6 +17,7 @@ import {
   TexturePacksService,
 } from '@wm/web/data-access/texture-packs';
 import { finalize, forkJoin } from 'rxjs';
+import { SeoService } from '@wm/web/web-shared';
 
 interface TextureDetailsCard extends TextureItemView {
   displaySize: string;
@@ -34,6 +35,7 @@ export class TexturePackDetailsPageComponent {
   #texturePacksService = inject(TexturePacksService);
   #destroyRef = inject(DestroyRef);
   #authService = inject(AuthService);
+  #seoService = inject(SeoService);
   #pageSize = 48;
 
   readonly packId = this.#route.snapshot.paramMap.get('id') ?? '';
@@ -82,6 +84,18 @@ export class TexturePackDetailsPageComponent {
       .subscribe({
         next: ({ pack, textures }) => {
           this.pack.set(pack);
+          this.#seoService.update(
+            {
+              title: pack.name,
+              description:
+                pack.description?.trim() ||
+                `Набор текстур «${pack.name}» от автора ${pack.author.nickname}.`,
+              index: true,
+              canonicalPath: `/texture-packs/${pack.id}`,
+              type: 'article',
+            },
+            `/texture-packs/${pack.id}`,
+          );
           this.isLiked.set(pack.isLiked);
           this.textures.set(
             textures.items.map((texture) => this.#toCard(texture)),
