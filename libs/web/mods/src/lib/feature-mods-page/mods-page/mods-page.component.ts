@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map, switchMap } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs';
 import { MockService } from '@wm/web/data-access/mock';
 import { AsyncPipe, Location } from '@angular/common';
 import {
@@ -13,6 +13,7 @@ import { OwlOptions } from 'ngx-owl-carousel-o';
 import {
   NavigationHistoryService,
   CommentsSectionComponent,
+  SeoService,
 } from '@wm/web/web-shared';
 
 @Component({
@@ -36,12 +37,28 @@ export class ModsPageComponent {
   #router = inject(Router);
   #mockService = inject(MockService);
   #navigationService = inject(NavigationHistoryService);
+  #seoService = inject(SeoService);
 
   comments = this.#mockService.getComments();
 
   mode$ = this.#activatedRoute.paramMap.pipe(
     map((pm) => Number(pm.get('id'))),
     switchMap((id) => this.#mockService.getModeById(id)),
+    tap((mode) => {
+      if (!mode) return;
+
+      this.#seoService.update(
+        {
+          title: mode.name,
+          description: mode.description,
+          index: true,
+          canonicalPath: `/mods/${mode.id}`,
+          image: mode.images[0]?.url,
+          type: 'article',
+        },
+        `/mods/${mode.id}`,
+      );
+    }),
   );
 
   customOptions: OwlOptions = {

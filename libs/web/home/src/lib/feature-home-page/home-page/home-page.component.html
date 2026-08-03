@@ -1,6 +1,13 @@
 <main class="container home">
   <section class="home__hero">
-    <img class="home__logo" src="/assets/imgs/new-logo.png" alt="logo" />
+    <h1 class="visually-hidden">
+      Онлайн-редактор карт для настольных ролевых игр
+    </h1>
+    <img
+      class="home__logo"
+      src="/assets/imgs/new-logo.png"
+      alt="GameMaster Helper"
+    />
 
     <p class="home__slogan">
       <strong class="company-name">GameMaster Helper</strong> — онлайн редактор
@@ -38,7 +45,7 @@
       </div>
     </div>
 
-    <button class="home__action-button">Попробовать</button>
+    <a class="home__action-button" [routerLink]="['/workshop']">Попробовать</a>
   </section>
 
   <div class="home__sections">

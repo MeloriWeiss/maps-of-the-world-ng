@@ -6,9 +6,26 @@ export const modsRoutes: Routes = [
   {
     path: '',
     component: ModsListComponent,
+    data: {
+      seo: {
+        title: 'Моды и наборы текстур',
+        description:
+          'Наборы текстур и дополнения сообщества для создания карт настольных ролевых игр.',
+        index: true,
+        canonicalPath: '/mods',
+      },
+    },
   },
   {
     path: ':id',
     component: ModsPageComponent,
+    data: {
+      seo: {
+        title: 'Набор текстур',
+        description: 'Описание и материалы набора текстур для карт НРИ.',
+        index: true,
+        type: 'article',
+      },
+    },
   },
 ];
