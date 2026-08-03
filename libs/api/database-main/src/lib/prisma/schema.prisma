@@ -142,11 +142,11 @@ model Forum {
 }
 
 model ForumCategory {
-  id          Int    @id @default(autoincrement())
-  slug        String @unique
+  id          Int     @id @default(autoincrement())
+  slug        String  @unique
   title       String
   description String?
-  sortOrder   Int    @default(0) @map("sort_order")
+  sortOrder   Int     @default(0) @map("sort_order")
 
   discussions Forum[]
 
@@ -202,9 +202,6 @@ model PersonalAccount {
 
   avatarUrl String? @map("avatar_url")
 
-  language String?
-  theme    AppTheme @default(DEFAULT)
-
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -240,10 +237,4 @@ model UserSession {
   userId Int  @map("user_id")
 
   @@map("sessions")
-}
-
-enum AppTheme {
-  DEFAULT @map("default")
-  LIGHT   @map("light")
-  DARK    @map("dark")
 }

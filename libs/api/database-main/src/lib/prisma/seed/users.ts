@@ -1,5 +1,4 @@
 import * as bcrypt from 'bcrypt';
-import { AppTheme } from '../../generated/prisma/enums';
 import { SeedPrismaClient } from './client';
 import { daysAgo } from './dates';
 import { SeedAccount } from './types';
@@ -14,8 +13,6 @@ const users = [
     firstName: 'Александр',
     lastName: 'Картографов',
     bio: 'Администратор и автор демонстрационных миров.',
-    language: 'ru',
-    theme: AppTheme.DARK,
   },
   {
     email: 'user@example.com',
@@ -24,8 +21,6 @@ const users = [
     firstName: 'Мария',
     lastName: 'Ветрова',
     bio: 'Веду кампании и собираю красивые карты.',
-    language: 'ru',
-    theme: AppTheme.LIGHT,
   },
   {
     email: 'dwarf@example.com',
@@ -34,8 +29,6 @@ const users = [
     firstName: 'Борис',
     lastName: 'Каменный',
     bio: 'Люблю подземелья, шахты и суровые горные крепости.',
-    language: 'ru',
-    theme: AppTheme.DARK,
   },
   {
     email: 'elf@example.com',
@@ -44,8 +37,6 @@ const users = [
     firstName: 'Элина',
     lastName: 'Листопад',
     bio: 'Создаю лесные поселения и природные ландшафты.',
-    language: 'ru',
-    theme: AppTheme.LIGHT,
   },
   {
     email: 'sea@example.com',
@@ -54,8 +45,6 @@ const users = [
     firstName: 'Виктор',
     lastName: 'Штормов',
     bio: 'Острова, морские пути и пиратские приключения.',
-    language: 'ru',
-    theme: AppTheme.DEFAULT,
   },
   {
     email: 'desert@example.com',
@@ -64,8 +53,6 @@ const users = [
     firstName: 'Алина',
     lastName: 'Солнечная',
     bio: 'Рисую пустыни, караванные маршруты и древние руины.',
-    language: 'ru',
-    theme: AppTheme.DEFAULT,
   },
   {
     email: 'north@example.com',
@@ -74,8 +61,6 @@ const users = [
     firstName: 'Игорь',
     lastName: 'Северный',
     bio: 'Снежные земли и опасные перевалы.',
-    language: 'ru',
-    theme: AppTheme.DARK,
   },
   {
     email: 'newcomer@example.com',
@@ -84,8 +69,6 @@ const users = [
     firstName: 'Олег',
     lastName: 'Новиков',
     bio: null,
-    language: 'ru',
-    theme: AppTheme.DEFAULT,
   },
 ] as const;
 
@@ -108,8 +91,6 @@ export async function seedUsers(prisma: SeedPrismaClient) {
             birthDate: index < 2 ? `199${index}-0${index + 1}-15` : null,
             bio: userData.bio,
             avatarUrl: `seed/avatars/${userData.username}.png`,
-            language: userData.language,
-            theme: userData.theme,
             createdAt: daysAgo(180 - index * 12),
           },
         },

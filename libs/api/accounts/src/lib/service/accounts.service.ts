@@ -1,11 +1,10 @@
-import { AppTheme, PrismaMainService } from '@wm/api/database-main';
+import { PrismaMainService } from '@wm/api/database-main';
 import { AccountResponseDto } from '@wm/shared/accounts';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ThemeEnum } from '@wm/shared/common';
 import { UpdateAccountDto } from '../dto';
 import { AvatarsService } from './avatars.service';
 
@@ -42,8 +41,6 @@ export class AccountsService {
       avatarUrl: account.avatarUrl
         ? this.#avatars.publicUrl(account.userId, account.avatarUrl)
         : null,
-      language: account.language,
-      theme: account.theme as unknown as ThemeEnum,
       createdAt: account.createdAt.toISOString(),
       updatedAt: account.updatedAt.toISOString(),
     };
@@ -170,8 +167,6 @@ export class AccountsService {
         phoneNumber: dto.phoneNumber,
         birthDate: dto.birthDate,
         bio: dto.bio,
-        language: dto.language,
-        theme: dto.theme ? (dto.theme as unknown as AppTheme) : undefined,
       },
     });
   }

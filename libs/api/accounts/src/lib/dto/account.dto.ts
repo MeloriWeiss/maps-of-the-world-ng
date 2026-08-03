@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ThemeEnum } from '@wm/shared/common';
 
 export class AccountDto {
   @ApiProperty({
@@ -71,24 +70,6 @@ export class AccountDto {
     description: 'Absolute URL pointing to the hosted profile image asset',
   })
   avatarUrl?: string | null;
-
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    required: false,
-    example: 'en',
-    description: 'Preferred system interface language code (ISO 639-1)',
-  })
-  language?: string | null;
-
-  @ApiProperty({
-    enum: ThemeEnum,
-    nullable: true,
-    required: false,
-    example: 'dark',
-    description: 'Active application interface visual theme preset',
-  })
-  theme!: ThemeEnum;
 
   @ApiProperty({
     example: '2026-07-24T20:55:32.105Z',

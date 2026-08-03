@@ -1,6 +1,5 @@
-import { ThemeEnum } from '@wm/shared/common';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
 
 export class UpdateAccountDto {
   @ApiPropertyOptional({
@@ -83,26 +82,4 @@ export class UpdateAccountDto {
   @IsOptional()
   @IsString()
   bio?: string | null;
-
-  @ApiPropertyOptional({
-    type: String,
-    nullable: true,
-    required: false,
-    example: 'en',
-    description: 'Preferred system interface language code (ISO 639-1)',
-  })
-  @IsOptional()
-  @IsString()
-  language?: string | null;
-
-  @ApiPropertyOptional({
-    enum: ThemeEnum,
-    nullable: true,
-    required: false,
-    example: 'DARK',
-    description: 'Active application interface visual theme preset',
-  })
-  @IsOptional()
-  @IsEnum(ThemeEnum)
-  theme?: ThemeEnum;
 }

@@ -1,5 +1,3 @@
-import { ThemeEnum } from '../../common';
-
 export interface UpdateAccountRequestDto {
   nickname?: string;
   firstName?: string | null;
@@ -8,6 +6,4 @@ export interface UpdateAccountRequestDto {
   phoneNumber?: string | null;
   birthDate?: string | null;
   bio?: string | null;
-  language?: string | null;
-  theme?: ThemeEnum;
 }
