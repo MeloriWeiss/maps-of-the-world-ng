@@ -11,8 +11,8 @@
 
 .desk-header {
   grid-area: header;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   padding: fluid(30, 15) fluid(20, 16) fluid(20, 10) fluid(30, 16);
   color: var(--light-color);
@@ -22,8 +22,23 @@
   gap: rem(30);
 
   @include mobile {
-    flex-wrap: wrap;
+    grid-template-columns: 1fr auto;
     gap: rem(14);
+
+    h1 {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .pagination-header {
+      grid-row: 2;
+      grid-column: 1 / -1;
+    }
+
+    [searchcontrol] {
+      grid-row: 1;
+      grid-column: 2;
+    }
   }
 
   h1 {
@@ -33,7 +48,6 @@
 
 .pagination-header {
   flex: 0 0 auto;
-  margin-left: auto;
 
   @include mobile {
     margin-left: 0;

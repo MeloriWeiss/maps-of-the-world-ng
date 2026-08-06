@@ -126,22 +126,42 @@
       </button>
 
       <nav wmPopoverContent class="profile-menu" aria-label="Профиль">
-        <a
-          [routerLink]="['profile', 'me']"
-          (click)="closeMenu()"
-          role="menuitem"
-          class="profile-menu__item"
-        >
-          Профиль
-        </a>
-        <button
-          (click)="logout()"
-          type="button"
-          role="menuitem"
-          class="profile-menu__item profile-menu__item--separated"
-        >
-          Выйти
-        </button>
+        @if (isAuthorized) {
+          <a
+            [routerLink]="['profile', 'me']"
+            (click)="closeMenu()"
+            role="menuitem"
+            class="profile-menu__item"
+          >
+            Профиль
+          </a>
+          <button
+            (click)="logout()"
+            type="button"
+            role="menuitem"
+            class="profile-menu__item profile-menu__item--separated"
+          >
+            Выйти
+          </button>
+        } @else {
+          <a
+            [routerLink]="['login']"
+            (click)="closeMenu()"
+            role="menuitem"
+            class="profile-menu__item"
+          >
+            Войти
+          </a>
+
+          <a
+            [routerLink]="['register']"
+            (click)="closeMenu()"
+            role="menuitem"
+            class="profile-menu__item"
+          >
+            Регистрация
+          </a>
+        }
       </nav>
     </wm-popover>
   </div>

@@ -36,6 +36,8 @@ export class HeaderComponent {
 
   searchControl = new FormControl('');
 
+  isAuthorized = this.#authService.isAuthorized$.getValue();
+
   isMenuOpen = signal<boolean>(false);
 
   r2 = inject(Renderer2);
