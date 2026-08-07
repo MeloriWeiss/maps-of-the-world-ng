@@ -252,16 +252,217 @@ curl http://127.0.0.1:3000/api
 `apps/web/src/environments/environment.prod.ts`. Он должен указывать на
 публичный HTTPS-адрес API.
 
-Соберите frontend:
+1. Соберите frontend:
 
 ```bash
 yarn build:web:prod
 ```
 
-Статические файлы появятся в `dist/apps/web/browser`. Настройте Nginx, Caddy
-или другой веб-сервер на раздачу этого каталога. Для маршрутов Angular
+Статические файлы появятся в `dist/apps/web/browser`.
+
+2. Загрузите файлы полученного билда на сервер в директорию своего пользователя (пользователя должен создать системный администратор). Команда выполняется локально, из корня репозитория.
+
+```bash
+scp -P <порт> -r dist/apps/web/browser <имя пользователя на сервере>@<ip-адрес сервера>:/tmp/frontend-build
+```
+
+3. Подключитесь к серверу по ssh либо другим доступным способом.
+
+Здесь будет рассмотрено подключение по ssh.
+Создайте ssh-ключи посредством следующей команды:
+
+```bash
+ssh-keygen -t ed25519 -C "ваша_почта@example.com"
+```
+
+Ключи по умолчанию должны быть созданы в `~/.ssh/id_ed25519` (`~` - домашняя директория вашего пользователя).
+Отдайте системному администратору ваш публичный ключ, который находится в файле с расширением `.pub`.
+
+Далее выполните подключение к серверу с помощью следующей команды:
+
+```bash
+ssh -i <путь к домашней директории пользователя>\.ssh\<название ключа> <имя пользователя на сервере>@<ip-адрес сервера> -p <порт>
+```
+
+Убедитесь, что вашему пользователю на сервере выданы достаточные права для того, чтобы выполнять дальнейшие команды. Возможно, они будут выполняться без `sudo.`
+
+Далее все команды выполняются на сервере. Создайте директорию для статики фронтенда, если таковой нет:
+
+```bash
+sudo mkdir -p /var/www/gmhelper-frontend
+```
+
+Скопируйте файлы сборки из временных файлов вашего пользователя в созданную директорию:
+
+```bash
+sudo cp -r /tmp/frontend-build/* /var/www/gmhelper-frontend/
+```
+
+Проверьте наличие перемещённых файлов и ассетов:
+
+```bash
+ls -la /var/www/gmhelper-frontend
+find /var/www/gmhelper-frontend -type f -iname 'new-logo.png' -print
+```
+
+Проверьте права каталогов:
+
+```bash
+namei -l /var/www/gmhelper-frontend/assets
+namei -l /var/www/gmhelper-frontend/assets/imgs
+```
+
+У каталогов в пути должны быть права прохода, например: `drwxr-xr-x`.
+
+Если статика загружена, но права ещё не исправлены:
+
+```bash
+sudo chmod 755 /var/www/gmhelper-frontend/assets
+sudo chmod 755 /var/www/gmhelper-frontend/assets/imgs
+```
+
+Настройте Nginx, Caddy или другой веб-сервер на раздачу этого каталога. Для маршрутов Angular
 необходимо возвращать `index.html`, если запрошенный статический файл не
 найден.
+
+Необходимо проверить, нет ли уже созданной конфигурации Nginx:
+
+```bash
+ls -la /etc/nginx/sites-available/
+ls -la /etc/nginx/sites-enabled/
+```
+
+Найдите конфигурации, где встречается домен `gm-helper.ru`:
+
+```bash
+sudo grep -RIn "gm-helper.ru" /etc/nginx
+```
+
+Если домен уже используется в какой-либо из конфигураций, её необходимо отключить, либо использовать эту конфигурацию и не создавать новую.
+
+Создайте конфигурацию Nginx, если таковой не было:
+
+```bash
+sudo nano /etc/nginx/sites-available/gmhelper
+```
+
+Настройте Nginx.
+
+Сохранение в nano:
+
+```bash
+Ctrl+O
+Enter
+Ctrl+X
+```
+
+Далее необходимо включить новую конфигурацию.
+
+Создаёте символическую ссылку:
+
+```bash
+sudo ln -s \
+  /etc/nginx/sites-available/gmhelper \
+  /etc/nginx/sites-enabled/gmhelper
+```
+
+Проверьте:
+
+```bash
+ls -la /etc/nginx/sites-enabled/
+```
+
+Должно появиться:
+
+```bash
+gmhelper-frontend -> /etc/nginx/sites-available/gmhelper
+```
+
+Проверьте синтаксис конфигурации:
+
+```bash
+sudo nginx -t
+```
+
+Если ошибок нет, перезапустите Nginx:
+
+```bash
+sudo systemctl reload nginx
+```
+
+После создания отдельного конфига получается:
+
+```bash
+/etc/nginx/
+├── sites-available/
+│   ├── default
+│   ├── default.backup
+│   └── gmhelper
+└── sites-enabled/
+    └── gmhelper -> /etc/nginx/sites-available/gmhelper
+```
+
+Сам фронтенд находится здесь:
+
+```bash
+/var/www/gmhelper
+```
+
+А новый сайт обрабатывается конфигом:
+
+```bash
+/etc/nginx/sites-available/gmhelper
+```
+
+Проверка:
+
+Проверка картинки через активный HTTPS-виртуальный хост:
+
+```bash
+curl -k -i --resolve gm-helper.ru:443:127.0.0.1 \
+  https://gm-helper.ru/assets/imgs/new-logo.png
+```
+
+Ожидается:
+
+```bash
+HTTP/1.1 200 OK
+Content-Type: image/png
+```
+
+Проверка Angular:
+
+```bash
+curl -k -i --resolve gm-helper.ru:443:127.0.0.1 \
+  https://gm-helper.ru/
+```
+
+Ожидается:
+
+```bash
+HTTP/1.1 200 OK
+Content-Type: text/html
+```
+
+Проверка Angular-маршрута:
+
+```bash
+curl -k -i --resolve gm-helper.ru:443:127.0.0.1 \
+  https://gm-helper.ru/home
+```
+
+Далее необходимо проверить, как фронтенд обрабатывает ответы на запросы, пока бэкенд не запущен:
+
+```bash
+curl -k -i --resolve gm-helper.ru:443:127.0.0.1 \
+  https://gm-helper.ru/api/users/me
+```
+
+Ожидаемый ответ:
+
+```bash
+HTTP/1.1 502 Bad Gateway
+```
 
 ## 7. Reverse proxy и TLS
 

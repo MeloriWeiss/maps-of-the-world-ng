@@ -12,8 +12,19 @@ export const globalHttpErrorInterceptor: HttpInterceptorFn = (req, next) => {
       const bypassGlobal = req.context.get(BYPASS_GLOBAL_ERROR);
 
       if (!bypassGlobal) {
-        const message = error.error.message ?? error.message;
-        // const statusCode = error.error.statusCode ?? error.status;
+        let message = error.error.message ?? error.message;
+        const statusCode = error.error.statusCode ?? error.status;
+
+        switch (statusCode) {
+          case 502:
+          case 503:
+          case 504:
+            message = 'Сервис временно недоступен. Попробуйте позже';
+            break;
+          case 413:
+            message = 'Размер загружаемого файла слишком большой';
+            break;
+        }
 
         toastService.show(ErrorToastComponent, { message: message });
       }
