@@ -8,7 +8,7 @@ interface StructuredLogEntry {
   timestamp: string;
   level: LogLevel;
   context?: string;
-  message: string;
+  message: unknown;
   meta?: LogMeta;
 }
 
@@ -18,8 +18,30 @@ export class ApiLogger implements LoggerService {
     this.#write('log', message, meta, context);
   }
 
-  error(message: string, meta?: LogMeta, trace?: string, context?: string) {
-    this.#write('error', message, { ...meta, trace }, context);
+  error(
+    message: unknown,
+    metaOrTrace?: LogMeta | string,
+    traceOrContext?: string,
+    context?: string,
+  ) {
+    const isNestLoggerCall = typeof metaOrTrace === 'string';
+    const trace = isNestLoggerCall ? metaOrTrace : traceOrContext;
+    const resolvedContext = isNestLoggerCall ? traceOrContext : context;
+    const meta = isNestLoggerCall ? undefined : metaOrTrace;
+    const error = message instanceof Error ? message : undefined;
+
+    this.#write(
+      'error',
+      error?.message ?? message,
+      {
+        ...meta,
+        ...(error && {
+          exception: { name: error.name, message: error.message },
+        }),
+        trace: trace ?? error?.stack,
+      },
+      resolvedContext,
+    );
   }
 
   warn(message: string, meta?: LogMeta, context?: string) {
@@ -34,7 +56,7 @@ export class ApiLogger implements LoggerService {
     this.#write('verbose', message, meta, context);
   }
 
-  #write(level: LogLevel, message: string, meta?: LogMeta, context?: string) {
+  #write(level: LogLevel, message: unknown, meta?: LogMeta, context?: string) {
     const entry: StructuredLogEntry = {
       timestamp: new Date().toISOString(),
       level,

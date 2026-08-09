@@ -8,6 +8,7 @@ import { AccountsModule } from '@wm/api/accounts';
 import { MapsModule } from '@wm/api/maps';
 import { TexturesModule } from '@wm/api/textures';
 import { ForumModule } from '@wm/api/forum';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { ForumModule } from '@wm/api/forum';
       validate: validateEnv,
     }),
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [ApiLogger],
 })
 export class AppModule {}

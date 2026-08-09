@@ -1,0 +1,11 @@
+[Unit]
+Description=Run GM Helper local backup daily
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=10m
+Unit=gmhelper-backup.service
+
+[Install]
+WantedBy=timers.target

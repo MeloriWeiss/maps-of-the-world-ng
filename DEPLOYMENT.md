@@ -1,258 +1,64 @@
 # Развёртывание на сервере
 
-Эта инструкция рассчитана на первый запуск проекта на Linux-сервере. API
+Эта инструкция рассчитана на первый и последующие запуски проекта на Linux-сервере. API
 запускается в Docker. PostgreSQL, frontend, reverse proxy, домен и TLS
 настраиваются отдельно.
 
-Команды выполняются из корня репозитория — каталога, в котором находится
-`package.json`. Значения в угловых скобках, например `<password>`, являются
-заглушками: их необходимо заменить своими значениями без угловых скобок.
+Если явно не указано иное, команды проекта выполняются из корня репозитория —
+каталога, в котором находится `package.json`. Значения в угловых скобках,
+например `<password>`, являются заглушками: их необходимо заменить своими
+значениями без угловых скобок. Не вводите пометки `[локально]` и `[на сервере]`
+как часть команды.
 
-## Что выбрать
+## Подключение к серверу по SSH
 
-- **MinIO** — если нужно полностью собственное объектное хранилище и вы готовы
-  самостоятельно отвечать за диск, обновления и резервные копии.
-- **Cloudflare R2** — если хранение объектов можно передать внешнему сервису.
-  На сервере тогда запускаются только migrator и API.
-
-Для одного окружения выбирается только один вариант. Переключение не требует
-изменения API-кода: отличаются ENV-переменные и команда запуска.
-
-## Архитектура
-
-Доступны два сценария:
-
-| Сценарий    | Контейнеры                       | Объектное хранилище    |
-| ----------- | -------------------------------- | ---------------------- |
-| Self-hosted | migrator, API, MinIO, minio-init | MinIO на Docker volume |
-| Cloudflare  | migrator, API                    | Cloudflare R2          |
-
-PostgreSQL разворачивается отдельно: как системный сервис на сервере, на
-другом сервере либо как managed database. pgAdmin постоянно в production не
-запускается.
-
-Перед API всегда запускается одноразовый migrator-контейнер. Он выполняет
-`prisma migrate deploy` и не создаёт новые миграции. API запускается только
-после успешного применения существующих миграций.
-
-## Требования
-
-- Linux-сервер с актуальными Docker Engine и Docker Compose;
-- Git;
-- Node.js версии из `.nvmrc`, Corepack и Yarn;
-- доступ к production PostgreSQL;
-- домен и reverse proxy, например Nginx или Caddy;
-- отдельное место для резервных копий;
-- закрытые production-секреты, не хранящиеся в Git.
-
-Проверьте окружение:
+Создайте SSH-ключ локально, если отдельного ключа для сервера ещё нет:
 
 ```bash
-node --version
-docker --version
-docker compose version
-corepack enable
-yarn --version
+ssh-keygen -t ed25519 -C "ваша_почта@example.com"
 ```
 
-API публикуется только на `127.0.0.1:3000`. Reverse proxy должен принимать
-внешний HTTPS-трафик и передавать его на этот адрес.
+Закрытый ключ остаётся на локальном компьютере. Передайте системному
+администратору только публичный ключ из файла с расширением `.pub`.
 
-## 1. Подготовка проекта
-
-Получите исходный код на сервере:
+Подключение с нестандартным портом:
 
 ```bash
-git clone <repository-url>
-cd <repository-directory>
+ssh -i <путь-к-закрытому-ключу> <server-user>@<server-ip> -p <ssh-port>
 ```
 
-Установите зависимости:
+Для установки и обслуживания backend пользователю необходимы `sudo` и доступ
+к Docker. После добавления пользователя в группы `sudo` и `docker` полностью
+завершите SSH-сеанс и подключитесь заново, затем проверьте права:
 
 ```bash
-yarn install --immutable
+id
+sudo whoami
+docker ps
 ```
 
-В production нельзя запускать проект из каталога, в котором находятся
-незакоммиченные изменения. Разворачивайте заранее проверенный commit или tag.
+Не передавайте закрытый SSH-ключ, его парольную фразу и production-секреты
+другим людям и не добавляйте их в Git.
 
-## 2. Подготовка PostgreSQL
-
-Создайте отдельные production-базу и пользователя. Пользователь должен иметь
-право подключаться к базе и применять миграции Prisma. Не используйте
-development-логин и пароль из `.env.example`.
-
-PostgreSQL может находиться:
-
-- на том же сервере как системный сервис;
-- на отдельном сервере в закрытой сети;
-- в managed database.
-
-Если PostgreSQL запущен непосредственно на том же сервере, из контейнера он
-доступен через `host.docker.internal`, а не через `localhost`:
-
-```env
-MAIN_DATABASE_URL=postgresql://<user>:<password>@host.docker.internal:5432/<database>?schema=public
-```
-
-Для PostgreSQL на другом сервере используйте его внутренний DNS или IP:
-
-```env
-MAIN_DATABASE_URL=postgresql://<user>:<password>@<database-host>:5432/<database>?schema=public
-```
-
-Перед продолжением убедитесь, что сервер разрешает подключение к PostgreSQL.
-Ограничьте доступ к порту БД firewall-правилами.
-
-## 3. Общая конфигурация API
-
-Создайте `docker/.env.prod` как копию
-`docker/examples/.env.prod.example` и замените все демонстрационные значения.
-Не редактируйте сам example-файл и не добавляйте `docker/.env.prod` в Git.
-
-```bash
-cp docker/examples/.env.prod.example docker/.env.prod
-chmod 600 docker/.env.prod
-```
-
-Критичные параметры:
-
-```env
-NODE_ENV=production
-MAIN_DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<database>?schema=public
-JWT_ACCESS_SECRET=<long-random-secret>
-JWT_REFRESH_SECRET=<different-long-random-secret>
-MAIN_API_PORT=3000
-```
-
-Создайте два разных случайных JWT-секрета. Не используйте значения из
-example-файла. Параметры `JWT_ACCESS_EXPIRES` и `JWT_REFRESH_EXPIRES`
-определяют срок действия access- и refresh-токенов.
-
-Если логин, пароль или имя базы в `MAIN_DATABASE_URL` содержат специальные
-символы, их необходимо percent-encode как компоненты URL.
-
-## 4. Настройка объектного хранилища
-
-Выполните только один из двух следующих подразделов.
-
-### Вариант A: собственный MinIO
-
-Создайте `docker/.env.minio.prod` как копию
-`docker/examples/.env.minio.prod.example`. Этот файл содержит
-административные данные MinIO и не передаётся API-контейнеру.
-
-```bash
-cp docker/examples/.env.minio.prod.example docker/.env.minio.prod
-chmod 600 docker/.env.minio.prod
-```
-
-В `docker/.env.prod` настройте доступ API:
-
-```env
-OBJECT_STORAGE_ENDPOINT=http://minio:9000
-OBJECT_STORAGE_REGION=us-east-1
-OBJECT_STORAGE_BUCKET=maps-of-the-world-prod
-OBJECT_STORAGE_ACCESS_KEY=<application-access-key>
-OBJECT_STORAGE_SECRET_KEY=<application-secret-key>
-OBJECT_STORAGE_FORCE_PATH_STYLE=true
-```
-
-В `docker/.env.minio.prod` задайте отдельные административные данные:
-
-```env
-MINIO_ROOT_USER=<admin-user>
-MINIO_ROOT_PASSWORD=<different-long-admin-secret>
-```
-
-Значения `OBJECT_STORAGE_ACCESS_KEY` и `OBJECT_STORAGE_SECRET_KEY` — данные
-пользователя приложения. Они должны отличаться от `MINIO_ROOT_USER` и
-`MINIO_ROOT_PASSWORD`.
-
-Первый запуск:
-
-```bash
-yarn deploy:api:prod:docker:minio
-```
-
-Команда:
-
-1. собирает migrator и API;
-2. запускает MinIO;
-3. создаёт бакет и пользователя приложения;
-4. применяет Prisma-миграции;
-5. запускает API после успешной инициализации.
-
-MinIO не публикует S3 API и Console наружу. Его данные находятся в Docker
-volume `minio_data`.
-
-### Вариант B: Cloudflare R2
-
-Создайте бакет и API token в Cloudflare. Ограничьте token нужным бакетом и
-правами чтения, записи и удаления объектов.
-
-Замените в `docker/.env.prod` блок хранилища:
-
-```env
-OBJECT_STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
-OBJECT_STORAGE_REGION=auto
-OBJECT_STORAGE_BUCKET=maps-of-the-world-prod
-OBJECT_STORAGE_ACCESS_KEY=<r2-access-key-id>
-OBJECT_STORAGE_SECRET_KEY=<r2-secret-access-key>
-OBJECT_STORAGE_FORCE_PATH_STYLE=true
-```
-
-Файл `docker/.env.minio.prod` не требуется.
-
-Первый запуск:
-
-```bash
-yarn deploy:api:prod:docker:cloudflare-r2
-```
-
-Профиль MinIO не включается, поэтому запускаются только migrator и API.
-
-## 5. Проверка контейнеров
-
-Проверьте состояние:
-
-```bash
-docker compose -f docker/docker-compose.prod.yml ps
-```
-
-API должен перейти в состояние `healthy`, migrator и `minio-init` — завершиться
-с кодом `0`.
-
-Если API не стал healthy, посмотрите логи:
-
-```bash
-docker compose -f docker/docker-compose.prod.yml logs migrate
-docker compose -f docker/docker-compose.prod.yml logs api
-```
-
-Для варианта с MinIO дополнительно доступны:
-
-```bash
-docker compose -f docker/docker-compose.prod.yml --profile minio logs minio
-docker compose -f docker/docker-compose.prod.yml --profile minio logs minio-init
-```
-
-До настройки reverse proxy API можно проверить непосредственно на сервере:
-
-```bash
-curl http://127.0.0.1:3000/api
-```
-
-Ответ с HTTP-статусом ниже `500` означает, что контейнер доступен. Это ещё не
-заменяет проверку авторизации, базы данных и загрузки файлов.
-
-## 6. Frontend
+## Frontend
 
 Перед сборкой проверьте `apiUrl` в
 `apps/web/src/environments/environment.prod.ts`. Он должен указывать на
 публичный HTTPS-адрес API.
 
-1. Соберите frontend:
+Краткая сводка команд для быстрого помещения сборки на сервер:
+
+```bash
+yarn build:web:prod [локально]
+ssh -i <путь к домашней директории пользователя>\.ssh\<название ключа> <имя пользователя на сервере>@<ip-адрес сервера> -p <порт> [локально]
+find /tmp/frontend-build -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + [на сервере]
+scp -P <порт> -r dist/apps/web/browser/. <имя пользователя на сервере>@<ip-адрес сервера>:/tmp/frontend-build [локально]
+rsync -av --no-perms --delete /tmp/frontend-build/ /var/www/gmhelper-frontend/ [на сервере]
+```
+
+Далее идёт более подробная инструкция.
+
+1. Соберите frontend локально:
 
 ```bash
 yarn build:web:prod
@@ -260,42 +66,48 @@ yarn build:web:prod
 
 Статические файлы появятся в `dist/apps/web/browser`.
 
-2. Загрузите файлы полученного билда на сервер в директорию своего пользователя (пользователя должен создать системный администратор). Команда выполняется локально, из корня репозитория.
+2. Подключитесь к серверу по инструкции из раздела
+   [«Подключение к серверу по SSH»](#подключение-к-серверу-по-ssh). Далее команды
+   выполняются на сервере, если явно не указано иное.
+
+3. Если вы уже загружали frontend, проверьте, нет ли старых файлов сборки во
+   временной директории:
 
 ```bash
-scp -P <порт> -r dist/apps/web/browser <имя пользователя на сервере>@<ip-адрес сервера>:/tmp/frontend-build
+ls -l /tmp/frontend-build
 ```
 
-3. Подключитесь к серверу по ssh либо другим доступным способом.
+Если директории не существует, то файлы тоже отсутствуют.
 
-Здесь будет рассмотрено подключение по ssh.
-Создайте ssh-ключи посредством следующей команды:
+Если файлы есть, то необходимо сначала удалить содержимое директории во избежание оставления старых ненужных файлов:
 
 ```bash
-ssh-keygen -t ed25519 -C "ваша_почта@example.com"
+find /tmp/frontend-build -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 ```
 
-Ключи по умолчанию должны быть созданы в `~/.ssh/id_ed25519` (`~` - домашняя директория вашего пользователя).
-Отдайте системному администратору ваш публичный ключ, который находится в файле с расширением `.pub`.
-
-Далее выполните подключение к серверу с помощью следующей команды:
+4. Загрузите файлы полученной сборки на сервер в директорию своего пользователя. Команда выполняется локально (не на сервере), из корня репозитория.
 
 ```bash
-ssh -i <путь к домашней директории пользователя>\.ssh\<название ключа> <имя пользователя на сервере>@<ip-адрес сервера> -p <порт>
-```
-
-Убедитесь, что вашему пользователю на сервере выданы достаточные права для того, чтобы выполнять дальнейшие команды. Возможно, они будут выполняться без `sudo.`
-
-Далее все команды выполняются на сервере. Создайте директорию для статики фронтенда, если таковой нет:
-
-```bash
-sudo mkdir -p /var/www/gmhelper-frontend
+scp -P <порт> -r dist/apps/web/browser/. <имя пользователя на сервере>@<ip-адрес сервера>:/tmp/frontend-build
 ```
 
 Скопируйте файлы сборки из временных файлов вашего пользователя в созданную директорию:
 
 ```bash
-sudo cp -r /tmp/frontend-build/* /var/www/gmhelper-frontend/
+rsync -av --no-perms --delete \
+  /tmp/frontend-build/ \
+  /var/www/gmhelper-frontend/
+```
+
+Если команда `rsync` не найдена, воспользуйтесь альтернативой:
+
+```bash
+find /var/www/gmhelper-frontend \
+  -mindepth 1 -maxdepth 1 \
+  -exec rm -rf -- {} +
+
+cp -r /tmp/frontend-build/. \
+  /var/www/gmhelper-frontend/
 ```
 
 Проверьте наличие перемещённых файлов и ассетов:
@@ -305,7 +117,7 @@ ls -la /var/www/gmhelper-frontend
 find /var/www/gmhelper-frontend -type f -iname 'new-logo.png' -print
 ```
 
-Проверьте права каталогов:
+Проверьте права каталогов, если в загруженном приложении в браузере не отображаются картинки (при наличии [настроенного Nginx](#настройка-nginx)):
 
 ```bash
 namei -l /var/www/gmhelper-frontend/assets
@@ -321,7 +133,19 @@ sudo chmod 755 /var/www/gmhelper-frontend/assets
 sudo chmod 755 /var/www/gmhelper-frontend/assets/imgs
 ```
 
-Настройте Nginx, Caddy или другой веб-сервер на раздачу этого каталога. Для маршрутов Angular
+Если в браузере приложение отдаёт страницу с 403 ошибкой (при наличии [настроенного Nginx](#настройка-nginx)), выдайте директории фронтенда необходимые права:
+
+```bash
+find /var/www/gmhelper-frontend -type d \
+  -exec printf 'chmod 755 "%s"\n' {} \;
+
+find /var/www/gmhelper-frontend -type f \
+  -exec printf 'chmod 644 "%s"\n' {} \;
+```
+
+### Настройка Nginx
+
+Настройте Nginx, Caddy или другой веб-сервер на раздачу этого каталога, если постановка приложения на сервер выполняется впервые. Для маршрутов Angular
 необходимо возвращать `index.html`, если запрошенный статический файл не
 найден.
 
@@ -346,7 +170,7 @@ sudo grep -RIn "gm-helper.ru" /etc/nginx
 sudo nano /etc/nginx/sites-available/gmhelper
 ```
 
-Настройте Nginx.
+Настройте Nginx-конфигурацию.
 
 Сохранение в nano:
 
@@ -405,7 +229,7 @@ sudo systemctl reload nginx
 Сам фронтенд находится здесь:
 
 ```bash
-/var/www/gmhelper
+/var/www/gmhelper-frontend
 ```
 
 А новый сайт обрабатывается конфигом:
@@ -464,97 +288,537 @@ curl -k -i --resolve gm-helper.ru:443:127.0.0.1 \
 HTTP/1.1 502 Bad Gateway
 ```
 
-## 7. Reverse proxy и TLS
+## Backend
 
-Не публикуйте порт `3000` напрямую в интернет. Reverse proxy должен:
+Backend состоит из системного PostgreSQL, Docker-контейнеров migrator и API и
+одного S3-совместимого объектного хранилища. Основной проверенный сценарий этой
+инструкции использует MinIO. Вместо него можно подключить Cloudflare R2.
 
-- раздавать собранный frontend;
-- обслуживать HTTPS;
-- перенаправлять запросы `/api` на `http://127.0.0.1:3000`;
-- передавать `Host`, `X-Forwarded-For` и `X-Forwarded-Proto`;
-- иметь ограничение размера запроса не меньше лимита загрузки текстур;
-- использовать автоматическое обновление TLS-сертификатов.
+PostgreSQL и данные MinIO живут отдельно от образа API. Пересборка и замена
+контейнера API не удаляет данные. Одноразовый migrator перед каждым запуском
+выполняет только существующие Prisma-миграции через `prisma migrate deploy`.
 
-## 8. Остановка и повторный запуск
+### Быстрая установка новой версии
 
-Остановить API и контейнеры выбранного сценария без удаления данных:
-
-```bash
-docker compose -f docker/docker-compose.prod.yml down
-```
-
-Для MinIO его volume сохраняется. Не используйте `down --volumes`, если не
-хотите удалить хранящиеся в нём объекты.
-
-Для повторного запуска выполните ту же команду, что и при первом запуске:
+Команды выполняются на сервере. До обновления создайте резервные копии БД и
+объектного хранилища.
 
 ```bash
-# MinIO
-yarn deploy:api:prod:docker:minio
-
-# или Cloudflare R2
-yarn deploy:api:prod:docker:cloudflare-r2
+cd /opt/gm-helper/backend
+git status --short
+git pull --ff-only
+docker compose -f docker/docker-compose.prod.yml --profile minio up -d --build
+docker compose -f docker/docker-compose.prod.yml --profile minio ps -a
+curl --fail --silent --show-error https://<domain>/api/health
+docker compose -f docker/docker-compose.prod.yml logs --tail=100 api
+docker image ls --filter dangling=true
+docker image prune -f
+docker system df
 ```
 
-Запускайте только команду выбранного хранилища.
+Удаляйте dangling-образы только после успешных проверок. На общем сервере не
+запускайте `docker system prune -a`, `docker volume prune` и
+`docker compose down --volumes`: эти команды могут затронуть другие проекты
+или удалить пользовательские файлы MinIO.
 
-## 9. Финальная проверка
+### Архитектура и каталоги
 
-Проверьте:
+| Компонент            | Размещение                   | Постоянные данные          |
+| -------------------- | ---------------------------- | -------------------------- |
+| Исходный код backend | `/opt/gm-helper/backend`     | Git и закрытые ENV-файлы   |
+| API                  | Docker, `127.0.0.1:3000`     | нет                        |
+| Migrator             | одноразовый Docker-контейнер | нет                        |
+| PostgreSQL           | системный сервис             | `/var/lib/postgresql`      |
+| MinIO                | Docker                       | volume `docker_minio_data` |
+| Frontend             | `/var/www/gmhelper-frontend` | статическая сборка         |
 
-1. регистрацию и вход;
-2. загрузку PNG, JPEG или WebP;
-3. получение текстуры после перезагрузки страницы;
-4. сохранение и повторное открытие карты;
-5. отсутствие ошибок API, PostgreSQL и хранилища в логах.
+MinIO не публикует порты `9000` и `9001` на хост. API доступен снаружи только
+через HTTPS reverse proxy. Node.js, Corepack и Yarn на сервер устанавливать не
+нужно: они используются внутри Docker builder-образа.
 
-## 10. Резервное копирование
+### 1. Проверка сервера
 
-Для PostgreSQL необходимы регулярные `pg_dump` или снапшоты managed database.
+Подключитесь по SSH и проверьте окружение, занятые порты и существующие
+контейнеры. Не останавливайте чужие сервисы.
 
-Для self-hosted MinIO необходима копия объектов на другом физическом сервере
-или в другом объектном хранилище. Копия того же Docker volume на том же диске
-не является резервной.
+```bash
+cat /etc/os-release
+uname -m
+docker --version
+docker compose version
+git --version
+sudo ss -lntp
+docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+docker volume ls
+df -h /
+free -h
+```
+
+Для описанного сценария должны быть свободны `127.0.0.1:3000` и внутренний
+порт PostgreSQL `5432`. Занятый на хосте порт `9000` не конфликтует с MinIO,
+поскольку MinIO не публикует его наружу.
+
+### 2. Установка проекта
+
+Создайте production-каталог и клонируйте репозиторий. Если репозиторий
+приватный, используйте GitLab/GitHub deploy key или access token с минимальными
+правами. Не сохраняйте пароль аккаунта в Git.
+
+```bash
+sudo mkdir -p /opt/gm-helper
+sudo chown <server-user>:<server-user> /opt/gm-helper
+cd /opt/gm-helper
+git clone <repository-url> backend
+cd backend
+git status
+git log -1 --oneline
+```
+
+Разворачивайте только проверенный commit или tag при чистом рабочем дереве.
+Если репозиторий сначала клонировали в домашний каталог и контейнеры ещё не
+запущены, перенесите единственную копию, сохранив закрытые ENV-файлы:
+
+```bash
+sudo mkdir -p /opt/gm-helper
+sudo mv /home/<server-user>/<repository-directory> /opt/gm-helper/backend
+sudo chown -R <server-user>:<server-user> /opt/gm-helper/backend
+```
+
+### 3. Установка PostgreSQL
+
+Для Ubuntu установите PostgreSQL как системный сервис:
+
+```bash
+sudo apt update
+sudo apt install -y postgresql postgresql-client
+sudo systemctl enable --now postgresql
+sudo systemctl status postgresql --no-pager
+```
+
+Создайте отдельную роль `gmhelper_api` и базу `gmhelper_prod`:
+
+```bash
+sudo -u postgres psql
+```
+
+В консоли PostgreSQL:
+
+```sql
+CREATE ROLE gmhelper_api LOGIN;
+\password gmhelper_api
+CREATE DATABASE gmhelper_prod OWNER gmhelper_api;
+\q
+```
+
+Сгенерируйте пароль командой `openssl rand -hex 32`, сохраните его в менеджере
+паролей и дважды введите после `\password`. Hex-пароль можно безопасно
+использовать в URL без percent-encoding.
+
+Проверьте локальное подключение:
+
+```bash
+psql -h 127.0.0.1 -U gmhelper_api -d gmhelper_prod
+```
+
+Выполните `\conninfo`, затем `\q`. Роль приложения не должна быть superuser.
+
+### 4. Доступ к PostgreSQL из Docker
+
+Определите внутренний Docker gateway:
+
+```bash
+docker network inspect bridge --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}'
+```
+
+Для стандартного адреса `172.17.0.1` настройте PostgreSQL слушать только
+localhost и Docker gateway:
+
+```bash
+sudo -u postgres psql -c "ALTER SYSTEM SET listen_addresses = 'localhost,172.17.0.1';"
+sudo -u postgres psql -Atc "SHOW hba_file;"
+```
+
+Добавьте в полученный `pg_hba.conf` одно правило для production-роли и базы:
+
+```text
+host gmhelper_prod gmhelper_api 172.16.0.0/12 scram-sha-256
+```
+
+Например:
+
+```bash
+HBA_FILE="$(sudo -u postgres psql -Atc 'SHOW hba_file;')"
+grep -qxF 'host gmhelper_prod gmhelper_api 172.16.0.0/12 scram-sha-256' "$HBA_FILE" || echo 'host gmhelper_prod gmhelper_api 172.16.0.0/12 scram-sha-256' | sudo tee -a "$HBA_FILE"
+sudo systemctl restart postgresql
+sudo ss -lntp | grep ':5432'
+```
+
+PostgreSQL не должен слушать `0.0.0.0:5432`. Ожидаются `127.0.0.1:5432` и
+адрес Docker gateway.
+
+Если UFW активен, сначала выполните первый запуск из раздела 6. Compose создаст
+сеть до запуска migrator; первый migrator при этом может завершиться с
+`P1001`. После этого определите созданную подсеть:
+
+```bash
+docker network inspect docker_default --format '{{range .IPAM.Config}}{{.Subnet}} gateway={{.Gateway}}{{end}}'
+```
+
+Разрешите этой подсети доступ только к внутреннему адресу PostgreSQL. Пример
+для Compose-сети `172.19.0.0/16` и gateway `172.17.0.1`:
+
+```bash
+sudo ufw allow from 172.19.0.0/16 to 172.17.0.1 port 5432 proto tcp comment 'gmhelper Docker to PostgreSQL'
+```
+
+Не копируйте пример буквально, если адреса отличаются. Если firewall
+обслуживает другой администратор, согласуйте правило с ним. Порт `5432` не
+нужно открывать для `Anywhere`.
+
+### 5. Production ENV
+
+Создайте закрытые конфигурационные файлы:
+
+```bash
+cd /opt/gm-helper/backend
+cp docker/examples/.env.prod.example docker/.env.prod
+cp docker/examples/.env.minio.prod.example docker/.env.minio.prod
+chmod 600 docker/.env.prod docker/.env.minio.prod
+```
+
+Сгенерируйте два разных JWT-секрета и два разных секрета MinIO:
+
+```bash
+openssl rand -hex 64
+openssl rand -hex 64
+openssl rand -hex 32
+openssl rand -hex 32
+```
+
+Не публикуйте результаты. Настройте `docker/.env.prod`:
+
+```env
+NODE_ENV=production
+MAIN_DATABASE_URL=postgresql://gmhelper_api:<postgres-password>@host.docker.internal:5432/gmhelper_prod?schema=public
+JWT_ACCESS_SECRET=<jwt-access-secret>
+JWT_REFRESH_SECRET=<different-jwt-refresh-secret>
+JWT_ACCESS_EXPIRES=15m
+JWT_REFRESH_EXPIRES=30d
+MAIN_API_PORT=3000
+OBJECT_STORAGE_ENDPOINT=http://minio:9000
+OBJECT_STORAGE_REGION=us-east-1
+OBJECT_STORAGE_BUCKET=maps-of-the-world-prod
+OBJECT_STORAGE_ACCESS_KEY=gmhelper-api
+OBJECT_STORAGE_SECRET_KEY=<minio-application-secret>
+OBJECT_STORAGE_FORCE_PATH_STYLE=true
+```
+
+Настройте `docker/.env.minio.prod`:
+
+```env
+MINIO_ROOT_USER=gmhelper-admin
+MINIO_ROOT_PASSWORD=<different-minio-admin-secret>
+```
+
+Пользователь приложения MinIO и администратор MinIO должны иметь разные
+секреты. Проверьте права и отсутствие демонстрационных значений, не печатая
+секреты:
+
+```bash
+stat -c '%a %n' docker/.env.prod docker/.env.minio.prod
+if grep -Eq 'replace-with|root_prod|FDGGJHG|CXVCVSA' docker/.env.prod docker/.env.minio.prod; then echo 'ОШИБКА: остались демонстрационные значения'; else echo 'OK: демонстрационных значений нет'; fi
+docker compose -f docker/docker-compose.prod.yml --profile minio config --quiet
+```
+
+### 6. Первый запуск с MinIO
+
+Соберите и запустите backend. Первая сборка скачивает образы и зависимости и
+может занять несколько минут:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml --profile minio up -d --build
+```
+
+Compose создаёт сеть `docker_default` и volume `docker_minio_data`. Если
+migrator сообщает `P1001`, проверьте сеть и firewall:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml run --rm --no-deps --entrypoint sh migrate -c 'echo "HOST:"; getent hosts host.docker.internal; echo "ROUTES:"; ip route; echo "PORT:"; nc -vz -w 3 host.docker.internal 5432'
+```
+
+Если возникает `P1000`, пароль роли `gmhelper_api` в PostgreSQL не совпадает с
+паролем внутри `MAIN_DATABASE_URL`. Исправьте пароль и пересоздайте контейнеры:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml --profile minio up -d --force-recreate
+```
+
+### 7. Первый запуск с Cloudflare R2
+
+Для R2 не создавайте `docker/.env.minio.prod`. Настройте в
+`docker/.env.prod` endpoint, bucket и ограниченный API token:
+
+```env
+OBJECT_STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+OBJECT_STORAGE_REGION=auto
+OBJECT_STORAGE_BUCKET=maps-of-the-world-prod
+OBJECT_STORAGE_ACCESS_KEY=<r2-access-key-id>
+OBJECT_STORAGE_SECRET_KEY=<r2-secret-access-key>
+OBJECT_STORAGE_FORCE_PATH_STYLE=false
+```
+
+Запустите только migrator и API:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml up -d --build
+```
+
+### 8. Проверка backend
+
+Для MinIO проверьте все контейнеры, включая одноразовые:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml --profile minio ps -a
+```
+
+Ожидаемые состояния:
+
+- `api-prod` — `Up (healthy)`;
+- `minio-prod` — `Up (healthy)`;
+- `api-migrate-prod` — `Exited (0)`;
+- `minio-init-prod` — `Exited (0)`.
+
+Проверьте логи и health endpoint:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml logs --tail=100 migrate
+docker compose -f docker/docker-compose.prod.yml logs --tail=100 api
+docker compose -f docker/docker-compose.prod.yml --profile minio logs --tail=100 minio-init
+curl --fail --silent --show-error http://127.0.0.1:3000/api/health
+curl --fail --silent --show-error https://<domain>/api/health
+```
+
+Ожидаемый ответ health endpoint:
+
+```json
+{ "status": "ok" }
+```
+
+Проверьте миграции и постоянный volume:
+
+```bash
+sudo -u postgres psql -d gmhelper_prod -c '\dt'
+docker volume inspect docker_minio_data --format '{{.Name}}: {{.Mountpoint}}'
+```
+
+После технических проверок зарегистрируйте тестового пользователя, войдите,
+обновите страницу, загрузите изображение и убедитесь, что авторизация и файл
+сохранились. Не запускайте production seed без отдельного решения о загрузке
+демонстрационных данных.
+
+### 9. Reverse proxy
+
+API публикуется только на `127.0.0.1:3000`. Nginx должен перенаправлять `/api`
+на этот адрес:
+
+```nginx
+location /api {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 50M;
+}
+```
+
+Проверьте и примените конфигурацию:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Порт `3000` не открывайте в firewall. TLS завершается на Nginx или другом
+reverse proxy.
+
+### 10. Повторный запуск и обновление
+
+Обычное обновление не требует остановки Compose через `down`:
+
+```bash
+cd /opt/gm-helper/backend
+git status --short
+git pull --ff-only
+docker compose -f docker/docker-compose.prod.yml --profile minio up -d --build
+docker compose -f docker/docker-compose.prod.yml --profile minio ps -a
+curl --fail --silent --show-error https://<domain>/api/health
+```
+
+Новый migrator применит только ещё не применённые миграции. PostgreSQL и
+`docker_minio_data` сохраняются. Не используйте `prisma db push` в production.
+
+После успешной проверки найдите старые dangling-образы:
+
+```bash
+docker image ls --filter dangling=true
+```
+
+На общем сервере убедитесь, что список появился именно после текущей сборки,
+и только затем удалите эти образы:
+
+```bash
+docker image prune -f
+docker system df
+```
+
+Команда `docker image prune -f` не удаляет volumes, но действует на весь Docker
+daemon, поэтому её нельзя выполнять до проверки списка.
+
+### 11. Остановка без потери данных
+
+Остановить контейнеры MinIO-сценария:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml --profile minio down
+```
+
+Запустить снова:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml --profile minio up -d
+```
+
+Обычный `down` сохраняет volume. Никогда не добавляйте `--volumes`, если не
+требуется безвозвратно удалить файлы MinIO.
+
+### 12. Контроль диска и логов
+
+Логи API и MinIO ротируются Docker: три файла максимум по 10 МБ на контейнер.
+Контролируйте фактическое использование диска:
+
+```bash
+docker system df
+sudo du -sh /var/lib/docker
+sudo du -sh /var/lib/docker/volumes/docker_minio_data/_data
+sudo du -sh /var/lib/postgresql
+sudo du -h "$(docker inspect --format '{{.LogPath}}' api-prod)" "$(docker inspect --format '{{.LogPath}}' minio-prod)"
+```
+
+Рост `docker_minio_data` и `/var/lib/postgresql` является ростом
+пользовательских данных, а не мусором. Не очищайте эти каталоги вручную.
+
+### 13. Резервное копирование
 
 Минимальная политика:
 
-- ежедневная автоматическая копия PostgreSQL;
-- ежедневная репликация или `mc mirror` бакета MinIO;
-- несколько поколений backup;
-- мониторинг свободного места;
-- регулярная тестовая процедура восстановления.
+- ежедневный `pg_dump` с несколькими поколениями копий;
+- ежедневное зеркалирование MinIO через `mc mirror`;
+- контроль успешности и свободного места;
+- периодическая проверка восстановления;
+- внешняя копия на другом физическом сервере, NAS или S3-хранилище.
 
-При Cloudflare R2 отдельно определите политику версионирования и резервной
-копии критичных пользовательских данных.
+Локальная копия на том же диске защищает от ошибочного изменения или миграции,
+но не от потери диска и не является полноценной резервной копией.
 
-## 11. Обновление
+Для локального ежедневного backup установите подготовленный скрипт и systemd
+units. Скрипт создаёт PostgreSQL dump и копирует завершённые объекты MinIO через
+S3 API, не читая внутреннее содержимое Docker volume напрямую:
 
-Перед обновлением:
+```bash
+cd /opt/gm-helper/backend
+sudo install -m 0750 -o root -g root scripts/backup-production.sh /usr/local/sbin/gmhelper-backup
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-backup.service /etc/systemd/system/gmhelper-backup.service
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-backup.timer /etc/systemd/system/gmhelper-backup.timer
+sudo mkdir -p /var/backups/gm-helper
+sudo chmod 700 /var/backups/gm-helper
+printf 'GMHELPER_BACKUP_RETENTION_DAYS=14\n' | sudo tee /etc/default/gmhelper-backup
+sudo systemctl daemon-reload
+```
 
-1. создайте backup PostgreSQL и объектного хранилища;
-2. проверьте новые Prisma-миграции;
-3. получите заранее проверенный commit или tag;
-4. выполните `yarn install --immutable`;
-5. повторно выполните команду выбранного сценария:
-   `yarn deploy:api:prod:docker:minio` или
-   `yarn deploy:api:prod:docker:cloudflare-r2`;
-6. пересоберите и опубликуйте frontend, если он изменился;
-7. проверьте healthcheck, логи и основной пользовательский сценарий.
+Ручной тест первого backup обязателен:
 
-Не используйте `prisma db push` для production.
+```bash
+sudo systemctl start gmhelper-backup.service
+sudo systemctl status gmhelper-backup.service --no-pager
+sudo journalctl -u gmhelper-backup.service -n 100 --no-pager
+sudo find /var/backups/gm-helper -maxdepth 3 -printf '%M %u:%g %s %p\n'
+```
 
-## Частые ошибки
+Только после успешного ручного теста включите расписание:
 
-- **API не подключается к PostgreSQL:** внутри контейнера `localhost` означает
-  сам контейнер. Для БД на том же сервере используйте
-  `host.docker.internal`.
-- **MinIO запускается, но API получает Access Denied:** проверьте совпадение
-  `OBJECT_STORAGE_*` в `docker/.env.prod` и повторите запуск MinIO-сценария,
-  чтобы `minio-init` назначил политику.
-- **R2 отвечает ошибкой авторизации:** проверьте account ID, ключи, имя бакета
-  и права token на этот бакет.
-- **Frontend обращается к старому API:** проверьте `apiUrl` в production
-  environment, пересоберите frontend и очистите кэш браузера/CDN.
+```bash
+sudo systemctl enable --now gmhelper-backup.timer
+systemctl list-timers gmhelper-backup.timer --all
+```
+
+Структура каталога:
+
+```text
+/var/backups/gm-helper/
+├── postgresql/
+│   └── YYYY-MM-DD_HH-MM-SS.dump
+└── minio/
+    └── YYYY-MM-DD_HH-MM-SS/
+```
+
+Timer запускается ежедневно около `03:30`; `RandomizedDelaySec=10m` немного
+разносит нагрузку с другими задачами сервера. Срок хранения задаётся целым
+положительным числом дней в `/etc/default/gmhelper-backup`:
+
+```env
+GMHELPER_BACKUP_RETENTION_DAYS=14
+```
+
+Например, для хранения в течение трёх суток укажите:
+
+```env
+GMHELPER_BACKUP_RETENTION_DAYS=3
+```
+
+Новое значение применяется при следующем запуске backup-сервиса. Скрипт
+удаляет только backup-файлы и snapshot-каталоги старше указанного срока.
+Production-БД и `docker_minio_data` он не удаляет.
+
+Временно остановить расписание без удаления настроек:
+
+```bash
+sudo systemctl stop gmhelper-backup.timer
+```
+
+Снова запустить расписание:
+
+```bash
+sudo systemctl start gmhelper-backup.timer
+```
+
+Полностью отключить автозапуск таймера:
+
+```bash
+sudo systemctl disable --now gmhelper-backup.timer
+```
+
+Остановить выполняющийся прямо сейчас backup:
+
+```bash
+sudo systemctl stop gmhelper-backup.service
+```
+
+После изменения backup-скрипта или systemd units повторите команды `install`,
+выполните `sudo systemctl daemon-reload` и снова запустите ручной тест.
+
+### Частые ошибки
+
+- **`P1001: Can't reach database server`:** проверьте, что PostgreSQL слушает
+  Docker gateway, `host.docker.internal` разрешается в нужный адрес и UFW
+  разрешает Compose-подсеть к внутреннему порту `5432`.
+- **`P1000: Authentication failed`:** синхронизируйте пароль роли
+  `gmhelper_api` и пароль в `MAIN_DATABASE_URL`.
 - **Migrator завершился с ошибкой:** не запускайте API вручную в обход
-  миграций. Сначала исправьте доступ к БД или саму миграцию и повторите
-  выбранную deploy-команду.
+  миграций. Исправьте причину и повторите Compose-команду.
+- **MinIO отвечает `Access Denied`:** проверьте `OBJECT_STORAGE_*` и повторите
+  запуск профиля MinIO, чтобы `minio-init` создал пользователя и политику.
+- **API остаётся `unhealthy`:** проверьте `/api/health` и логи `api-prod`.
+- **Frontend обращается к старому API:** проверьте production `apiUrl`,
+  пересоберите frontend и очистите кэш браузера/CDN.

@@ -26,37 +26,9 @@ export const validateEnv = (config: Record<string, unknown>) => {
   if (!config['MAIN_API_PORT'])
     errors.push('MAIN_API_PORT is required (API server port, e.g. "3000")');
 
-  if (!config['MAIN_DB_PORT'])
-    errors.push(
-      'MAIN_DB_PORT is required (PostgreSQL database port, e.g. "5432")',
-    );
-
-  if (!config['PGADMIN_PORT'])
-    errors.push(
-      'PGADMIN_PORT is required (pgAdmin web interface port, e.g. "5050")',
-    );
-
   // База данных
   if (!config['MAIN_DATABASE_URL'])
     errors.push('MAIN_DATABASE_URL is required (PostgreSQL connection URL)');
-
-  if (!config['MAIN_DB_USER'])
-    errors.push('MAIN_DB_USER is required (PostgreSQL database username)');
-
-  if (!config['MAIN_DB_PASSWORD'])
-    errors.push('MAIN_DB_PASSWORD is required (PostgreSQL database password)');
-
-  if (!config['MAIN_DB_NAME'])
-    errors.push('MAIN_DB_NAME is required (PostgreSQL database name)');
-
-  // pgAdmin
-  if (!config['PGADMIN_DEFAULT_EMAIL'])
-    errors.push('PGADMIN_DEFAULT_EMAIL is required (pgAdmin login email)');
-
-  if (!config['PGADMIN_DEFAULT_PASSWORD'])
-    errors.push(
-      'PGADMIN_DEFAULT_PASSWORD is required (pgAdmin login password)',
-    );
 
   // NODE_ENV (опционально, но рекомендуется)
   if (!config['NODE_ENV'])

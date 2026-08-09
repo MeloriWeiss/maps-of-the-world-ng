@@ -26,6 +26,9 @@ WORKDIR /usr/src/app/app
 
 RUN yarn install --immutable
 
+COPY --from=builder /usr/src/app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /usr/src/app/node_modules/@prisma/client-runtime-utils ./node_modules/@prisma/client-runtime-utils
+
 EXPOSE 3000
 USER node
 CMD ["node", "main.js"]
