@@ -300,24 +300,38 @@ PostgreSQL и данные MinIO живут отдельно от образа A
 
 ### Быстрая установка новой версии
 
-Команды выполняются на сервере. До обновления создайте резервные копии БД и
-объектного хранилища.
+Команды выполняются на сервере из корня backend-репозитория
+`/opt/gm-helper/backend`. До обновления создайте резервные копии БД и объектного
+хранилища. `gmhelper-deploy` можно вызвать из любого каталога, но переход в
+корень нужен для следующих команд `docker compose`.
 
 ```bash
 cd /opt/gm-helper/backend
-git status --short
-git pull --ff-only
-docker compose -f docker/docker-compose.prod.yml --profile minio up -d --build
-docker compose -f docker/docker-compose.prod.yml --profile minio ps -a
-curl --fail --silent --show-error https://<domain>/api/health
+gmhelper-deploy
+curl --fail --silent --show-error https://gm-helper.ru/api/health
 docker compose -f docker/docker-compose.prod.yml logs --tail=100 api
 docker image ls --filter dangling=true
 docker image prune -f
 docker system df
 ```
 
-Удаляйте dangling-образы только после успешных проверок. На общем сервере не
-запускайте `docker system prune -a`, `docker volume prune` и
+Только после намеренного force-push в `master`, если `gmhelper-deploy` не может
+выполнить fast-forward:
+
+```bash
+cd /opt/gm-helper/backend
+git status --short
+git fetch origin master
+git reset --hard origin/master
+gmhelper-deploy
+```
+
+Перед `reset --hard` вывод `git status --short` должен быть пустым. При обычном
+обновлении этот блок не выполняйте.
+
+Команды очистки находятся после `gmhelper-deploy`: выполняйте их только если
+deploy и healthcheck завершились успешно. На общем сервере не запускайте
+`docker system prune -a`, `docker volume prune` и
 `docker compose down --volumes`: эти команды могут затронуть другие проекты
 или удалить пользовательские файлы MinIO.
 
@@ -645,16 +659,87 @@ reverse proxy.
 
 ### 10. Повторный запуск и обновление
 
-Обычное обновление не требует остановки Compose через `down`:
+Установите production deploy-скрипт и общий maintenance-lock. Этот же lock
+используют backup-сервисы, поэтому обновление и backup не выполняются
+одновременно:
+
+```bash
+cd /opt/gm-helper/backend
+sudo install -m 0755 -o root -g root scripts/deploy-production.sh /usr/local/sbin/gmhelper-deploy
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-maintenance.conf /etc/tmpfiles.d/gmhelper-maintenance.conf
+sudo systemd-tmpfiles --create /etc/tmpfiles.d/gmhelper-maintenance.conf
+```
+
+Пользователь, запускающий deploy, должен входить в группу `docker`. Обычное
+обновление с MinIO запускается без `sudo`:
+
+```bash
+gmhelper-deploy
+```
+
+Для Cloudflare R2:
+
+```bash
+GMHELPER_STORAGE_MODE=r2 gmhelper-deploy
+```
+
+Скрипт ожидает освобождения lock до двух часов, требует чистое Git-дерево и не
+менее 5 ГиБ свободного места, выполняет только `git pull --ff-only`, проверяет
+Compose, migrator и `/api/health`. Он не удаляет старые образы автоматически.
+
+#### Что делает `gmhelper-deploy`
+
+1. Ожидает общий maintenance-lock, чтобы не пересечься с backup.
+2. Проверяет параметры запуска, чистоту Git-дерева и свободное место.
+3. Получает новую версию только через `git pull --ff-only`.
+4. Проверяет итоговую Compose-конфигурацию.
+5. Собирает новые Docker-образы, пока старый API продолжает работать.
+6. Запускает migrator с `prisma migrate deploy`.
+7. Только после успешной миграции заменяет контейнер API.
+8. Ожидает состояние `healthy` и проверяет локальный `/api/health`.
+
+Не выполняйте `docker compose down` перед обновлением: это создаст лишний
+простой. Nginx продолжает раздавать frontend во время deploy, PostgreSQL и
+MinIO не останавливаются. При замене `api-prod` API может быть недоступен
+несколько секунд. Текущая схема не является zero-downtime deployment.
+
+#### Совместимость API и production-миграций
+
+Во время применения миграции предыдущая версия API ещё может обслуживать
+запросы. Поэтому изменения схемы должны быть совместимы как со старой, так и с
+новой версией API. Используйте подход expand–migrate–contract:
+
+1. **Expand:** добавьте новую таблицу или nullable-колонку, не удаляя и не
+   переименовывая используемые элементы схемы.
+2. **Migrate:** выпустите API, который понимает новую схему, и при необходимости
+   перенесите или заполните существующие данные отдельной миграцией.
+3. **Contract:** только в следующем релизе удалите старую колонку, таблицу или
+   временную совместимость, когда предыдущий API их больше не использует.
+
+Не удаляйте и не переименовывайте используемую колонку в том же обычном
+релизе, где API переключается на её замену. Добавление обязательной колонки
+выполняйте сначала как nullable или со значением по умолчанию, затем заполните
+данные и лишь в последующем релизе добавляйте `NOT NULL`. Большие или заведомо
+несовместимые миграции требуют отдельного окна обслуживания и заранее
+проверенного плана отката.
+
+Если история `master` была намеренно перезаписана через force-push, обычный
+`git pull --ff-only` и `gmhelper-deploy` безопасно завершатся с ошибкой до
+пересборки контейнеров. Синхронизируйте deployment-копию вручную:
 
 ```bash
 cd /opt/gm-helper/backend
 git status --short
-git pull --ff-only
-docker compose -f docker/docker-compose.prod.yml --profile minio up -d --build
-docker compose -f docker/docker-compose.prod.yml --profile minio ps -a
-curl --fail --silent --show-error https://<domain>/api/health
+git fetch origin master
+git reset --hard origin/master
+gmhelper-deploy
 ```
+
+Перед `reset --hard` вывод `git status --short` должен быть пустым. Команда
+удаляет незакоммиченные изменения отслеживаемых файлов репозитория, но не
+затрагивает игнорируемые production ENV, PostgreSQL, Docker volumes и
+работающие контейнеры. Не используйте `git clean -fd`: эта команда может
+удалить неотслеживаемые серверные файлы.
 
 Новый migrator применит только ещё не применённые миграции. PostgreSQL и
 `docker_minio_data` сохраняются. Не используйте `prisma db push` в production.
@@ -714,7 +799,7 @@ sudo du -h "$(docker inspect --format '{{.LogPath}}' api-prod)" "$(docker inspec
 Минимальная политика:
 
 - ежедневный `pg_dump` с несколькими поколениями копий;
-- ежедневное зеркалирование MinIO через `mc mirror`;
+- ежедневное зеркалирование S3-совместимого хранилища через `mc mirror`;
 - контроль успешности и свободного места;
 - периодическая проверка восстановления;
 - внешняя копия на другом физическом сервере, NAS или S3-хранилище.
@@ -722,35 +807,46 @@ sudo du -h "$(docker inspect --format '{{.LogPath}}' api-prod)" "$(docker inspec
 Локальная копия на том же диске защищает от ошибочного изменения или миграции,
 но не от потери диска и не является полноценной резервной копией.
 
-Для локального ежедневного backup установите подготовленный скрипт и systemd
-units. Скрипт создаёт PostgreSQL dump и копирует завершённые объекты MinIO через
-S3 API, не читая внутреннее содержимое Docker volume напрямую:
+PostgreSQL и объектное хранилище копируются независимыми скриптами и systemd
+timers. Ошибка одного источника не блокирует запуск backup другого. Скрипт
+объектного хранилища читает текущие `OBJECT_STORAGE_*` из `docker/.env.prod` и
+работает как с MinIO, так и с Cloudflare R2 через S3 API.
+
+Установите оба контура backup:
 
 ```bash
 cd /opt/gm-helper/backend
-sudo install -m 0750 -o root -g root scripts/backup-production.sh /usr/local/sbin/gmhelper-backup
-sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-backup.service /etc/systemd/system/gmhelper-backup.service
-sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-backup.timer /etc/systemd/system/gmhelper-backup.timer
+sudo install -m 0750 -o root -g root scripts/backup-postgresql-production.sh /usr/local/sbin/gmhelper-postgresql-backup
+sudo install -m 0750 -o root -g root scripts/backup-object-storage-production.sh /usr/local/sbin/gmhelper-object-storage-backup
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-postgresql-backup.service /etc/systemd/system/gmhelper-postgresql-backup.service
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-postgresql-backup.timer /etc/systemd/system/gmhelper-postgresql-backup.timer
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-object-storage-backup.service /etc/systemd/system/gmhelper-object-storage-backup.service
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-object-storage-backup.timer /etc/systemd/system/gmhelper-object-storage-backup.timer
+sudo install -m 0644 -o root -g root scripts/systemd/gmhelper-maintenance.conf /etc/tmpfiles.d/gmhelper-maintenance.conf
 sudo mkdir -p /var/backups/gm-helper
 sudo chmod 700 /var/backups/gm-helper
-printf 'GMHELPER_BACKUP_RETENTION_DAYS=14\n' | sudo tee /etc/default/gmhelper-backup
+printf 'GMHELPER_POSTGRES_BACKUP_RETENTION_DAYS=14\nGMHELPER_OBJECT_STORAGE_BACKUP_RETENTION_DAYS=14\nGMHELPER_MAINTENANCE_LOCK_WAIT_SECONDS=7200\nGMHELPER_BACKUP_MIN_FREE_KIB=1048576\n' | sudo tee /etc/default/gmhelper-backup
+sudo systemd-tmpfiles --create /etc/tmpfiles.d/gmhelper-maintenance.conf
 sudo systemctl daemon-reload
 ```
 
-Ручной тест первого backup обязателен:
+Ручной тест каждого backup обязателен:
 
 ```bash
-sudo systemctl start gmhelper-backup.service
-sudo systemctl status gmhelper-backup.service --no-pager
-sudo journalctl -u gmhelper-backup.service -n 100 --no-pager
+sudo systemctl start gmhelper-postgresql-backup.service
+sudo systemctl status gmhelper-postgresql-backup.service --no-pager
+sudo journalctl -u gmhelper-postgresql-backup.service -n 100 --no-pager
+sudo systemctl start gmhelper-object-storage-backup.service
+sudo systemctl status gmhelper-object-storage-backup.service --no-pager
+sudo journalctl -u gmhelper-object-storage-backup.service -n 100 --no-pager
 sudo find /var/backups/gm-helper -maxdepth 3 -printf '%M %u:%g %s %p\n'
 ```
 
 Только после успешного ручного теста включите расписание:
 
 ```bash
-sudo systemctl enable --now gmhelper-backup.timer
-systemctl list-timers gmhelper-backup.timer --all
+sudo systemctl enable --now gmhelper-postgresql-backup.timer gmhelper-object-storage-backup.timer
+systemctl list-timers 'gmhelper-*-backup.timer' --all
 ```
 
 Структура каталога:
@@ -759,51 +855,112 @@ systemctl list-timers gmhelper-backup.timer --all
 /var/backups/gm-helper/
 ├── postgresql/
 │   └── YYYY-MM-DD_HH-MM-SS.dump
-└── minio/
+└── object-storage/
     └── YYYY-MM-DD_HH-MM-SS/
 ```
 
-Timer запускается ежедневно около `03:30`; `RandomizedDelaySec=10m` немного
-разносит нагрузку с другими задачами сервера. Срок хранения задаётся целым
-положительным числом дней в `/etc/default/gmhelper-backup`:
+Корневой каталог имеет права `700` и намеренно недоступен обычному
+пользователю. Просматривайте его через `sudo`, не ослабляя права:
+
+```bash
+sudo ls -la /var/backups/gm-helper
+sudo find /var/backups/gm-helper -maxdepth 3 -printf '%M %u:%g %s %p\n'
+sudo du -sh /var/backups/gm-helper /var/backups/gm-helper/postgresql /var/backups/gm-helper/object-storage
+```
+
+Для временной интерактивной работы внутри каталога можно открыть root shell,
+а после просмотра сразу выйти:
+
+```bash
+sudo -i
+cd /var/backups/gm-helper
+exit
+```
+
+PostgreSQL запускается ежедневно около `03:30`, объектное хранилище — около
+`04:00`. `RandomizedDelaySec=10m` немного разносит нагрузку с другими задачами
+сервера. Сроки хранения настраиваются независимо в
+`/etc/default/gmhelper-backup`:
 
 ```env
-GMHELPER_BACKUP_RETENTION_DAYS=14
+GMHELPER_POSTGRES_BACKUP_RETENTION_DAYS=14
+GMHELPER_OBJECT_STORAGE_BACKUP_RETENTION_DAYS=14
+GMHELPER_MAINTENANCE_LOCK_WAIT_SECONDS=7200
+GMHELPER_BACKUP_MIN_FREE_KIB=1048576
 ```
 
 Например, для хранения в течение трёх суток укажите:
 
 ```env
-GMHELPER_BACKUP_RETENTION_DAYS=3
+GMHELPER_POSTGRES_BACKUP_RETENTION_DAYS=3
+GMHELPER_OBJECT_STORAGE_BACKUP_RETENTION_DAYS=3
 ```
 
-Новое значение применяется при следующем запуске backup-сервиса. Скрипт
-удаляет только backup-файлы и snapshot-каталоги старше указанного срока.
-Production-БД и `docker_minio_data` он не удаляет.
+Новое значение применяется при следующем запуске соответствующего сервиса.
+Скрипты удаляют только свои backup-файлы и snapshot-каталоги старше указанного
+срока. Production-БД, MinIO, R2 и `docker_minio_data` они не удаляют.
+
+`GMHELPER_MAINTENANCE_LOCK_WAIT_SECONDS` задаёт максимальное ожидание общего
+lock, а `GMHELPER_BACKUP_MIN_FREE_KIB` — минимальный остаток свободного места
+перед backup. Значение `1048576` соответствует 1 ГиБ. При недостатке места
+новая копия не создаётся, а существующие копии не удаляются.
+
+Оба backup-сервиса и `gmhelper-deploy` используют один exclusive lock. Поэтому
+они ожидают завершения уже запущенной операции и не меняют PostgreSQL, MinIO
+или контейнеры одновременно. Пользовательские записи API при этом не
+блокируются: `pg_dump` создаёт согласованный снимок, а `mc mirror` копирует
+только завершённые S3-объекты.
+
+При переходе с MinIO на R2 обновите `OBJECT_STORAGE_*` в `docker/.env.prod` и
+выполните ручной тест `gmhelper-object-storage-backup.service`. PostgreSQL timer
+и его настройки менять не требуется.
 
 Временно остановить расписание без удаления настроек:
 
 ```bash
-sudo systemctl stop gmhelper-backup.timer
+sudo systemctl stop gmhelper-postgresql-backup.timer gmhelper-object-storage-backup.timer
 ```
 
 Снова запустить расписание:
 
 ```bash
-sudo systemctl start gmhelper-backup.timer
+sudo systemctl start gmhelper-postgresql-backup.timer gmhelper-object-storage-backup.timer
 ```
 
 Полностью отключить автозапуск таймера:
 
 ```bash
-sudo systemctl disable --now gmhelper-backup.timer
+sudo systemctl disable --now gmhelper-postgresql-backup.timer gmhelper-object-storage-backup.timer
 ```
 
 Остановить выполняющийся прямо сейчас backup:
 
 ```bash
-sudo systemctl stop gmhelper-backup.service
+sudo systemctl stop gmhelper-postgresql-backup.service gmhelper-object-storage-backup.service
 ```
+
+Полностью удалить автоматизацию backup, сохранив уже созданные копии:
+
+```bash
+sudo systemctl disable --now gmhelper-postgresql-backup.timer gmhelper-object-storage-backup.timer
+sudo systemctl stop gmhelper-postgresql-backup.service gmhelper-object-storage-backup.service
+sudo rm -f /etc/systemd/system/gmhelper-postgresql-backup.timer /etc/systemd/system/gmhelper-postgresql-backup.service /etc/systemd/system/gmhelper-object-storage-backup.timer /etc/systemd/system/gmhelper-object-storage-backup.service
+sudo rm -f /usr/local/sbin/gmhelper-postgresql-backup /usr/local/sbin/gmhelper-object-storage-backup /etc/default/gmhelper-backup
+sudo systemctl daemon-reload
+sudo systemctl reset-failed
+```
+
+Файлы в `/var/backups/gm-helper` этими командами не удаляются. Удаление самих
+резервных копий является отдельной необратимой операцией. Перед ней убедитесь,
+что каталог содержит только backup GM Helper:
+
+```bash
+sudo find /var/backups/gm-helper -maxdepth 3 -printf '%M %u:%g %s %p\n'
+```
+
+Общий maintenance-lock нужен также для `gmhelper-deploy`, поэтому при удалении
+только backup-автоматизации не удаляйте `/etc/tmpfiles.d/gmhelper-maintenance.conf`
+и `/run/lock/gmhelper/maintenance.lock`.
 
 После изменения backup-скрипта или systemd units повторите команды `install`,
 выполните `sudo systemctl daemon-reload` и снова запустите ручной тест.

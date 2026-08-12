@@ -1,0 +1,13 @@
+[Unit]
+Description=GM Helper local S3-compatible object storage backup
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=6h
+EnvironmentFile=-/etc/default/gmhelper-backup
+ExecStart=/usr/local/sbin/gmhelper-object-storage-backup
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

@@ -192,8 +192,8 @@ R2, настройку ENV, миграции, reverse proxy и резервно�
 Примеры коммитов:
 
 ```bash
-feat(web): добавить компонент UserCard
-fix(api): исправить обработку ошибок
+feat(frontend): добавить компонент UserCard
+fix(backend): исправить обработку ошибок
 docs: обновить README
 ```
 

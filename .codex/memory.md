@@ -106,14 +106,38 @@
   - pgAdmin is at `http://localhost:5050`; connect from pgAdmin to host `db`, port `5432`.
 - `minio-init` is a short-lived idempotent container. It creates the bucket and application user, attaches the policy, then exits successfully. It has no volume or legacy texture mount.
 - Production uses `docker/docker-compose.prod.yml`:
-  - `yarn deploy:api:prod:docker:minio` starts migrator, API, MinIO, and `minio-init`.
-  - `yarn deploy:api:prod:docker:cloudflare-r2` starts only migrator and API and uses external R2.
+  - The verified server layout keeps the repository at `/opt/gm-helper/backend` and frontend static files at `/var/www/gmhelper-frontend`.
+  - Node.js and Yarn are not required on the production host; Docker builder stages run Corepack/Yarn.
+  - `docker compose -f docker/docker-compose.prod.yml --profile minio up -d --build` starts migrator, API, MinIO, and `minio-init`.
+  - Without the `minio` profile, Compose starts migrator and API for external Cloudflare R2.
   - The one-shot migrator runs `prisma migrate deploy`; API waits for successful migrations.
-  - API binds only to `127.0.0.1:3000`, runs as the non-root `node` user, and has a healthcheck.
+  - API binds only to `127.0.0.1:3000`, runs as the non-root `node` user, and uses strict `GET /api/health` health checks.
+  - API and MinIO Docker JSON logs rotate at three files of 10 MiB each.
+  - MinIO data persists in named volume `docker_minio_data`; never use `down --volumes`, `docker volume prune`, or manually edit its internal files.
   - pgAdmin is not a production service.
+- The verified production PostgreSQL runs as an Ubuntu system service rather than in Docker:
+  - database `gmhelper_prod`, application role `gmhelper_api`;
+  - data lives under `/var/lib/postgresql`;
+  - PostgreSQL listens on localhost and the Docker gateway, not on `0.0.0.0`;
+  - containers connect through `host.docker.internal:5432`;
+  - UFW permits only the GM Helper Compose subnet to the internal Docker-gateway address on port 5432.
+- Production deployment is managed by `/usr/local/sbin/gmhelper-deploy`, installed from `scripts/deploy-production.sh`:
+  - it can be invoked from any directory but internally uses `/opt/gm-helper/backend`;
+  - it shares `/run/lock/gmhelper/maintenance.lock` with backup jobs so deploy and backup cannot overlap;
+  - it requires a clean worktree, at least 5 GiB free, `git pull --ff-only`, valid Compose, successful migrator, and healthy API;
+  - it does not run `docker image prune`; inspect dangling images and prune only after successful deployment;
+  - after an intentional force-push, use `git fetch origin master` and `git reset --hard origin/master` only when `git status --short` is empty, then rerun `gmhelper-deploy`; never use `git clean -fd` on the server.
+- Do not stop containers before normal deployment. Images build while the old API runs, then API replacement may cause a few seconds of API downtime; frontend, PostgreSQL, and MinIO remain available.
+- Production schema changes must follow expand-migrate-contract because the old API may run while migrations apply. Add compatible nullable/defaulted structures first, migrate data, and remove old structures or add `NOT NULL` only in a later release.
 - Production secrets live in ignored files:
   - `docker/.env.prod`, based on `docker/examples/.env.prod.example`;
   - `docker/.env.minio.prod`, based on `docker/examples/.env.minio.prod.example`, only for self-hosted MinIO administration.
+- Backup automation exists in the repository but is intentionally not enabled on the current server yet:
+  - PostgreSQL and object storage have independent scripts, systemd services, timers, logs, and retention settings;
+  - object-storage backup reads `OBJECT_STORAGE_*` and works with either MinIO or Cloudflare R2 through S3 API;
+  - both jobs use the same maintenance lock as deploy and enforce minimum free space;
+  - local backups live under root-only `/var/backups/gm-helper`; inspect them with `sudo`, do not weaken directory permissions;
+  - local copies protect against operator errors but not physical disk loss; external backup remains future work.
 - Documentation roles:
   - `README.md`: local setup, development, and builds.
   - `DEPLOYMENT.md`: end-to-end Linux server deployment, MinIO/R2 choice, verification, backup, and update procedure.
@@ -303,6 +327,8 @@
 - Prisma seed: `yarn db:main:seed`.
 - Deploy production API with self-hosted MinIO: `yarn deploy:api:prod:docker:minio`.
 - Deploy production API with Cloudflare R2: `yarn deploy:api:prod:docker:cloudflare-r2`.
+- Verified production-server update: `gmhelper-deploy` (MinIO) or `GMHELPER_STORAGE_MODE=r2 gmhelper-deploy` (R2).
+- After a successful production update: inspect with `docker image ls --filter dangling=true`, then run `docker image prune -f` and `docker system df`.
 - Lint all: `yarn lint`.
 - Test all: `yarn test`.
 - Generate docs: `yarn docs:gen`.
@@ -329,6 +355,8 @@
 - Services should coordinate entities rather than know every concrete entity type.
 - Create reusable UI abstractions when the current problem and likely future uses share a clear stable contract; avoid abstractions without a concrete reuse case.
 - Keep fixes narrowly scoped. Do not change adjacent layout or behavior unless it is necessary for the requested result.
+- Production deployment was installed and smoke-tested on 2026-08-09: API health, PostgreSQL persistence, MinIO persistence, container recreation, Nginx HTTPS proxying, migrations, and log rotation worked. Backup timers remained disabled as of 2026-08-12.
+- The production host is shared with Mailcow, Nextcloud, and Portainer. Never stop/remove unknown containers or use global destructive cleanup such as `docker system prune -a` or `docker volume prune`.
 
 ## Backend Repair Notes (2026-07-27)
 

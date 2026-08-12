@@ -1,0 +1,13 @@
+[Unit]
+Description=GM Helper local PostgreSQL backup
+Requires=postgresql.service
+After=postgresql.service
+
+[Service]
+Type=oneshot
+TimeoutStartSec=6h
+EnvironmentFile=-/etc/default/gmhelper-backup
+ExecStart=/usr/local/sbin/gmhelper-postgresql-backup
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

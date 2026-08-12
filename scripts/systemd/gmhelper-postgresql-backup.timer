@@ -1,11 +1,11 @@
 [Unit]
-Description=Run GM Helper local backup daily
+Description=Run GM Helper PostgreSQL backup daily
 
 [Timer]
 OnCalendar=*-*-* 03:30:00
 Persistent=true
 RandomizedDelaySec=10m
-Unit=gmhelper-backup.service
+Unit=gmhelper-postgresql-backup.service
 
 [Install]
 WantedBy=timers.target

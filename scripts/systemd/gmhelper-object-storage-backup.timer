@@ -1,0 +1,11 @@
+[Unit]
+Description=Run GM Helper object storage backup daily
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+RandomizedDelaySec=10m
+Unit=gmhelper-object-storage-backup.service
+
+[Install]
+WantedBy=timers.target
