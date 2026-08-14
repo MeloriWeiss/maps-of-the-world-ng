@@ -7,10 +7,10 @@ export class MapsService {
   constructor(private readonly prisma: PrismaMainService) {}
 
   async listPublicCatalog(query: MapCatalogQueryDto, accountId?: number) {
-    const where = { isPublished: true };
+    const where = { isPublished: true, isHidden: false };
     const [maps, total] = await this.prisma.$transaction([
       this.prisma.map.findMany({
-        where: { isPublished: true },
+        where,
         orderBy: { id: 'desc' },
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
@@ -53,7 +53,7 @@ export class MapsService {
 
   async getPublicMap(id: number, accountId?: number) {
     const map = await this.prisma.map.findFirst({
-      where: { id, isPublished: true },
+      where: { id, isPublished: true, isHidden: false },
       select: {
         id: true,
         name: true,
@@ -198,6 +198,7 @@ export class MapsService {
     const maps = await this.prisma.map.findMany({
       where: {
         isPublished: true,
+        isHidden: false,
         authorAccount: { userId: authorUserId },
       },
       orderBy: { id: 'desc' },
@@ -246,7 +247,7 @@ export class MapsService {
 
   async #assertPublished(id: number) {
     const map = await this.prisma.map.findFirst({
-      where: { id, isPublished: true },
+      where: { id, isPublished: true, isHidden: false },
       select: { id: true },
     });
     if (!map) throw new NotFoundException('Published map not found');

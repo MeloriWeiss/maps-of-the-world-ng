@@ -13,6 +13,7 @@ import {
   jwtStrategies,
 } from './jwt';
 import { PassportModule } from '@nestjs/passport';
+import { RolesGuard } from './roles';
 
 @Module({
   imports: [
@@ -29,12 +30,14 @@ import { PassportModule } from '@nestjs/passport';
     JwtAccessGuard,
     JwtRefreshGuard,
     OptionalJwtAccessGuard,
+    RolesGuard,
   ],
   exports: [
     PassportModule,
     JwtAccessGuard,
     JwtRefreshGuard,
     OptionalJwtAccessGuard,
+    RolesGuard,
   ],
 })
 export class ApiAuthModule {}

@@ -65,6 +65,11 @@
   gap: rem(24);
 }
 
+.catalog-grid--loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .catalog-pagination {
   margin-top: rem(32);
 }

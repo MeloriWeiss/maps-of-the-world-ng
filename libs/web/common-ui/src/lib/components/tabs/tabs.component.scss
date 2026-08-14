@@ -1,0 +1,65 @@
+:host {
+  display: block;
+  max-width: 100%;
+}
+
+.tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs__list {
+  display: flex;
+  width: 100%;
+  min-width: max-content;
+  margin: 0;
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  background-color: var(--dark-primary-transparent-color);
+  list-style: none;
+}
+
+.tabs__item {
+  flex: 1 0 0;
+}
+
+.tabs__control {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: var(--light-color);
+  background: transparent;
+  font:
+    1rem/1.3125 'Play',
+    sans-serif;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.tabs__control:hover,
+.tabs__control--active {
+  color: var(--dark-primary-color);
+  background-color: var(--light-color);
+}
+
+@media (max-width: 30rem) {
+  .tabs__item {
+    flex-basis: auto;
+  }
+
+  .tabs__control {
+    padding: 0.4375rem 1.125rem;
+    font-size: 0.875rem;
+  }
+}

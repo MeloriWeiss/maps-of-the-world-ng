@@ -124,7 +124,7 @@ describe('TexturePacksService', () => {
 
     expect(prisma.texturePack.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { isPublished: true },
+        where: { isPublished: true, isHidden: false },
       }),
     );
   });
@@ -147,7 +147,7 @@ describe('TexturePacksService', () => {
     });
     expect(prisma.texturePack.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'pack-id', isPublished: true },
+        where: { id: 'pack-id', isPublished: true, isHidden: false },
         select: expect.objectContaining({
           _count: {
             select: {

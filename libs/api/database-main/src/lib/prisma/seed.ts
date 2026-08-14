@@ -6,8 +6,10 @@ import { seedTexturePacks } from './seed/texture-packs';
 import { seedForum } from './seed/forum';
 import { seedSessions } from './seed/sessions';
 import { printSeedSummary } from './seed/summary';
+import { assertDevelopmentSeedAllowed } from './seed/seed-environment';
 
 async function main() {
+  assertDevelopmentSeedAllowed();
   console.log('Resetting development database...');
   await resetDatabase(prisma);
 

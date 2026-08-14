@@ -1,0 +1,218 @@
+:host {
+  display: block;
+  max-width: 75rem;
+  margin: 0 auto;
+}
+.eyebrow {
+  color: var(--light-gray-font-color);
+  margin-bottom: 0.25rem;
+}
+h1 {
+  color: var(--semi-dark-font-color);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.stats article,
+.chart-card {
+  min-width: 0;
+  background: var(--light-color);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 0.25rem 1.25rem rgb(from var(--dark-color) r g b / 5%);
+}
+.stats span {
+  display: block;
+  color: var(--light-gray-font-color);
+}
+.stats strong {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 2rem;
+  color: var(--semi-dark-font-color);
+}
+.system-card {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--light-color);
+  box-shadow: 0 0.25rem 1.25rem rgb(from var(--dark-color) r g b / 5%);
+}
+.system-card__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.system-card__heading p,
+.system-grid span,
+.system-grid small {
+  color: var(--light-gray-font-color);
+}
+.system-card__heading button {
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  color: var(--light-color);
+  background: var(--info-color);
+  cursor: pointer;
+}
+.system-card__heading button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.system-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.system-grid article {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--light-bg-color);
+}
+.status-available {
+  color: var(--success-color);
+}
+.status-unavailable {
+  color: var(--error-color);
+}
+.chart-card h2 {
+  margin-bottom: 1rem;
+}
+.chart {
+  max-width: 28rem;
+  margin: 0 auto;
+}
+.chart-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.chart-heading p,
+.activity-summary span {
+  color: var(--light-gray-font-color);
+}
+.period-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.period-filter button {
+  border: 0.0625rem solid var(--light-gray-font-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--semi-dark-font-color);
+  background: var(--light-color);
+  cursor: pointer;
+}
+.period-filter button.active {
+  color: var(--light-color);
+  background: var(--primary-color);
+}
+.custom-period {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.custom-period label,
+.custom-period__field {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--light-gray-font-color);
+}
+.custom-period input,
+.custom-period button {
+  min-height: 2.5rem;
+  border: 0.0625rem solid var(--light-gray-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--semi-dark-font-color);
+  background: var(--light-color);
+}
+.custom-period wm-select {
+  min-width: 10rem;
+}
+.custom-period button {
+  border-color: var(--primary-color);
+  color: var(--light-color);
+  background: var(--primary-color);
+  cursor: pointer;
+}
+.activity-card {
+  margin-bottom: 1rem;
+}
+.activity-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin: 1rem 0;
+}
+.activity-summary span,
+.activity-summary strong {
+  display: block;
+}
+.activity-summary strong {
+  font-size: 1.5rem;
+  color: var(--semi-dark-font-color);
+}
+.activity-chart {
+  height: 22rem;
+}
+.loading {
+  color: var(--light-gray-font-color);
+}
+.interval-notice {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 0.25rem solid var(--info-color);
+  border-radius: 0.5rem;
+  color: var(--semi-dark-font-color);
+  background: var(--light-primary-color);
+}
+.request-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 0.25rem solid var(--error-color);
+  border-radius: 0.5rem;
+  color: var(--error-color);
+  background: var(--light-error-background-color);
+}
+.request-error button {
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--light-color);
+  background: var(--error-color);
+  cursor: pointer;
+}
+@media (max-width: 40rem) {
+  .chart-heading {
+    flex-direction: column;
+  }
+  .custom-period,
+  .custom-period label,
+  .custom-period__field,
+  .custom-period input,
+  .custom-period wm-select,
+  .custom-period button {
+    width: 100%;
+  }
+  .activity-chart {
+    height: 18rem;
+  }
+}

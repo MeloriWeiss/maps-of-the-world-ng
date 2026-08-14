@@ -56,6 +56,11 @@
   }
 }
 
+.catalog-grid--loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .map-card,
 .catalog-state {
   overflow: hidden;

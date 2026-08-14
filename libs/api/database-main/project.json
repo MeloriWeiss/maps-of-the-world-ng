@@ -24,6 +24,9 @@
     "seed": {
       "command": "prisma db seed --config=libs/api/database-main/src/lib/prisma.config.ts"
     },
+    "create-super-admin": {
+      "command": "tsx --tsconfig tsconfig.base.json libs/api/database-main/src/lib/prisma/create-super-admin.ts"
+    },
     "push": {
       "command": "prisma db push --config=libs/api/database-main/src/lib/prisma.config.ts"
     }

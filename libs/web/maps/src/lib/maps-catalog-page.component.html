@@ -14,9 +14,9 @@
       }
     </header>
 
-    @if (isLoading()) {
+    @if (isLoading() && maps().length === 0) {
       <div class="catalog-state">Загружаем опубликованные карты…</div>
-    } @else if (hasError()) {
+    } @else if (hasError() && maps().length === 0) {
       <div class="catalog-state">
         <span>Не удалось загрузить каталог.</span>
         <button type="button" (click)="load()">Повторить</button>
@@ -31,7 +31,12 @@
         </a>
       </wm-empty-state>
     } @else {
-      <section class="catalog-grid" aria-label="Опубликованные карты">
+      <section
+        class="catalog-grid"
+        aria-label="Опубликованные карты"
+        [class.catalog-grid--loading]="isLoading()"
+        [attr.aria-busy]="isLoading()"
+      >
         @for (map of maps(); track map.id) {
           <article class="map-card">
             <a

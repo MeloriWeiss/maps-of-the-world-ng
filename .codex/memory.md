@@ -3,7 +3,7 @@
 ## Project
 
 - Repository: `maps-of-the-world-ng`.
-- Product: DnD/world map modelling app.
+- Product: **GameMaster Helper**, a browser platform for tabletop-RPG game masters and world authors. It combines a map workshop, public map and texture-pack catalogs, author profiles, likes/comments, a forum, and a private administration area. `Maps-of-the-World` is the historical repository name.
 - Stack: Nx monorepo, Angular 19 frontend, NestJS 11 backend, Prisma/PostgreSQL.
 - Package manager: Yarn 4 (`packageManager`: `yarn@4.17.0`).
 
@@ -24,6 +24,7 @@
 
 - `libs/shared/shared`: shared DTOs and interfaces used by web and api.
 - `libs/api/api-auth`: auth endpoints, JWT guards/strategies, cookies, sessions.
+- `libs/api/admin`: protected administration API, moderation, user management, and audit log.
 - `libs/api/users`: users controller/service.
 - `libs/api/database-main`: Prisma service, schema, migrations, seed scripts.
 - `libs/api/api-shared`: env/config helpers.
@@ -33,13 +34,18 @@
 - `libs/web/data-access`: frontend services/interfaces/tokens.
 - `libs/web/common-ui`: shared UI, pipes, SCSS mixins/functions.
 - `libs/web/workshop`: main map editor/canvas workspace.
+- `libs/web/admin`: lazy-loaded administration dashboard and management pages.
 
 ## Domain
 
 - Prisma schema is at `libs/api/database-main/src/lib/prisma/schema.prisma`.
-- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapLike`, `MapComment`, `ForumCategory`, `Forum`, `ForumComment`, `ForumLike`, `TexturePack`, `TexturePackLike`, and `Texture`.
+- Current models include `User`, `UserSession`, `PersonalAccount`, `Map`, `MapLike`, `MapComment`, `ForumCategory`, `Forum`, `ForumComment`, `ForumLike`, `TexturePack`, `TexturePackLike`, `Texture`, `AdminAuditLog`, and `SiteVisit`.
 - Backend endpoints cover auth, users, accounts/profiles, owned and published maps, texture packs/files, and the working forum.
 - Auth uses access/refresh JWT cookies, refresh rotation, session storage, logout, logout-all, and sessions listing.
+- Password validation intentionally differs by operation:
+  - registration enforces the shared 6–30 character limit and at least one uppercase Latin letter on both web and API;
+  - login requires a non-empty string but does not reapply registration strength or maximum-length rules, so existing long passwords (including a 64-character production super-admin password) can authenticate;
+  - invalid login credentials are handled by bcrypt comparison and return 401.
 - `libs/api/maps` implements map persistence, publication, public viewing, and deletion:
   - `GET /api/maps?page=&pageSize=` returns the server-paginated public catalog as `{ items, total, page, pageSize }`; default page size is 9. Legacy `catalog` and `published` aliases remain temporarily for backward compatibility.
   - `GET /api/maps/:id` returns one published map for read-only viewing; `public/:id` and `published/:id` are compatibility aliases.
@@ -92,6 +98,31 @@
   - `POST /api/accounts/me/avatar` immediately uploads or replaces the current avatar.
   - `DELETE /api/accounts/me/avatar` clears the database reference and removes the stored image.
 
+## Administration
+
+- Administration is a private, non-indexable section under `/admin`, implemented in `libs/web/admin` and lazy-loaded from the application routes.
+- Roles are `USER`, `ADMIN`, and `SUPER_ADMIN`; user statuses are `ACTIVE` and `BLOCKED`.
+- The authenticated user's current role and status are read from the database for protected requests. Blocking a user invalidates that user's sessions.
+- Only `SUPER_ADMIN` can grant or revoke the `ADMIN` role. Administrators cannot change their own role/status, and a super-administrator cannot be blocked or demoted through the regular admin API.
+- The first super-administrator is created explicitly with `yarn admin:create-super`. The command requires `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_USERNAME`, and a `SUPER_ADMIN_PASSWORD` of at least 12 characters; it refuses to create a second super-administrator and can promote a matching existing user.
+- The API is exposed below `/api/admin` and provides dashboard statistics, user/traffic analytics, paginated/searchable users, role/status changes, map/texture-pack/forum moderation, filtered audit records, and system status.
+- Content moderation is reversible: `Map`, `TexturePack`, and `Forum` use `isHidden`; public queries exclude hidden content. Administration does not physically delete moderated content.
+- `AdminAuditLog` records role/status changes and content hide/restore actions. Audit responses resolve target names in batches; the web presenter translates technical actions/details and falls back to type plus id when the target no longer exists.
+- Admin web pages include the dashboard, users, content moderation, and audit log. All list pages support pagination and hide it when there is only one page.
+- Admin list/filter state is URL-backed where applicable:
+  - users support search;
+  - content supports tabs plus search, author, visibility, publication status, and forum category;
+  - audit supports actor nickname/username/email, action, target type/id, and date range.
+- Dangerous admin actions use confirmation modals and pending-button guards. Server authorization remains authoritative: UI confirmation is not a security boundary.
+- Loading failures are rendered separately from empty states and offer retry actions; failed mutations are also visible to administrators.
+- Site traffic is recorded once per browser session through the public visit endpoint. `SiteVisit.sessionId` makes recording idempotent; optional `visitorId` is used for unique-visitor counts and is not derived from registered users.
+- `GET /api/admin/user-analytics` returns registrations, visits, and unique visitors for arbitrary date ranges. Supported requested/effective intervals are hour/day/week/month/year; the API automatically coarsens overly detailed ranges toward roughly 400 points and returns the effective interval.
+- `GET /api/admin/system-status` is protected by admin roles and checks PostgreSQL plus S3-compatible object storage independently with a three-second timeout. It also returns API uptime, version, response times, and check time. There is no polling: the dashboard calls it on page creation and when the administrator presses the refresh button.
+- `ObjectStorage.checkAvailability()` performs a read-only signed S3 `HEAD` request against the configured bucket. Implementations and test fakes must preserve this contract.
+- The dashboard uses `ng2-charts@8.0.0` with `chart.js@4.5.1`. Chart registration stays inside the lazy admin route so it does not increase the initial public bundle.
+- `admin-web` now has its own standard Jest target/configuration. Current focused suites cover the admin guard, audit presenter, admin API rules/filters/analytics/system status, S3 availability, and texture storage consumers.
+- The admin route declares `index: false`; child routes inherit the parent SEO metadata and are emitted as `noindex, nofollow`.
+
 ## Docker and Object Storage
 
 - Root `.env` is development-only and is created from `.env.example`.
@@ -123,7 +154,8 @@
   - UFW permits only the GM Helper Compose subnet to the internal Docker-gateway address on port 5432.
 - Production deployment is managed by `/usr/local/sbin/gmhelper-deploy`, installed from `scripts/deploy-production.sh`:
   - it can be invoked from any directory but internally uses `/opt/gm-helper/backend`;
-  - it shares `/run/lock/gmhelper/maintenance.lock` with backup jobs so deploy and backup cannot overlap;
+  - it acquires `/run/lock/gmhelper/maintenance.lock` before reading or changing the repository and holds it for the full deployment;
+  - another deploy or backup waits for the same lock for up to 7200 seconds by default (`GMHELPER_MAINTENANCE_LOCK_WAIT_SECONDS` overrides the positive-integer timeout), preventing concurrent Git, image-build, migration, and container-replacement races;
   - it requires a clean worktree, at least 5 GiB free, `git pull --ff-only`, valid Compose, successful migrator, and healthy API;
   - it does not run `docker image prune`; inspect dangling images and prune only after successful deployment;
   - after an intentional force-push, use `git fetch origin master` and `git reset --hard origin/master` only when `git status --short` is empty, then rerun `gmhelper-deploy`; never use `git clean -fd` on the server.
@@ -140,15 +172,15 @@
   - local copies protect against operator errors but not physical disk loss; external backup remains future work.
 - Documentation roles:
   - `README.md`: local setup, development, and builds.
-  - `DEPLOYMENT.md`: end-to-end Linux server deployment, MinIO/R2 choice, verification, backup, and update procedure.
+  - `DEPLOYMENT.md`: end-to-end Linux server deployment, MinIO/R2 choice, verification, backup, and update procedure. It has a table of contents and a dedicated anchored section `Быстрые команды постановки frontend на сервер`.
   - `OBJECT_STORAGE.md`: S3 terminology and the internal storage architecture; do not duplicate operational instructions there.
 
 ## Angular Routing
 
-- Routes are in `apps/web/src/app/app.routes.ts`.
+- `apps/web/src/app/app.routes.ts` is the composition root. Public route definitions live in `apps/web/src/app/routing/public.routes.ts`, and authentication routes live in `apps/web/src/app/routing/auth.routes.ts`.
 - `apps/web/src/app/app.config.ts` enables `withInMemoryScrolling` with browser-history scroll restoration and anchor scrolling.
 - Authenticated area uses `BaseLayoutComponent` and `canActivateAuth`.
-- Lazy/feature routes include `home`, `profile/:id`, `forum`, `mods`, `/maps`, and the `/texture-packs` catalog.
+- Lazy/feature routes include `home`, `profile/:id`, `forum`, `mods`, `/maps`, the `/texture-packs` catalog, and the guarded `/admin` section.
 - `/texture-packs/:id` is the read-only public pack details page; `/texture-packs/:id/edit` is the separate owner editor. Keep the `/edit` route before the generic `/:id` route.
 - `workshop` loads `WorkshopPageComponent` directly.
 - `login` and `register` use `AuthLayoutComponent` and `canActivateNonAuth`.
@@ -188,6 +220,8 @@
   - During `401 -> refresh -> retry`, the same user may be authenticated twice. `CurrentAccountStore.authenticate()` must not invalidate an active profile request for the same user; request versions change only when the account actually changes or is cleared.
 - `SearchableSelectComponent` in `common-ui` accepts generic `{ value, label, description? }` options, supports local search, a scrollable list, outside-click closing, and keyboard navigation.
   - Search clear content is projected with `wmSearchableSelectClearIcon`; the dropdown indicator can be projected with `wmSearchableSelectIndicator`.
+- `SelectComponent` (`wm-select`) is the light rounded select without search. Options are projected as `wm-option`, so callers retain control of each option's content and styling. Admin analytics and filters use it.
+- `TabsComponent` in `common-ui` is the reusable tab navigation used by profile/admin layouts; keep tabs mounted while tab content loads.
 - `ToggleComponent` (`wm-toggle`) in `common-ui` is the reusable signal-friendly switch. It accepts `checked`, `disabled`, and `ariaLabel`, emits `checkedChange`, and receives its visible label through content projection.
 - `PaginationService` and `PaginationComponent` in `common-ui` are the shared query-parameter pagination implementation. `visiblePages` is computed reactively from both `currentPage` and `maxPage`; do not restore the former `untracked(maxPage)` effect because it hid pagination on initial async loads.
 - `DeskListComponent` supports `paginationInHeader`. The forum uses it so pagination sits in the brown header between the discussion count and search; a second paginator remains below the list.
@@ -325,6 +359,7 @@
 - Apply existing production migrations: `yarn db:main:deploy`.
 - Generate Prisma client: `yarn db:main:generate`.
 - Prisma seed: `yarn db:main:seed`.
+- Create the first production super-administrator: set `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_USERNAME`, and `SUPER_ADMIN_PASSWORD`, then run `yarn admin:create-super`.
 - Deploy production API with self-hosted MinIO: `yarn deploy:api:prod:docker:minio`.
 - Deploy production API with Cloudflare R2: `yarn deploy:api:prod:docker:cloudflare-r2`.
 - Verified production-server update: `gmhelper-deploy` (MinIO) or `GMHELPER_STORAGE_MODE=r2 gmhelper-deploy` (R2).
@@ -336,8 +371,9 @@
 ## Development Seed
 
 - `yarn db:main:seed` is destructive by design: it truncates the local main database, resets identities, and recreates the complete deterministic development dataset.
+- The development seed is explicitly blocked when `NODE_ENV=production`; production super-administration is created only with the one-shot `yarn admin:create-super` command.
 - The current seed creates 8 users/accounts, 36 maps (30 published), 15 texture packs (12 published), 192 textures, 55 forum discussions with nested comments, likes, and sessions.
-- All demo accounts use the shared `SEED_PASSWORD` constant from `seed/users.ts`: `Admin123`. Primary credentials are `admin@example.com / Admin123` and `user@example.com / Admin123`.
+- All demo accounts use the shared `SEED_PASSWORD` constant from `seed/users.ts`: `Admin123`. Primary credentials are `admin@example.com / Admin123` and `user@example.com / Admin123`; the seeded `admin@example.com` account has role `SUPER_ADMIN` for development only.
 - Generated texture sources live in `libs/api/database-main/src/lib/prisma/seed/assets/texture-packs`.
 - There are 12 thematic top-down fantasy materials and four orientation variants per theme. Packs keep their own theme; variants are repeated as needed to preserve the 62-texture pagination scenario in the first pack.
 - `uploadSeedImages()` uploads the real PNG source files to configured S3/MinIO and uploads only the small placeholder for seed avatars.
@@ -347,8 +383,7 @@
 ## Caveats
 
 - PowerShell displayed `README.md` and some Russian strings as mojibake during inspection; be careful with file encoding.
-- Snapshot refreshed after the user reset to commit `38334e8` (`feat(frontend): доработать дизайн страниц [главная] и [о нас]`) on 2026-08-03; the working tree was clean at refresh time.
-- Build, lint, test, smoke-test, and Docker-runtime results recorded before that reset are historical and must be rerun before relying on them.
+- Snapshot refreshed on 2026-08-14 after the administration, analytics, documentation, migration, system-status, deployment-safety, and login-validation work. The working tree contains current user/assistant changes; do not assume it is clean and do not discard or restage unrelated files.
 - Prefer existing Nx project patterns and standalone Angular conventions.
 - Before implementing a feature, identify which entity owns the state and behavior.
 - Prefer encapsulation and polymorphism over central switches or mappings that must change whenever a new subtype is introduced.
@@ -357,15 +392,19 @@
 - Keep fixes narrowly scoped. Do not change adjacent layout or behavior unless it is necessary for the requested result.
 - Production deployment was installed and smoke-tested on 2026-08-09: API health, PostgreSQL persistence, MinIO persistence, container recreation, Nginx HTTPS proxying, migrations, and log rotation worked. Backup timers remained disabled as of 2026-08-12.
 - The production host is shared with Mailcow, Nextcloud, and Portainer. Never stop/remove unknown containers or use global destructive cleanup such as `docker system prune -a` or `docker volume prune`.
+- The environment-file refactor discussed on 2026-08-12 was fully reverted. Keep the established production split: `docker/.env.prod` contains API/JWT and `OBJECT_STORAGE_*`; `docker/.env.minio.prod` contains only MinIO administration credentials. The four original files in `docker/examples` remain valid examples; do not rename them without a new explicit deployment migration plan.
+- The repository migration chain now includes `20260803232703_remove_theme_and_language`, `20260812230000_add_admin_roles`, `20260813190000_add_site_visits`, and `20260813210000_add_site_visit_visitor_id`. Production must apply them with `prisma migrate deploy`; do not replace migration deployment with `db push`.
+- The obsolete theme/language columns and values were intentionally removed without backup at the user's request. Do not restore them unless a new feature explicitly requires new schema/data.
+- Site-visit analytics requires both the `site_visits` table and its `visitor_id` column. A Prisma `42P01`/missing-table or PostgreSQL `42703`/missing-column error on `/api/admin/user-analytics` means the running database has not applied the complete migration chain.
+- Current verification on 2026-08-14 passed: API production build, web production build, `admin-api` lint/tests (12 tests), `admin-web` lint/tests (8 tests), `api-shared` tests (5 tests), `textures` lint/tests (14 tests), and `git diff --check`. `api-shared` has no lint target. The web build retains pre-existing initial-bundle and home-style budget warnings; admin/chart code remains lazy-loaded.
 
 ## Backend Repair Notes (2026-07-27)
 
 - The local PostgreSQL database originally contained legacy PascalCase tables while Prisma expected snake_case tables. This caused login to fail with a Prisma error and HTTP 500.
-- The migration chain is now registered and applied locally. The refactor migration preserves legacy data by renaming/converting tables and foreign keys instead of dropping them.
-- The migration chain currently contains twelve migrations through `20260803180000_add_forum_functionality`, including content likes and the forum schema.
+- The migration chain was registered and applied in the database inspected on 2026-07-27. This is historical information and does not describe the current local database noted above.
+- The repository migration chain contains the historical migrations listed above plus the later theme/language removal, admin-role, site-visit, and visitor-id migrations. Treat this section as repair history, not a replacement for inspecting the current migration directory.
 - The local database previously matched the Prisma schema but had no `_prisma_migrations` table because it had been created outside the migration chain. The six pre-texture migrations were safely baselined after `prisma migrate diff` confirmed that the only schema delta was `textures`; the texture migration was then deployed.
 - The invalid historical seed bcrypt placeholder was replaced. Demo credentials are `admin@example.com` / `Admin123`.
-- Login validation intentionally does not enforce registration password-strength rules; invalid credentials return 401.
 - `GlobalExceptionFilter` now sends the status calculated for Prisma errors, maps common database failures, and does not expose unexpected internal error messages.
 - API bootstrap failures are caught and logged.
 - `apps/api/project.json` regenerates the Prisma client before API builds.

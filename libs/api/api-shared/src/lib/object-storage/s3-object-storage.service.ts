@@ -35,6 +35,15 @@ export class S3ObjectStorageService implements ObjectStorage {
     };
   }
 
+  async checkAvailability(): Promise<void> {
+    const response = await this.#request('HEAD', '');
+    if (!response.ok) {
+      throw new Error(
+        `S3 availability check failed with status ${response.status}`,
+      );
+    }
+  }
+
   async put(input: PutObjectInput): Promise<void> {
     const response = await this.#request(
       'PUT',
@@ -63,7 +72,7 @@ export class S3ObjectStorageService implements ObjectStorage {
   }
 
   async #request(
-    method: 'DELETE' | 'GET' | 'PUT',
+    method: 'DELETE' | 'GET' | 'HEAD' | 'PUT',
     objectKey: string,
     body?: Buffer,
     contentType?: string,

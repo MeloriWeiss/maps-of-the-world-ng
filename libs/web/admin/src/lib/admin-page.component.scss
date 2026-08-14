@@ -1,0 +1,70 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--light-bg-color);
+}
+.admin-shell {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  min-height: 100dvh;
+}
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  box-sizing: border-box;
+  gap: 2rem;
+  padding: 2rem 1.25rem;
+  background: var(--dark-primary-color);
+  color: var(--light-color);
+}
+.admin-brand {
+  color: var(--light-color);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+nav {
+  display: grid;
+  gap: 0.5rem;
+}
+nav a,
+.back-link {
+  color: var(--light-transparent-font-color);
+  padding: 0.75rem;
+  border-radius: 0.625rem;
+}
+nav a:hover,
+nav a.active {
+  color: var(--light-color);
+  background: var(--dark-primary-bright-color);
+}
+.back-link {
+  margin-top: auto;
+}
+.admin-content {
+  padding: 2rem;
+  min-width: 0;
+  overflow: hidden;
+}
+@media (max-width: 48rem) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+  .admin-sidebar {
+    position: static;
+    height: auto;
+    gap: 1rem;
+  }
+  nav {
+    grid-template-columns: 1fr 1fr;
+  }
+  .back-link {
+    margin-top: 0;
+  }
+  .admin-content {
+    padding: 1rem;
+  }
+}

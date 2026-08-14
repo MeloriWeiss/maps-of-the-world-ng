@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--semi-dark-font-color);
+  cursor: pointer;
+}
+
+:host(:hover),
+:host(.wm-option--selected) {
+  background-color: var(--light-primary-color);
+}
+
+:host(.wm-option--selected) {
+  font-weight: 700;
+}

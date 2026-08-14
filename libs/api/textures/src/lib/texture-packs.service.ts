@@ -94,7 +94,7 @@ export class TexturePacksService {
     query: TexturePackCatalogQueryDto,
     accountId?: number,
   ) {
-    const where = { isPublished: true };
+    const where = { isPublished: true, isHidden: false };
     const [packs, total] = await this.prisma.$transaction([
       this.#findPublic(where, accountId, {
         skip: (query.page - 1) * query.pageSize,
@@ -121,6 +121,7 @@ export class TexturePacksService {
     const packs = await this.#findPublic(
       {
         isPublished: true,
+        isHidden: false,
         ...(authorUserId === undefined
           ? {}
           : { owner: { userId: authorUserId } }),
@@ -177,7 +178,7 @@ export class TexturePacksService {
 
   async getPublicPack(id: string, accountId?: number) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id, isPublished: true },
+      where: { id, isPublished: true, isHidden: false },
       select: {
         id: true,
         name: true,
@@ -312,7 +313,7 @@ export class TexturePacksService {
 
   async listPublicTextures(packId: string, query: TexturePageQueryDto) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id: packId, isPublished: true },
+      where: { id: packId, isPublished: true, isHidden: false },
       select: { id: true },
     });
     if (!pack) throw new NotFoundException('Published texture pack not found');
@@ -455,7 +456,7 @@ export class TexturePacksService {
 
   async #assertPublished(packId: string) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id: packId, isPublished: true },
+      where: { id: packId, isPublished: true, isHidden: false },
       select: { id: true },
     });
     if (!pack) throw new NotFoundException('Published texture pack not found');

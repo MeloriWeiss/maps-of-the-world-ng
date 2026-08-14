@@ -58,6 +58,8 @@ export class AuthController {
       id: user.id,
       email: user.email,
       username: user.username,
+      role: user.role,
+      status: user.status,
     };
 
     return result;
@@ -90,6 +92,8 @@ export class AuthController {
       id: user.id,
       email: user.email,
       username: user.username,
+      role: user.role,
+      status: user.status,
     };
 
     return result;

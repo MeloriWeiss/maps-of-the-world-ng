@@ -17,8 +17,5 @@ export class LoginDto {
   @ApiProperty()
   @IsDefined({ message: authConfig.password.required.message })
   @IsString()
-  @MaxLength(authConfig.password.maxLength.value, {
-    message: authConfig.password.maxLength.message,
-  })
   password!: string;
 }

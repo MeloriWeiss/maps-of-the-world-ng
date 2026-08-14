@@ -1,0 +1,15 @@
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <a class="admin-brand" routerLink="/admin">Управление сайтом</a>
+    <nav aria-label="Разделы администрирования">
+      <a routerLink="dashboard" routerLinkActive="active">Обзор</a>
+      <a routerLink="users" routerLinkActive="active">Пользователи</a>
+      <a routerLink="content" routerLinkActive="active">Контент</a>
+      <a routerLink="audit" routerLinkActive="active">Журнал</a>
+    </nav>
+    <a class="back-link" routerLink="/home">← Вернуться на сайт</a>
+  </aside>
+  <main class="admin-content">
+    <router-outlet />
+  </main>
+</div>

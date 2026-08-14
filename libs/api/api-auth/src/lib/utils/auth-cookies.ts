@@ -1,7 +1,7 @@
 import { Response } from 'express';
+import { isProd } from '@wm/api/api-shared';
 import { AuthTokens } from '@wm/shared/common';
 import { jwtConfig } from '../jwt';
-import { isProd } from './is-prod';
 
 export const setAuthCookies = (res: Response, tokens: AuthTokens) => {
   res.cookie(jwtConfig.accessToken.name, tokens.accessToken, {

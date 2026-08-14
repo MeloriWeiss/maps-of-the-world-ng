@@ -31,7 +31,9 @@ export class ForumService {
         slug: true,
         title: true,
         description: true,
-        _count: { select: { discussions: true } },
+        _count: {
+          select: { discussions: { where: { isHidden: false } } },
+        },
       },
     });
     return categories.map(({ _count, ...category }) => ({
@@ -43,6 +45,7 @@ export class ForumService {
   async discussions(query: ListForumDiscussionsDto, accountId?: number) {
     const search = query.search?.trim();
     const where = {
+      isHidden: false,
       ...(query.category ? { category: { slug: query.category } } : {}),
       ...(search
         ? {
@@ -98,8 +101,8 @@ export class ForumService {
   }
 
   async discussion(id: number, accountId?: number) {
-    const discussion = await this.prisma.forum.findUnique({
-      where: { id },
+    const discussion = await this.prisma.forum.findFirst({
+      where: { id, isHidden: false },
       select: {
         id: true,
         title: true,
@@ -240,8 +243,8 @@ export class ForumService {
   }
 
   async #assertDiscussion(id: number) {
-    const discussion = await this.prisma.forum.findUnique({
-      where: { id },
+    const discussion = await this.prisma.forum.findFirst({
+      where: { id, isHidden: false },
       select: { id: true },
     });
     if (!discussion) throw new NotFoundException('Discussion not found');

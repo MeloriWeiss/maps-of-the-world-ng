@@ -9,6 +9,7 @@ import { MapsModule } from '@wm/api/maps';
 import { TexturesModule } from '@wm/api/textures';
 import { ForumModule } from '@wm/api/forum';
 import { HealthController } from './health.controller';
+import { AdminModule } from '@wm/api/admin';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { HealthController } from './health.controller';
     MapsModule,
     TexturesModule,
     ForumModule,
+    AdminModule,
     ConfigModule.forRoot({
       isGlobal: true,
       expandVariables: true,

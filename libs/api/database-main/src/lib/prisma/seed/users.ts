@@ -82,6 +82,7 @@ export async function seedUsers(prisma: SeedPrismaClient) {
         email: userData.email,
         username: userData.username,
         passwordHash,
+        role: index === 0 ? 'SUPER_ADMIN' : 'USER',
         personalAccount: {
           create: {
             nickname: userData.nickname,

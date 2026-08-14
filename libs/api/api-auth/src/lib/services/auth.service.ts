@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { RegisterDto } from '../dto';
 import { JwtTokenPayload, UserMeta } from '../interfaces';
 import { jwtConfig } from '../jwt';
+import { UserStatus } from '@wm/shared/users';
 
 @Injectable()
 export class AuthService {
@@ -64,6 +65,9 @@ export class AuthService {
     });
 
     if (!user) throw new UnauthorizedException('Введены неверные данные');
+
+    if (user.status === UserStatus.blocked)
+      throw new UnauthorizedException('Аккаунт заблокирован');
 
     const isPasswordValid = await bcrypt.compare(
       dto.password,

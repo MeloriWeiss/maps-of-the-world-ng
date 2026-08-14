@@ -6,9 +6,14 @@ import {
 } from '@wm/web/common-ui';
 import { LabeledCheckboxComponent } from '@wm/web/common-ui';
 import { Router, RouterLink } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { firstValueFrom, tap } from 'rxjs';
-import { validateEmail, validatePassword } from '../../validators';
+import { validateEmail } from '../../validators';
 import { authConfig } from '@wm/shared/auth';
 
 @Component({
@@ -35,7 +40,7 @@ export class LoginPageComponent {
       validators: [validateEmail],
     }),
     password: new FormControl<string | null>('', {
-      validators: [validatePassword],
+      validators: [Validators.required],
     }),
   });
 

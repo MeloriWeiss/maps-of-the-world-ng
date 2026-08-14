@@ -3,6 +3,10 @@ import { ObjectStorage, PutObjectInput } from '@wm/api/api-shared';
 export class FakeObjectStorage implements ObjectStorage {
   readonly objects = new Map<string, Buffer>();
 
+  checkAvailability(): Promise<void> {
+    return Promise.resolve();
+  }
+
   put(input: PutObjectInput): Promise<void> {
     this.objects.set(input.key, Buffer.from(input.body));
     return Promise.resolve();

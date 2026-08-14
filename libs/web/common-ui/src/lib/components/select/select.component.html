@@ -1,0 +1,21 @@
+<div class="select" wmClickOutside (wmClickOutside)="close()">
+  <button
+    class="select__trigger"
+    type="button"
+    role="combobox"
+    aria-haspopup="listbox"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-controls]="optionsId"
+    [disabled]="disabled()"
+    (click)="toggle()"
+  >
+    <span>{{ selectedLabel() }}</span>
+    <span class="select__arrow" aria-hidden="true"></span>
+  </button>
+  @if (isOpen()) {
+    <div class="select__options" role="listbox" [id]="optionsId">
+      <ng-content />
+    </div>
+  }
+</div>

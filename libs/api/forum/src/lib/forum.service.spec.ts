@@ -23,7 +23,7 @@ describe('ForumService', () => {
               findUnique: findCategory,
             },
             forum: {
-              findUnique: findDiscussion,
+              findFirst: findDiscussion,
               create: createDiscussion,
             },
           },

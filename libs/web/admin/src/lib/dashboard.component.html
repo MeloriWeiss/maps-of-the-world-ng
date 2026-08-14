@@ -1,0 +1,218 @@
+<header>
+  <p class="eyebrow">Администрирование</p>
+  <h1>Обзор сайта</h1>
+</header>
+@if (isLoading()) {
+  <p>Загрузка статистики…</p>
+}
+@if (dashboardError(); as error) {
+  <div class="request-error" role="alert">
+    <span>{{ error }}</span>
+    <button type="button" (click)="loadDashboard()">Повторить</button>
+  </div>
+}
+@if (dashboard(); as data) {
+  <section class="stats" aria-label="Основные показатели">
+    <article>
+      <span>Пользователи</span><strong>{{ data.users }}</strong>
+    </article>
+    <article>
+      <span>Заблокированы</span><strong>{{ data.blockedUsers }}</strong>
+    </article>
+    <article>
+      <span>Карты</span><strong>{{ data.maps }}</strong>
+    </article>
+    <article>
+      <span>Наборы текстур</span><strong>{{ data.texturePacks }}</strong>
+    </article>
+    <article>
+      <span>Темы форума</span><strong>{{ data.discussions }}</strong>
+    </article>
+    <article>
+      <span>Комментарии</span><strong>{{ data.comments }}</strong>
+    </article>
+  </section>
+  <section class="system-card" aria-labelledby="system-status-title">
+    <div class="system-card__heading">
+      <div>
+        <h2 id="system-status-title">Состояние системы</h2>
+        <p>Доступность основных сервисов на момент последней проверки.</p>
+      </div>
+      <button
+        type="button"
+        [disabled]="systemStatusLoading()"
+        (click)="loadSystemStatus()"
+      >
+        {{ systemStatusLoading() ? 'Проверяем…' : 'Проверить' }}
+      </button>
+    </div>
+    @if (systemStatusError(); as error) {
+      <div class="request-error" role="alert">
+        <span>{{ error }}</span>
+      </div>
+    }
+    @if (systemStatus(); as system) {
+      <div class="system-grid">
+        <article>
+          <span>API</span><strong class="status-available">Доступен</strong>
+        </article>
+        <article>
+          <span>PostgreSQL</span>
+          <strong
+            [class.status-available]="
+              system.resources.database.status === 'available'
+            "
+            [class.status-unavailable]="
+              system.resources.database.status === 'unavailable'
+            "
+          >
+            {{
+              system.resources.database.status === 'available'
+                ? 'Доступна'
+                : 'Недоступна'
+            }}
+          </strong>
+          <small>{{ system.resources.database.responseTimeMs }} мс</small>
+        </article>
+        <article>
+          <span>Хранилище</span>
+          <strong
+            [class.status-available]="
+              system.resources.objectStorage.status === 'available'
+            "
+            [class.status-unavailable]="
+              system.resources.objectStorage.status === 'unavailable'
+            "
+          >
+            {{
+              system.resources.objectStorage.status === 'available'
+                ? 'Доступно'
+                : 'Недоступно'
+            }}
+          </strong>
+          <small>{{ system.resources.objectStorage.responseTimeMs }} мс</small>
+        </article>
+        <article>
+          <span>Время работы API</span><strong>{{ uptimeLabel() }}</strong>
+        </article>
+        <article>
+          <span>Версия</span><strong>{{ system.version }}</strong>
+        </article>
+        <article>
+          <span>Проверено</span
+          ><strong>{{
+            system.checkedAt | date: 'dd.MM.yyyy, HH:mm:ss'
+          }}</strong>
+        </article>
+      </div>
+    }
+  </section>
+  <section class="chart-card activity-card">
+    <div class="chart-heading">
+      <div>
+        <h2>Посещаемость и регистрации</h2>
+        <p>Один визит учитывается за браузерную сессию.</p>
+      </div>
+      <div class="period-filter" aria-label="Период статистики">
+        <button
+          type="button"
+          [class.active]="selectedPeriod() === 1"
+          (click)="selectPeriod(1)"
+        >
+          День
+        </button>
+        <button
+          type="button"
+          [class.active]="selectedPeriod() === 7"
+          (click)="selectPeriod(7)"
+        >
+          Неделя
+        </button>
+        <button
+          type="button"
+          [class.active]="selectedPeriod() === 30"
+          (click)="selectPeriod(30)"
+        >
+          Месяц
+        </button>
+      </div>
+    </div>
+    <form
+      class="custom-period"
+      [formGroup]="periodForm"
+      (ngSubmit)="applyCustomPeriod()"
+    >
+      <label>
+        С
+        <input type="date" formControlName="from" required />
+      </label>
+      <label>
+        По
+        <input type="date" formControlName="to" required />
+      </label>
+      <div class="custom-period__field">
+        <span>Шаг графика</span>
+        <wm-select
+          ariaLabel="Выбрать шаг графика"
+          [value]="periodForm.controls.interval.value"
+          (valueChange)="selectInterval($event)"
+        >
+          <wm-option value="hour" label="Час">Час</wm-option>
+          <wm-option value="day" label="День">День</wm-option>
+          <wm-option value="week" label="Неделя">Неделя</wm-option>
+          <wm-option value="month" label="Месяц">Месяц</wm-option>
+          <wm-option value="year" label="Год">Год</wm-option>
+        </wm-select>
+      </div>
+      <button type="submit">Применить</button>
+    </form>
+    @if (analyticsLoading()) {
+      <p class="loading" aria-live="polite">Загрузка данных за период…</p>
+    }
+    @if (analyticsError(); as error) {
+      <div class="request-error" role="alert">
+        <span>{{ error }}</span>
+        <button type="button" (click)="applyCustomPeriod()">Повторить</button>
+      </div>
+    }
+    @if (intervalNotice(); as notice) {
+      <p class="interval-notice" role="status">{{ notice }}</p>
+    }
+    @if (analytics(); as activity) {
+      <div class="activity-summary">
+        <p>
+          <span>Посещения</span><strong>{{ activity.summary.visits }}</strong>
+        </p>
+        <p>
+          <span>Уникальные посетители</span
+          ><strong>{{ activity.summary.uniqueVisitors }}</strong>
+        </p>
+        <p>
+          <span>Регистрации</span
+          ><strong>{{ activity.summary.registered }}</strong>
+        </p>
+      </div>
+      <div class="activity-chart">
+        <canvas
+          baseChart
+          type="line"
+          [data]="activityChartData()"
+          [options]="activityChartOptions"
+        >
+          За выбранный период: посещений {{ activity.summary.visits }},
+          уникальных посетителей {{ activity.summary.uniqueVisitors }},
+          регистраций {{ activity.summary.registered }}.
+        </canvas>
+      </div>
+    }
+  </section>
+  <section class="chart-card">
+    <h2>Распределение контента</h2>
+    <div class="chart">
+      <canvas baseChart type="doughnut" [data]="chartData()"
+        >Диаграмма распределения контента: карт {{ data.maps }}, наборов текстур
+        {{ data.texturePacks }}, тем форума {{ data.discussions }}.</canvas
+      >
+    </div>
+  </section>
+}

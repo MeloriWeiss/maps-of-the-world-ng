@@ -22,14 +22,7 @@
         type="password"
         [showPasswordToggle]="true"
         formControlName="password"
-      >
-        <div class="control-error-block" errorBlock>
-          <span class="control-error-text">{{
-            loginForm.controls.password.getError(authConfig.password.errorName)
-              ?.message
-          }}</span>
-        </div>
-      </wm-form-input>
+      ></wm-form-input>
     </wm-labeled-form-field-wrapper>
 
     <wm-labeled-checkbox

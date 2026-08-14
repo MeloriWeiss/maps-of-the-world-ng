@@ -1,0 +1,128 @@
+<header>
+  <div>
+    <p class="eyebrow">Управление доступом</p>
+    <h1>Пользователи</h1>
+    <p>Всего: {{ total() }}</p>
+  </div>
+  <form class="search" (ngSubmit)="searchUsers()">
+    <label for="admin-user-search">Поиск</label>
+    <input
+      id="admin-user-search"
+      name="search"
+      [(ngModel)]="search"
+      placeholder="Email или имя пользователя"
+    />
+    <button type="submit">Найти</button>
+  </form>
+</header>
+@if (loadError(); as error) {
+  <div class="request-error" role="alert">
+    <span>{{ error }}</span>
+    <button type="button" (click)="loadUsers()">Повторить</button>
+  </div>
+}
+@if (actionError(); as error) {
+  <p class="action-error" role="alert">{{ error }}</p>
+}
+@if (isLoading() && users().length === 0) {
+  <p>Загрузка пользователей…</p>
+}
+@if (!isLoading() || users().length > 0) {
+  <div
+    class="table-wrap"
+    [class.table-wrap--loading]="isLoading()"
+    [attr.aria-busy]="isLoading()"
+  >
+    <table>
+      <colgroup>
+        <col class="user-column" />
+        <col class="role-column" />
+        <col class="status-column" />
+        <col class="date-column" />
+        <col class="actions-column" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Пользователь</th>
+          <th>Роль</th>
+          <th>Статус</th>
+          <th>Дата регистрации</th>
+          <th><span class="visually-hidden">Действия</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>
+              <strong>{{ user.username }}</strong
+              ><span>{{ user.email }}</span>
+            </td>
+            <td>
+              <span class="badge">{{ user.role }}</span>
+            </td>
+            <td>
+              <span
+                class="status"
+                [class.blocked]="user.status === 'BLOCKED'"
+                >{{
+                  user.status === 'ACTIVE' ? 'Активен' : 'Заблокирован'
+                }}</span
+              >
+            </td>
+            <td>{{ user.createdAt | date: 'dd.MM.yyyy, HH:mm' }}</td>
+            <td class="actions">
+              <div class="actions__inner">
+                @if (isSuperAdmin() && user.role === 'USER') {
+                  <button
+                    type="button"
+                    [disabled]="pendingUserId() !== null"
+                    (click)="grantAdmin(user)"
+                  >
+                    {{
+                      pendingUserId() === user.id
+                        ? 'Сохранение…'
+                        : 'Сделать админом'
+                    }}
+                  </button>
+                }
+                @if (isSuperAdmin() && user.role === 'ADMIN') {
+                  <button
+                    type="button"
+                    [disabled]="pendingUserId() !== null"
+                    (click)="revokeAdmin(user)"
+                  >
+                    {{
+                      pendingUserId() === user.id ? 'Сохранение…' : 'Снять роль'
+                    }}
+                  </button>
+                }
+                @if (user.role !== 'SUPER_ADMIN') {
+                  <button
+                    type="button"
+                    class="danger"
+                    [disabled]="pendingUserId() !== null"
+                    (click)="toggleStatus(user)"
+                  >
+                    {{
+                      pendingUserId() === user.id
+                        ? 'Сохранение…'
+                        : user.status === 'ACTIVE'
+                          ? 'Заблокировать'
+                          : 'Разблокировать'
+                    }}
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+        @if (!isLoading() && users().length === 0) {
+          <tr>
+            <td colspan="5" class="empty">Пользователи не найдены.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <wm-pagination class="pagination" aria-label="Страницы пользователей" />
+}

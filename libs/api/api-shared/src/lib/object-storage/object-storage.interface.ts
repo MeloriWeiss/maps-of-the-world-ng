@@ -5,6 +5,7 @@ export interface PutObjectInput {
 }
 
 export interface ObjectStorage {
+  checkAvailability(): Promise<void>;
   put(input: PutObjectInput): Promise<void>;
   get(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;

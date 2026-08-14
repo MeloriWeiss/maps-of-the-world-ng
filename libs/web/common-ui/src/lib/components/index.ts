@@ -26,6 +26,9 @@ import { PopoverComponent } from './popover/popover.component';
 import { EmptyStateComponent } from './empty-state/empty-state.component';
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { ToggleComponent } from './toggle/toggle.component';
+import { SelectComponent } from './select/select.component';
+import { SelectOptionComponent } from './select/select-option.component';
+import { TabsComponent } from './tabs/tabs.component';
 
 export {
   FormInputComponent,
@@ -56,7 +59,12 @@ export {
   EmptyStateComponent,
   SearchableSelectComponent,
   ToggleComponent,
+  SelectComponent,
+  SelectOptionComponent,
+  TabsComponent,
 };
+
+export type { TabItem } from './tabs/tabs.component';
 
 export type { VirtualListItemContext } from './virtual-list/virtual-list.component';
 export type { PopoverAlignment } from './popover/popover.component';

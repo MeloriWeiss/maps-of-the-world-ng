@@ -1,0 +1,103 @@
+<header>
+  <p>Безопасность</p>
+  <h1>Журнал действий</h1>
+  <span>Записей: {{ total() }}</span>
+</header>
+<form class="filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+  <label>
+    Администратор
+    <input formControlName="actor" placeholder="Ник, логин или email" />
+  </label>
+  <div class="filter-field">
+    <span>Действие</span>
+    <wm-select
+      ariaLabel="Фильтр по действию"
+      placeholder="Все действия"
+      [value]="filtersForm.controls.action.value"
+      (valueChange)="selectAction($event)"
+    >
+      <wm-option value="" label="Все действия">Все действия</wm-option>
+      <wm-option value="USER_ROLE_CHANGED" label="Изменение роли"
+        >Изменение роли</wm-option
+      >
+      <wm-option value="USER_STATUS_CHANGED" label="Изменение статуса"
+        >Изменение статуса</wm-option
+      >
+      <wm-option value="CONTENT_VISIBILITY_CHANGED" label="Видимость контента">
+        Видимость контента
+      </wm-option>
+    </wm-select>
+  </div>
+  <div class="filter-field">
+    <span>Тип объекта</span>
+    <wm-select
+      ariaLabel="Фильтр по типу объекта"
+      placeholder="Все объекты"
+      [value]="filtersForm.controls.targetType.value"
+      (valueChange)="selectTargetType($event)"
+    >
+      <wm-option value="" label="Все объекты">Все объекты</wm-option>
+      <wm-option value="USER" label="Пользователь">Пользователь</wm-option>
+      <wm-option value="MAP" label="Карта">Карта</wm-option>
+      <wm-option value="TEXTURE_PACK" label="Набор текстур"
+        >Набор текстур</wm-option
+      >
+      <wm-option value="FORUM_DISCUSSION" label="Тема форума"
+        >Тема форума</wm-option
+      >
+    </wm-select>
+  </div>
+  <label>
+    ID объекта
+    <input formControlName="targetId" placeholder="Например, 42" />
+  </label>
+  <label>
+    С даты
+    <input type="date" formControlName="from" />
+  </label>
+  <label>
+    По дату
+    <input type="date" formControlName="to" />
+  </label>
+  <div class="filter-actions">
+    <button type="submit">Применить</button>
+    <button type="button" class="secondary" (click)="resetFilters()">
+      Сбросить
+    </button>
+  </div>
+</form>
+@if (loadError(); as error) {
+  <div class="request-error" role="alert">
+    <span>{{ error }}</span>
+    <button type="button" (click)="load()">Повторить</button>
+  </div>
+}
+@if (isLoading() && items().length === 0) {
+  <p>Загрузка журнала…</p>
+}
+<div
+  class="audit-list"
+  [class.audit-list--loading]="isLoading()"
+  [attr.aria-busy]="isLoading()"
+>
+  @for (item of items(); track item.id) {
+    <article>
+      <div>
+        <strong>{{ item.actionLabel }}</strong>
+        @if (item.changeLabel) {
+          <span>{{ item.changeLabel }}</span>
+        }
+      </div>
+      <span>{{ item.targetLabel }}</span>
+      <span>
+        {{ item.actor.personalAccount?.nickname ?? item.actor.username }} ·
+        {{ item.createdAt | date: 'dd.MM.yyyy, HH:mm' }}
+      </span>
+    </article>
+  } @empty {
+    @if (!isLoading() && !loadError()) {
+      <p>Действий пока не зафиксировано.</p>
+    }
+  }
+</div>
+<wm-pagination class="pagination" aria-label="Страницы журнала действий" />

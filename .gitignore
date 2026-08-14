@@ -60,8 +60,7 @@ package-lock.json
 #!.yarn/cache
 .pnp.*
 
-.nx/cache
-.nx/workspace-data
+/.nx/
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 .angular

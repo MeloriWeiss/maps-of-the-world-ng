@@ -62,4 +62,17 @@ describe('S3ObjectStorageService', () => {
       expect.objectContaining({ method: 'GET' }),
     );
   });
+
+  it('checks bucket availability without modifying objects', async () => {
+    const fetchSpy = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 200 }));
+    const service = new S3ObjectStorageService(new ConfigService(config));
+
+    await expect(service.checkAvailability()).resolves.toBeUndefined();
+    expect(fetchSpy).toHaveBeenCalledWith(
+      new URL('http://localhost:9000/textures-dev/'),
+      expect.objectContaining({ method: 'HEAD' }),
+    );
+  });
 });

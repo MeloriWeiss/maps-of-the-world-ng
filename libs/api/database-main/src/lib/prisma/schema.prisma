@@ -12,11 +12,54 @@ model User {
   email        String @unique
   username     String @unique
   passwordHash String @map("password_hash")
+  role         UserRole @default(USER)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
 
   personalAccount PersonalAccount? @relation("UserPersonalAccount")
   sessions        UserSession[]
+  auditLogs       AdminAuditLog[] @relation("AuditActor")
 
   @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+model AdminAuditLog {
+  id         Int      @id @default(autoincrement())
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  actorId Int  @map("actor_id")
+  actor   User @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@map("admin_audit_logs")
+}
+
+model SiteVisit {
+  id        BigInt   @id @default(autoincrement())
+  sessionId String   @unique @map("session_id") @db.Uuid
+  visitorId String?  @map("visitor_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([visitorId, createdAt])
+  @@map("site_visits")
 }
 
 model Map {
@@ -25,6 +68,7 @@ model Map {
   body          String
   description   String?
   isPublished   Boolean @default(false) @map("is_published")
+  isHidden      Boolean @default(false) @map("is_hidden")
   likesCount    Int     @default(0) @map("likes_count")
   commentsCount Int     @default(0) @map("comments_count")
   accountId     Int     @map("account_id")
@@ -62,6 +106,7 @@ model TexturePack {
   name        String
   description String?
   isPublished Boolean   @default(false) @map("is_published")
+  isHidden    Boolean   @default(false) @map("is_hidden")
   likesCount  Int       @default(0) @map("likes_count")
   publishedAt DateTime? @map("published_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -127,6 +172,7 @@ model Forum {
   commentsCount Int    @default(0) @map("comments_count")
   authorId      Int    @map("author_id")
   categoryId    Int    @map("category_id")
+  isHidden      Boolean @default(false) @map("is_hidden")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

@@ -11,7 +11,6 @@ import {
   NavigationEnd,
   Router,
   RouterLink,
-  RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
 import {
@@ -21,6 +20,8 @@ import {
   PopoverComponent,
   SuccessToastComponent,
   SvgComponent,
+  TabItem,
+  TabsComponent,
   ToastService,
 } from '@wm/web/common-ui';
 import {
@@ -45,10 +46,10 @@ const emptySummary: ProfileSummaryDto = {
   selector: 'wm-profile-page-layout',
   imports: [
     RouterOutlet,
-    SvgComponent,
     RouterLink,
-    RouterLinkActive,
+    SvgComponent,
     PopoverComponent,
+    TabsComponent,
   ],
   templateUrl: './profile-page-layout.component.html',
   styleUrl: './profile-page-layout.component.scss',
@@ -73,6 +74,17 @@ export class ProfilePageLayoutComponent {
   );
   readonly profileId = this.#route.parent?.snapshot.paramMap.get('id') ?? 'me';
   readonly isOwnProfile = this.profileId === 'me';
+  readonly profileTabs: readonly TabItem[] = [
+    { id: 'maps', label: 'Карты', routerLink: ['maps'] },
+    {
+      id: 'texture-packs',
+      label: 'Текстур-паки',
+      routerLink: ['texture-packs'],
+    },
+    ...(this.isOwnProfile
+      ? [{ id: 'favourite', label: 'Понравилось', routerLink: ['favourite'] }]
+      : []),
+  ];
   readonly summary = computed(() =>
     this.isOwnProfile
       ? (this.#currentAccountStore.profile() ?? emptySummary)

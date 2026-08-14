@@ -159,60 +159,6 @@
 
 .profile__nav {
   margin-bottom: rem(30);
-  overflow-x: auto;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.profile__tabs-list {
-  background-color: var(--dark-primary-transparent-color);
-  display: flex;
-  width: 100%;
-  min-width: rem(430);
-  padding: rem(4);
-  border-radius: rem(12);
-
-  @include mobile {
-    min-width: max-content;
-  }
-}
-
-.profile__tabs-item {
-  flex: 1 0 0;
-
-  @include mobile {
-    flex-basis: auto;
-  }
-}
-
-.profile__tabs-link {
-  line-height: rem(21);
-  padding: rem(8) rem(20);
-  border-radius: rem(8);
-  color: var(--light-color);
-  display: block;
-  font-size: rem(16);
-  transition:
-    background-color 0.2s,
-    color 0.2s;
-  font-family: 'Play', sans-serif;
-  text-decoration: none;
-  text-align: center;
-  white-space: nowrap;
-
-  @include mobile {
-    font-size: rem(14);
-    padding: rem(7) rem(18);
-  }
-
-  &.active,
-  &:hover {
-    background-color: var(--light-color);
-    color: var(--dark-primary-color);
-  }
 }
 
 .page-content {

@@ -1,0 +1,28 @@
+<nav class="tabs" [attr.aria-label]="ariaLabel()">
+  <ul class="tabs__list" [attr.role]="activeTab() !== null ? 'tablist' : null">
+    @for (tab of tabs(); track tab.id) {
+      <li class="tabs__item">
+        @if (tab.routerLink; as routerLink) {
+          <a
+            class="tabs__control"
+            [routerLink]="routerLink"
+            routerLinkActive="tabs__control--active"
+          >
+            {{ tab.label }}
+          </a>
+        } @else {
+          <button
+            class="tabs__control"
+            type="button"
+            role="tab"
+            [attr.aria-selected]="activeTab() === tab.id"
+            [class.tabs__control--active]="activeTab() === tab.id"
+            (click)="selectTab(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </li>
+    }
+  </ul>
+</nav>

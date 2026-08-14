@@ -17,12 +17,22 @@ export class UsersService {
       id: user.id,
       email: user.email,
       username: user.username,
+      role: user.role,
+      status: user.status,
     };
 
     return result;
   }
 
   getUsers() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        status: true,
+      },
+    });
   }
 }

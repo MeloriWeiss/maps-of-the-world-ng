@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { jwtConfig, jwtStrategies } from '../consts';
 import { extractFromCookie } from '../../utils';
 import { JwtTokenPayload, RefreshPayload } from '../../interfaces';
+import { UserStatus } from '@wm/shared/users';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -38,6 +39,14 @@ export class JwtRefreshStrategy extends PassportStrategy(
     const refreshToken = extractFromCookie(jwtConfig.refreshToken.name)(req);
 
     if (!refreshToken) throw new UnauthorizedException('Missing refresh token');
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { status: true },
+    });
+
+    if (!user || user.status === UserStatus.blocked)
+      throw new UnauthorizedException('Account is unavailable');
 
     const sessions = await this.prisma.userSession.findMany({
       where: { userId: payload.sub },

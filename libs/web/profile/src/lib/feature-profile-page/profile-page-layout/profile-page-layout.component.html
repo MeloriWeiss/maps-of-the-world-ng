@@ -108,39 +108,11 @@
   </div>
 
   @if (!isEditing()) {
-    <nav class="profile__nav" aria-label="Разделы профиля">
-      <ul class="profile__tabs-list">
-        <li class="profile__tabs-item">
-          <a
-            [routerLink]="['maps']"
-            routerLinkActive="active"
-            class="profile__tabs-link"
-          >
-            Карты
-          </a>
-        </li>
-        <li class="profile__tabs-item">
-          <a
-            [routerLink]="['texture-packs']"
-            routerLinkActive="active"
-            class="profile__tabs-link"
-          >
-            Текстур-паки
-          </a>
-        </li>
-        @if (isOwnProfile) {
-          <li class="profile__tabs-item">
-            <a
-              [routerLink]="['favourite']"
-              routerLinkActive="active"
-              class="profile__tabs-link"
-            >
-              Понравилось
-            </a>
-          </li>
-        }
-      </ul>
-    </nav>
+    <wm-tabs
+      class="profile__nav"
+      [tabs]="profileTabs"
+      ariaLabel="Разделы профиля"
+    />
   }
 
   <div class="profile-body">

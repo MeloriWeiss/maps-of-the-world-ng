@@ -1,0 +1,201 @@
+<header>
+  <p class="eyebrow">Модерация</p>
+  <h1>Контент</h1>
+  <p>Скрытые материалы недоступны в публичных каталогах, но сохраняются.</p>
+</header>
+
+<wm-tabs
+  [tabs]="tabs"
+  [activeTab]="activeTab()"
+  ariaLabel="Тип контента"
+  (tabChange)="selectTab($event)"
+/>
+
+<form class="filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+  <label>
+    Поиск
+    <input formControlName="search" placeholder="Название материала" />
+  </label>
+  <label>
+    Автор
+    <input formControlName="author" placeholder="Ник автора" />
+  </label>
+  <div class="filter-field">
+    <span>Видимость</span>
+    <wm-select
+      ariaLabel="Фильтр по видимости"
+      placeholder="Все материалы"
+      [value]="filtersForm.controls.visibility.value"
+      (valueChange)="selectVisibility($event)"
+    >
+      <wm-option value="" label="Все материалы">Все материалы</wm-option>
+      <wm-option value="visible" label="Видимые">Видимые</wm-option>
+      <wm-option value="hidden" label="Скрытые">Скрытые</wm-option>
+    </wm-select>
+  </div>
+  @if (activeTab() !== 'discussions') {
+    <div class="filter-field">
+      <span>Публикация</span>
+      <wm-select
+        ariaLabel="Фильтр по публикации"
+        placeholder="Все статусы"
+        [value]="filtersForm.controls.publication.value"
+        (valueChange)="selectPublication($event)"
+      >
+        <wm-option value="" label="Все статусы">Все статусы</wm-option>
+        <wm-option value="published" label="Опубликованные"
+          >Опубликованные</wm-option
+        >
+        <wm-option value="draft" label="Черновики">Черновики</wm-option>
+      </wm-select>
+    </div>
+  } @else {
+    <label>
+      Категория
+      <input formControlName="category" placeholder="Название категории" />
+    </label>
+  }
+  <div class="filter-actions">
+    <button type="submit">Применить</button>
+    <button type="button" class="secondary" (click)="resetFilters()">
+      Сбросить
+    </button>
+  </div>
+</form>
+
+@if (loadError(); as error) {
+  <div class="request-error" role="alert">
+    <span>{{ error }}</span>
+    <button type="button" (click)="retryLoad()">Повторить</button>
+  </div>
+}
+@if (actionError(); as error) {
+  <p class="action-error" role="alert">{{ error }}</p>
+}
+
+@if (isLoading() && !hasActiveItems()) {
+  <p class="loading">Загрузка контента…</p>
+}
+@if (!isLoading() || hasActiveItems()) {
+  @if (activeTab() === 'maps') {
+    <section
+      role="tabpanel"
+      [class.section--loading]="isLoading()"
+      [attr.aria-busy]="isLoading()"
+    >
+      <h2>Карты</h2>
+      <div class="items">
+        @for (item of maps(); track item.id) {
+          <article [class.hidden]="item.isHidden">
+            <div>
+              <strong>{{ item.name }}</strong
+              ><span>{{ item.authorAccount.nickname }}</span>
+            </div>
+            <div class="meta">
+              {{ item.isPublished ? 'Опубликована' : 'Черновик' }} ·
+              {{ item.likesCount }} отметок ·
+              {{ item.commentsCount }} комментариев
+            </div>
+            <button
+              type="button"
+              [disabled]="pendingMapId() !== null"
+              (click)="toggleMap(item)"
+            >
+              {{
+                pendingMapId() === item.id
+                  ? 'Сохранение…'
+                  : item.isHidden
+                    ? 'Вернуть'
+                    : 'Скрыть'
+              }}
+            </button>
+          </article>
+        } @empty {
+          <p>Карт пока нет.</p>
+        }
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'texture-packs') {
+    <section
+      role="tabpanel"
+      [class.section--loading]="isLoading()"
+      [attr.aria-busy]="isLoading()"
+    >
+      <h2>Наборы текстур</h2>
+      <div class="items">
+        @for (item of texturePacks(); track item.id) {
+          <article [class.hidden]="item.isHidden">
+            <div>
+              <strong>{{ item.name }}</strong
+              ><span>{{ item.owner.nickname }}</span>
+            </div>
+            <div class="meta">
+              {{ item.isPublished ? 'Опубликован' : 'Черновик' }} ·
+              {{ item._count.textures }} текстур · {{ item.likesCount }} отметок
+            </div>
+            <button
+              type="button"
+              [disabled]="pendingTexturePackId() !== null"
+              (click)="toggleTexturePack(item)"
+            >
+              {{
+                pendingTexturePackId() === item.id
+                  ? 'Сохранение…'
+                  : item.isHidden
+                    ? 'Вернуть'
+                    : 'Скрыть'
+              }}
+            </button>
+          </article>
+        } @empty {
+          <p>Наборов пока нет.</p>
+        }
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'discussions') {
+    <section
+      role="tabpanel"
+      [class.section--loading]="isLoading()"
+      [attr.aria-busy]="isLoading()"
+    >
+      <h2>Темы форума</h2>
+      <div class="items">
+        @for (item of discussions(); track item.id) {
+          <article [class.hidden]="item.isHidden">
+            <div>
+              <strong>{{ item.title }}</strong
+              ><span
+                >{{ item.category.title }} ·
+                {{ item.authorAccount.nickname }}</span
+              >
+            </div>
+            <div class="meta">
+              {{ item.likesCount }} отметок ·
+              {{ item.commentsCount }} комментариев
+            </div>
+            <button
+              type="button"
+              [disabled]="pendingDiscussionId() !== null"
+              (click)="toggleDiscussion(item)"
+            >
+              {{
+                pendingDiscussionId() === item.id
+                  ? 'Сохранение…'
+                  : item.isHidden
+                    ? 'Вернуть'
+                    : 'Скрыть'
+              }}
+            </button>
+          </article>
+        } @empty {
+          <p>Тем форума пока нет.</p>
+        }
+      </div>
+    </section>
+  }
+  <wm-pagination class="pagination" aria-label="Страницы контента" />
+}

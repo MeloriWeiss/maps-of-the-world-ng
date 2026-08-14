@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
 import { SvgComponent } from '../svg/svg.component';
 import { PaginationService } from './pagination.service';
 
@@ -8,6 +13,9 @@ import { PaginationService } from './pagination.service';
   templateUrl: './pagination.component.html',
   styleUrl: './pagination.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[style.display]': 'isVisible() ? null : "none"',
+  },
 })
 export class PaginationComponent {
   #paginationService = inject(PaginationService);
@@ -15,6 +23,7 @@ export class PaginationComponent {
   currentPage = this.#paginationService.currentPage;
   maxPage = this.#paginationService.maxPage;
   visiblePages = this.#paginationService.visiblePages;
+  isVisible = computed(() => (this.maxPage() ?? 0) > 1);
 
   changePage(page: number | '...') {
     if (page === '...') return;
