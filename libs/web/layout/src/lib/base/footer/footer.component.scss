@@ -4,9 +4,9 @@
 
 :host {
   display: block;
-  background-color: var(--dark-primary-color);
+  background-color: var(--bg-surface-main-color);
   padding: fluid(32, 19) fluid(277, 80) fluid(36, 32) fluid(107, 97);
-  color: var(--light-color);
+  color: var(--text-light-color);
 }
 
 .footer-content {
@@ -57,7 +57,7 @@
 
   .policy-link {
     text-decoration: underline;
-    color: var(--light-color);
+    color: var(--text-light-color);
     @include fluid-text(14, 11);
     line-height: rem(16);
   }

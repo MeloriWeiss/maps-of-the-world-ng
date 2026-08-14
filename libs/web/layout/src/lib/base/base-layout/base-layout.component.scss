@@ -1,3 +1,5 @@
+@use 'functions' as *;
+
 :host {
   min-height: 100dvh;
   display: flex;
@@ -5,7 +7,7 @@
 }
 
 .footer-spy {
-  height: 161px;
+  height: rem(161);
 }
 
 :host > div:not(.footer) {

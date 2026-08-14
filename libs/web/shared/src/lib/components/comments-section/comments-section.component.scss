@@ -4,10 +4,14 @@
 
 :host {
   display: block;
-  background-color: var(--light-color);
+  background-color: var(--bg-card-color);
   padding: fluid(12, 11) fluid(20, 8);
   border-radius: fluid(15, 10);
-  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgb(from var(--dark-color) r g b / 25%);
+  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgb(from var(--shadow-color) r g b / 6%);
+
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .comments-section__title {
@@ -15,7 +19,7 @@
   font-family: 'Play', sans-serif;
   font-weight: 400;
   line-height: fluid(21, 16);
-  color: var(--dark-color);
+  color: var(--text-primary-color);
   margin-bottom: rem(15);
 }
 
@@ -25,5 +29,17 @@
 
 .cancel-reply {
   margin-bottom: rem(12);
-  color: var(--blue-link-color);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: rem(14);
+  font-weight: 600;
+  color: var(--text-secondary-color);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--error-color);
+  }
 }

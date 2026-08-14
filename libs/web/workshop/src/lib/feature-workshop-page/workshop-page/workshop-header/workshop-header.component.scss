@@ -1,24 +1,25 @@
 ﻿@use 'functions' as *;
+@use 'mixins' as *;
 
 :host {
   display: block;
-  height: 58px;
-  color: var(--light-color);
-  background: var(--dark-primary-bright-color);
-  border-bottom: 1px solid rgb(from var(--light-color) r g b / 18%);
+  height: rem(58);
+  color: var(--text-light-color);
+  background: var(--bg-surface-main-color);
+  border-bottom: rem(1) solid rgb(from var(--light-color) r g b / 18%);
 }
 
 .controls__header {
   display: flex;
   align-items: center;
   height: 100%;
-  padding: 0 16px 0 8px;
-  gap: 22px;
+  padding: 0 rem(16) 0 rem(8);
+  gap: rem(22);
 }
 
 .controls__logo {
-  width: 46px;
-  height: 46px;
+  width: rem(46);
+  height: rem(46);
   object-fit: contain;
 }
 
@@ -32,6 +33,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--text-light-color);
   }
 }
 
@@ -39,8 +41,8 @@
   flex: 0 0 auto;
   padding: rem(5) rem(8);
   border-radius: rem(999);
-  color: var(--dark-primary-color);
-  background-color: var(--light-primary-color);
+  color: var(--btn-primary-text-color);
+  background-color: var(--bg-surface-light-color);
   font-size: rem(12);
 }
 
@@ -52,18 +54,29 @@
   margin-left: auto;
 
   a {
-    color: var(--light-color);
+    color: var(--text-light-color);
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
   button {
     padding: rem(8) rem(12);
     border-radius: rem(6);
-    color: var(--dark-primary-color);
-    background-color: var(--light-color);
+    color: var(--btn-primary-text-color);
+    background-color: var(--bg-surface-light-color);
     font-weight: 700;
+    transition: opacity 0.2s ease;
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
 
     &:disabled {
       opacity: 0.55;
+      color: var(--text-popover-muted-color);
     }
   }
 
@@ -73,28 +86,29 @@
     gap: rem(5);
 
     &.active {
-      color: var(--error-color);
+      color: var(--red-color);
     }
   }
 }
 
 .controls__history {
   display: flex;
-  gap: 8px;
+  gap: rem(8);
 
   button {
     display: grid;
     place-items: center;
-    width: 35px;
-    height: 22px;
-    color: var(--light-color);
-    background: var(--primary-color);
-    border-radius: 5px;
-    font-size: 24px;
+    width: rem(35);
+    height: rem(22);
+    color: var(--text-inverse-color);
+    background: var(--btn-primary-bg-color);
+    border-radius: rem(5);
+    font-size: rem(24);
     line-height: 1;
 
     &:hover {
-      background: var(--primary-color);
+      background: var(--btn-primary-bg-color);
+      opacity: 0.9;
     }
   }
 }
@@ -114,11 +128,11 @@
     width: rem(18);
     height: rem(2);
     border-radius: rem(2);
-    background-color: var(--light-color);
+    background-color: var(--text-light-color);
   }
 
   &:hover {
-    background-color: rgb(from var(--light-color) r g b / 10%);
+    background-color: rgb(from var(--text-light-color) r g b / 10%);
   }
 }
 
@@ -127,15 +141,18 @@
   width: rem(320);
   padding: rem(18);
   gap: rem(14);
+  background-color: var(--bg-popover-color);
+  border: rem(1) solid var(--border-popover-color);
 
   h2 {
     font-size: rem(18);
+    color: var(--text-popover-primary-color);
   }
 
   label {
     display: grid;
     gap: rem(5);
-    color: var(--light-gray-font-color);
+    color: var(--text-popover-muted-color);
     font-size: rem(13);
   }
 
@@ -143,15 +160,15 @@
   textarea {
     width: 100%;
     padding: rem(8) rem(10);
-    border: rem(1) solid var(--light-gray-color);
+    border: rem(1) solid var(--border-input-color);
     border-radius: rem(5);
     outline: none;
-    color: var(--semi-dark-font-color);
-    background-color: var(--light-color);
+    color: var(--text-primary-color);
+    background-color: var(--bg-input-color);
     font: inherit;
 
     &:focus {
-      border-color: var(--primary-color);
+      border-color: var(--btn-primary-bg-color);
     }
   }
 
@@ -165,10 +182,10 @@
     padding: rem(8) rem(10);
     align-items: center;
     justify-content: center;
-    border: rem(1) solid var(--primary-color);
+    border: rem(1) solid var(--border-input-color);
     border-radius: rem(5);
-    color: var(--dark-primary-color);
-    background-color: var(--light-primary-color);
+    color: var(--btn-secondary-text-color);
+    background-color: var(--btn-secondary-bg-color);
     font-size: rem(14);
     font-weight: 700;
     transition:
@@ -177,8 +194,8 @@
 
     &:hover,
     &:focus-visible {
-      color: var(--light-color);
-      background-color: var(--dark-primary-color);
+      color: var(--btn-primary-text-color);
+      background-color: var(--btn-primary-bg-color);
       outline: none;
     }
   }
@@ -192,11 +209,11 @@
   button {
     padding: rem(8);
     border-radius: rem(5);
-    color: var(--light-color);
-    background-color: var(--dark-primary-color);
+    color: var(--btn-primary-text-color);
+    background-color: var(--btn-primary-bg-color);
 
     &:hover:not(:disabled) {
-      background-color: var(--dark-primary-bright-color);
+      opacity: 0.9;
     }
 
     &:disabled {
@@ -207,13 +224,13 @@
 }
 
 .controls__map-menu-status {
-  color: var(--light-gray-font-color);
+  color: var(--text-popover-muted-color);
   font-size: rem(13);
 }
 
 .controls__divider {
-  width: 1px;
-  height: 40px;
+  width: rem(1);
+  height: rem(40);
   background: rgb(from var(--light-color) r g b / 45%);
 }
 
@@ -222,7 +239,7 @@
 }
 
 .controls__select-clear {
-  color: var(--light-color);
+  color: var(--text-light-color);
   font-size: rem(20);
   line-height: 1;
 }
@@ -231,65 +248,72 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: rem(6);
 
   input {
-    width: 112px;
-    padding: 6px 8px;
-    color: var(--light-bg-color);
-    background: var(--semi-dark-font-color);
-    border: 1px solid rgb(from var(--light-color) r g b / 22%);
-    border-radius: 4px;
+    width: rem(112);
+    padding: rem(6) rem(8);
+    font-family: 'Play', sans-serif;
+    color: var(--text-light-color);
+    background: var(--bg-surface-main-color);
+    border: rem(1) solid rgb(from var(--light-color) r g b / 22%);
+    border-radius: rem(4);
   }
 
   button {
-    padding: 6px 10px;
-    color: var(--light-color);
-    background: var(--primary-color);
-    border-radius: 4px;
+    padding: rem(6) rem(10);
+    font-family: 'Play', sans-serif;
+    background-color: var(--btn-primary-bg-color);
+    color: var(--btn-primary-text-color);
+    border-radius: rem(4);
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
   }
 }
 
 .controls__status {
   position: absolute;
-  top: 34px;
+  top: rem(34);
   left: 0;
   z-index: 20;
-  padding: 5px 8px;
-  color: var(--semi-dark-font-color);
-  background: var(--light-primary-color);
-  border-radius: 4px;
-  box-shadow: 0 3px 12px rgb(from var(--dark-color) r g b / 25%);
-  font-size: 12px;
+  padding: rem(5) rem(8);
+  color: var(--text-popover-primary-color);
+  background: var(--bg-surface-primary-color);
+  border-radius: rem(4);
+  box-shadow: 0 rem(3) rem(12) rgb(from var(--shadow-color) r g b / 25%);
+  font-size: rem(12);
   white-space: nowrap;
 }
 
 .controls__setting {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 145px;
-  font-size: 17px;
+  gap: rem(10);
+  min-width: rem(145);
+  font-size: rem(17);
   white-space: nowrap;
 
   input[type='range'] {
     position: absolute;
-    width: 1px;
-    height: 1px;
+    width: rem(1);
+    height: rem(1);
     opacity: 0;
   }
 }
 
 .controls__color {
-  width: 18px;
-  height: 18px;
+  width: rem(18);
+  height: rem(18);
   padding: 0;
   overflow: hidden;
-  background: var(--light-color);
+  background: var(--bg-surface-light-color);
   border: 0;
   border-radius: 50%;
 }
 
 .controls__drop {
-  font-size: 20px;
+  font-size: rem(20);
 }

@@ -2,7 +2,13 @@
 @use 'mixins' as *;
 
 :host {
+  display: block;
+  min-height: 100dvh;
+  background-color: var(--bg-main-color);
+
   &.only-error-info {
+    min-height: auto;
+
     .container {
       height: auto;
     }
@@ -13,29 +19,95 @@
   display: grid;
   place-content: center;
   height: 100dvh;
+  position: relative;
+  overflow: hidden;
 }
 
 .error-block {
+  position: relative;
   max-width: rem(500);
-  border-radius: rem(14);
-  background-color: var(--light-primary-color);
-  padding: rem(18) rem(30) rem(30);
+  border-radius: rem(20);
+  padding: rem(40) rem(30);
   text-align: center;
   @include flex-center();
   flex-direction: column;
-  gap: rem(20);
+  gap: rem(24);
+  z-index: 2;
+
+  background-color: rgb(from var(--bg-card-color) r g b / 80%);
+  backdrop-filter: blur(rem(12));
+  border: rem(1) solid rgb(from var(--border-input-color) r g b / 30%);
+  box-shadow: 0 rem(20) rem(50) var(--shadow-color);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: rem(300);
+    height: rem(300);
+    border-radius: 50%;
+
+    background: radial-gradient(
+      circle,
+      rgb(from var(--purple-color) r g b / 25%) 0%,
+      transparent 70%
+    );
+
+    filter: blur(rem(30));
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '⚄';
+    position: absolute;
+    top: rem(-35);
+    font-size: rem(50);
+    color: var(--red-color);
+    background: var(--bg-card-color);
+    width: rem(70);
+    height: rem(70);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: rem(1) solid rgb(from var(--border-input-color) r g b / 40%);
+    box-shadow: 0 rem(4) rem(12) var(--shadow-color);
+  }
 }
 
 .error-code {
-  @include fluid-text(60, 45);
+  @include fluid-text(72, 50);
+  font-family: 'Platypi', serif;
   font-weight: 800;
+  line-height: 1;
+  margin-top: rem(10);
+  background: linear-gradient(135deg, var(--red-color), var(--purple-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: rem(2);
 }
 
 .error-text {
-  @include fluid-text(30, 20);
-  font-weight: 800;
+  @include fluid-text(22, 16);
+  font-family: 'Play', sans-serif;
+  font-weight: 700;
+  color: var(--text-primary-color);
+  line-height: 1.4;
+  max-width: rem(380);
+
+  &::after {
+    content: 'Вы провалили проверку на внимательность. Путь дальше скрыт туманом войны.';
+    display: block;
+    font-size: rem(13);
+    font-weight: 400;
+    color: var(--text-muted-color);
+    margin-top: rem(10);
+  }
 }
 
 .button {
-  width: rem(140);
+  width: rem(160);
+  margin-top: rem(10);
 }

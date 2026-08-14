@@ -12,13 +12,17 @@
   display: flex;
   flex-direction: column;
   padding-bottom: rem(12);
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
 }
 
 .sidebar-filters {
   display: block;
   border-radius: rem(10);
-  background-color: var(--dark-primary-transparent-color);
+  background-color: var(--bg-surface-main-color);
   min-height: rem(400);
+  box-shadow: 0 rem(4) rem(12) rgb(from var(--shadow-color) r g b / 5%);
 
   @include tablet {
     display: none;
@@ -28,7 +32,8 @@
 .title {
   font-size: rem(18);
   line-height: rem(21);
-  color: var(--light-color);
+  font-family: 'Play', sans-serif;
+  color: var(--text-muted-color);
   text-align: center;
   padding: rem(13) rem(20) rem(3);
 }
@@ -43,22 +48,28 @@
 
 .sidebar-mobile {
   display: none;
+
   @include tablet {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-weight: 400;
-    background-color: var(--dark-primary-transparent-color);
-    padding-left: rem(8);
+    border-radius: rem(6);
+    background-color: var(--bg-surface-main-color);
+    color: var(--text-light-color);
+    padding-left: rem(12);
     padding-right: rem(12);
   }
 }
 
 .new-action-btn {
-  background-color: var(--primary-color);
-  text-align: center;
-  font-weight: 700;
+  @include tablet {
+    padding-top: rem(13);
+    padding-bottom: rem(11);
+  }
 }
 
 .svg15 {
   transform: rotate(90deg);
+  fill: currentColor;
 }

@@ -5,9 +5,18 @@
 :host {
   display: block;
   padding: rem(9) rem(16) rem(9);
-  background-color: var(--light-color);
+  background-color: var(--bg-card-color);
   border-radius: fluid(15, 10);
-  box-shadow: 0 rem(4) rem(4) rgb(from var(--dark-color) r g b / 25%);
+  box-shadow: 0 rem(4) rem(4) rgb(from var(--shadow-color) r g b / 8%);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 rem(6) rem(12) rgb(from var(--shadow-color) r g b / 12%);
+  }
 }
 
 .card-preview {
@@ -30,11 +39,27 @@
   border: none;
   background: none;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0;
+  color: var(--text-secondary-color);
+
+  transition:
+    transform 0.3s ease,
+    color 0.2s ease;
+
+  svg {
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: var(--text-primary-color);
+  }
 
   &.active {
     transform: rotateZ(90deg);
+    color: var(--btn-primary-bg-color);
   }
 }
 
@@ -44,6 +69,7 @@
   justify-self: start;
   gap: rem(2);
   cursor: pointer;
+  text-decoration: none;
 
   @include mobile {
     margin-left: rem(-13);
@@ -54,14 +80,18 @@
   @include fluid-text(20, 14);
   font-family: 'Play', sans-serif;
   line-height: fluid(23, 16);
-  color: var(--semi-dark-font-color);
+  color: var(--text-primary-color);
+
+  .header:hover & {
+    color: var(--btn-primary-bg-color);
+  }
 }
 
 .mode-username {
   font-family: 'Platypi', serif;
   @include fluid-text(18, 11);
   line-height: fluid(25, 15);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
 }
 
 .statistics {
@@ -73,8 +103,18 @@
   @include flex-center();
   @include fluid-text(18, 11);
   line-height: rem(15);
-  color: var(--dark-primary-color);
+  text-decoration: none;
   gap: fluid(4, 2);
+
+  color: var(--text-secondary-color);
+
+  svg {
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: var(--btn-primary-bg-color);
+  }
 
   .svg-heart {
     margin-top: rem(1);
@@ -85,16 +125,24 @@
   @include fluid-text(14, 11);
   line-height: rem(16);
   max-height: fit-content;
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
   padding: fluid(8, 5) rem(38) fluid(20, 10);
+  margin-top: rem(8);
 
   @include mobile {
     margin-left: rem(-13);
   }
 }
 
-.card-extra.is-opened {
-  padding-bottom: rem(11);
+.card-extra {
+  border-top: rem(1) solid transparent;
+  transition: border-color 0.3s ease;
+  margin-top: rem(8);
+
+  &.is-opened {
+    padding-bottom: rem(11);
+    border-color: var(--border-popover-color);
+  }
 }
 
 .svg18 {

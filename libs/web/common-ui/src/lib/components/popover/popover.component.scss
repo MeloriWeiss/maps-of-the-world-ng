@@ -16,11 +16,11 @@
   top: calc(100% + #{rem(10)});
   min-width: rem(180);
   overflow: hidden;
-  border: rem(1) solid var(--light-primary-color);
+  border: rem(1) solid var(--border-popover-color);
   border-radius: rem(12);
-  background-color: var(--light-color);
-  box-shadow: 0 rem(6) rem(16) var(--dark-primary-transparent-color);
-  color: var(--dark-color);
+  background-color: var(--bg-popover-color);
+  box-shadow: 0 rem(6) rem(16) rgb(from var(--shadow-color) r g b / 16%);
+  color: var(--text-popover-primary-color);
 
   &--start {
     left: 0;

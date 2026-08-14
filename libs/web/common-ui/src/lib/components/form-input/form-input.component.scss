@@ -8,7 +8,7 @@
     }
 
     .form-input {
-      border-color: var(--error-color);
+      border-color: var(--red-color);
     }
   }
 }
@@ -16,15 +16,16 @@
 .form-input {
   width: 100%;
   height: rem(32);
-  border: rem(1) solid var(--light-gray-color);
-  color: var(--dark-color);
+  color: var(--text-primary-color);
+  background-color: var(--bg-input-color);
+  border: rem(1) solid var(--border-input-color);
   border-radius: rem(10);
   padding: rem(9);
   font-size: rem(13);
   outline: none;
 
   &::placeholder {
-    color: var(--light-gray-color);
+    color: var(--text-input-placeholder-color);
   }
 
   @include tablet {
@@ -50,14 +51,14 @@
   height: rem(24);
   padding: 0;
   border: 0;
-  color: var(--light-gray-color);
+  color: var(--text-input-placeholder-color);
   background: transparent;
   cursor: pointer;
   transform: translateY(-50%);
 
   &:hover,
   &:focus-visible {
-    color: var(--dark-color);
+    color: var(--text-primary-color);
   }
 
   &:disabled {

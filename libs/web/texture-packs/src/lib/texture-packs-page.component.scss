@@ -8,13 +8,16 @@
 .texture-packs {
   min-height: calc(100dvh - rem(170));
   padding: fluid(72, 36) 0 fluid(96, 56);
+
   background:
     radial-gradient(
       circle at 84% 6%,
-      var(--light-primary-color),
+      var(--bg-surface-primary-color),
       transparent 28%
     ),
-    var(--light-bg-color);
+    var(--bg-main-color);
+
+  transition: background-color 0.3s ease;
 }
 
 .texture-packs--embedded {
@@ -42,7 +45,7 @@
 
 .eyebrow {
   margin-bottom: rem(8);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
   font-size: rem(13);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -53,13 +56,13 @@ h1 {
   font-family: 'Platypi', serif;
   font-size: fluid(46, 30);
   line-height: 1.1;
-  color: var(--semi-dark-font-color);
+  color: var(--text-primary-color);
 }
 
 .page-description {
   max-width: rem(590);
   margin-top: rem(14);
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
   font-size: fluid(18, 15);
   line-height: 1.5;
 }
@@ -67,9 +70,9 @@ h1 {
 .format-note {
   flex: 0 0 auto;
   padding: rem(13) rem(18);
-  border: rem(1) solid var(--primary-color);
+  border: rem(1) solid var(--border-input-color);
   border-radius: rem(14);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
   font-size: rem(13);
   line-height: 1.5;
   text-align: right;
@@ -81,9 +84,9 @@ h1 {
   gap: fluid(64, 28);
   padding: fluid(36, 24);
   border-radius: rem(24);
-  background-color: var(--dark-primary-color);
-  color: var(--light-color);
-  box-shadow: 0 rem(18) rem(45) var(--dark-primary-transparent-color);
+  background-color: var(--bg-surface-main-color);
+  color: var(--text-light-color);
+  box-shadow: 0 rem(18) rem(45) rgb(from var(--shadow-color) r g b / 15%);
 }
 
 .create-card__intro,
@@ -99,8 +102,9 @@ h1 {
   place-items: center;
   width: rem(40);
   height: rem(40);
-  border: rem(1) solid var(--primary-color);
+  border: rem(1) solid var(--btn-primary-bg-color);
   border-radius: 50%;
+  color: var(--text-light-color);
   font-size: rem(13);
 }
 
@@ -108,11 +112,12 @@ h2 {
   margin-bottom: rem(8);
   font-family: 'Platypi', serif;
   font-size: fluid(25, 21);
+  color: inherit;
 }
 
 .create-card__intro p {
   max-width: rem(350);
-  color: var(--light-transparent-font-color);
+  color: var(--text-muted-color);
   line-height: 1.45;
 }
 
@@ -125,6 +130,7 @@ h2 {
     display: grid;
     gap: rem(8);
     font-size: rem(14);
+    color: var(--text-light-color);
   }
 
   label:nth-child(2) {
@@ -133,46 +139,101 @@ h2 {
   }
 
   small {
-    color: var(--light-transparent-font-color);
+    color: var(--text-muted-color);
   }
 
   input,
   textarea {
     width: 100%;
-    border: rem(1) solid var(--primary-color);
+    border: rem(1) solid var(--border-input-color);
     border-radius: rem(12);
     padding: rem(12) rem(14);
     outline: none;
-    background-color: var(--dark-primary-bright-color);
-    color: var(--light-color);
+    background-color: var(--bg-input-color);
+    color: var(--text-light-color);
     font: inherit;
     resize: vertical;
+    transition: border-color 0.2s;
 
     &::placeholder {
-      color: var(--light-gray-color);
+      color: var(--text-input-placeholder-color);
     }
 
     &:focus {
-      border-color: var(--light-color);
+      border-color: var(--btn-primary-bg-color);
     }
   }
 }
 
-.primary-button,
-.upload-button {
+.primary-button {
   display: grid;
   place-items: center;
   min-height: rem(44);
   border-radius: rem(12);
-  background-color: var(--light-color);
-  color: var(--dark-primary-color);
+  border: none;
   font: inherit;
   font-weight: 700;
+  cursor: pointer;
+  background-color: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.55;
+  }
 }
 
-.primary-button:disabled {
-  cursor: wait;
-  opacity: 0.65;
+.upload-button {
+  display: grid;
+  place-items: center;
+  min-height: rem(40);
+  cursor: pointer;
+  border-radius: rem(12);
+  text-decoration: none;
+  font: inherit;
+  font-weight: 700;
+  font-size: rem(14);
+
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+
+  border: rem(1) solid var(--btn-secondary-text-color);
+  color: var(--btn-secondary-text-color);
+  background-color: transparent;
+
+  &:hover {
+    background-color: var(--bg-popover-hover-color);
+  }
+}
+
+.publication-button {
+  width: 100%;
+  min-height: rem(40);
+  margin-top: rem(10);
+  border-radius: rem(12);
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 }
 
 .error-message {
@@ -181,13 +242,16 @@ h2 {
   gap: rem(16);
   margin-top: rem(24);
   padding: rem(14) rem(18);
-  border-left: rem(4) solid var(--error-color);
+  border-left: rem(4) solid var(--red-color);
   border-radius: rem(10);
-  background-color: var(--light-color);
-  color: var(--error-color);
+  background-color: var(--bg-popover-hover-color);
+  color: var(--red-color);
 
   button {
-    color: var(--error-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--red-color);
     font-weight: 700;
   }
 }
@@ -202,12 +266,12 @@ h2 {
 
   h2 {
     margin: rem(5) 0 0;
-    color: var(--semi-dark-font-color);
+    color: var(--text-primary-color);
   }
 }
 
 .pack-total {
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
 }
 
 .pack-list-tabs {
@@ -217,7 +281,7 @@ h2 {
   margin-bottom: rem(24);
   padding: rem(4);
   border-radius: rem(10);
-  background-color: var(--dark-primary-transparent-color);
+  background-color: var(--bg-main-color);
 }
 
 .pack-list-tab {
@@ -230,18 +294,24 @@ h2 {
   padding: rem(7) rem(16);
   border: 0;
   border-radius: rem(7);
-  color: var(--light-color);
+  color: var(--text-muted-color);
   background-color: transparent;
   font: inherit;
   cursor: pointer;
+
   transition:
     color 0.2s,
     background-color 0.2s;
 
   &:hover,
   &--active {
-    color: var(--dark-primary-color);
-    background-color: var(--light-color);
+    color: var(--btn-primary-text-color);
+    background-color: var(--btn-primary-bg-color);
+
+    .pack-list-tab__count {
+      background-color: var(--bg-main-color);
+      color: var(--text-primary-color);
+    }
   }
 }
 
@@ -249,10 +319,14 @@ h2 {
   min-width: rem(24);
   padding: rem(2) rem(7);
   border-radius: rem(999);
-  color: var(--dark-primary-color);
-  background-color: var(--light-primary-color);
+  background-color: var(--bg-popover-hover-color);
+  color: var(--text-secondary-color);
   font-size: rem(12);
   text-align: center;
+
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .pack-grid {
@@ -263,14 +337,15 @@ h2 {
 
 .pack-card,
 .state-card {
-  border: rem(1) solid var(--light-primary-color);
+  border: rem(1) solid var(--border-popover-color);
   border-radius: rem(20);
   padding: fluid(24, 18);
-  background-color: var(--light-color);
+  background-color: var(--bg-card-color);
+  box-shadow: 0 rem(4) rem(12) rgb(from var(--shadow-color) r g b / 6%);
 }
 
 .pack-card h3 {
-  color: var(--semi-dark-font-color);
+  color: var(--text-primary-color);
   font-family: 'Platypi', serif;
   font-size: rem(21);
 }
@@ -285,19 +360,20 @@ h2 {
 .publication-badge {
   padding: rem(4) rem(8);
   border-radius: rem(999);
-  background-color: var(--light-primary-color);
-  color: var(--light-gray-font-color);
+  background-color: var(--bg-popover-hover-color);
+  color: var(--text-muted-color);
   font-size: rem(11);
+  font-weight: 500;
 
   &--published {
-    color: var(--success-color);
+    color: var(--green-color);
   }
 }
 
 .pack-card__top p {
   min-height: rem(38);
   margin-top: rem(6);
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
   line-height: 1.35;
 }
 
@@ -308,8 +384,8 @@ h2 {
   min-width: rem(38);
   height: rem(38);
   border-radius: rem(12);
-  background-color: var(--light-primary-color);
-  color: var(--dark-primary-color);
+  background-color: var(--bg-popover-hover-color);
+  color: var(--text-secondary-color);
   font-weight: 700;
 }
 
@@ -318,36 +394,14 @@ h2 {
   min-height: rem(112);
   margin: rem(20) 0;
   place-content: center;
-  border: rem(1) dashed var(--primary-color);
+  border: rem(1) dashed var(--border-input-color);
   border-radius: rem(14);
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
   text-align: center;
 
   span {
-    color: var(--primary-color);
+    color: var(--btn-primary-bg-color);
     font-size: rem(30);
-  }
-}
-
-.upload-button {
-  min-height: rem(40);
-  cursor: pointer;
-  border: rem(1) solid var(--dark-primary-color);
-  background-color: transparent;
-}
-
-.publication-button {
-  width: 100%;
-  min-height: rem(40);
-  margin-top: rem(10);
-  border-radius: rem(12);
-  background-color: var(--dark-primary-color);
-  color: var(--light-color);
-  font: inherit;
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
   }
 }
 
@@ -356,11 +410,11 @@ h2 {
   min-height: rem(180);
   place-content: center;
   gap: rem(8);
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
   text-align: center;
 
   strong {
-    color: var(--semi-dark-font-color);
+    color: var(--text-primary-color);
     font-size: rem(20);
   }
 }
@@ -369,7 +423,6 @@ h2 {
   .create-card {
     grid-template-columns: 1fr;
   }
-
   .pack-grid {
     grid-template-columns: 1fr;
   }

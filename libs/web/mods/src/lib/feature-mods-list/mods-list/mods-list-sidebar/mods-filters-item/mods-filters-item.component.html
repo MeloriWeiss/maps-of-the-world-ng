@@ -1,17 +1,21 @@
 @if (filter(); as filter) {
-  <button
+  <div
     (click)="toggleActive()"
     class="sidebar-content-list-btn"
     [class.active]="isActive()"
     [class.opened]="isOpened()"
+    role="button"
+    tabindex="0"
   >
     @if (filter.extras.length) {
       <button class="open-filter-button" (click)="toggleOpened($event)">
         <svg icon="arrow-tailless" class="svg16"></svg>
       </button>
     }
+
     <span>{{ filter.name }}</span>
     <span>{{ isOpened() ? '...' : filter.count }}</span>
+
     @if (filter.extras.length) {
       <div wmCollapsible [isOpened]="isOpened()" class="extra-filters">
         <div class="filters-body-gap"></div>
@@ -26,5 +30,5 @@
         }
       </div>
     }
-  </button>
+  </div>
 }

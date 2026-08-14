@@ -1,3 +1,5 @@
+@use 'functions' as *;
+
 :host {
   position: relative;
   display: block;
@@ -12,33 +14,34 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  color: var(--light-color);
+  color: var(--text-light-color);
+
   background: radial-gradient(
     circle at 50% 45%,
-    var(--dark-primary-color),
-    var(--dark-primary-bright-color) 42%,
-    var(--dark-color) 130%
+    var(--bg-surface-tertiary-color),
+    var(--bg-surface-main-color) 42%,
+    var(--bg-main-color) 130%
   );
 
   &__map {
     position: relative;
-    width: 112px;
-    height: 112px;
-    margin-bottom: 30px;
+    width: rem(112);
+    height: rem(112);
+    margin-bottom: rem(30);
   }
 
   &__orbit {
     position: absolute;
     inset: 0;
-    border: 2px solid var(--light-transparent-color);
-    border-top-color: var(--light-color);
+    border: rem(2) solid var(--border-separator-color);
+    border-top-color: var(--text-light-color);
     border-radius: 50%;
     animation: loader-orbit 1.8s linear infinite;
 
     &--inner {
-      inset: 14px;
-      border-color: var(--light-transparent-color);
-      border-bottom-color: var(--primary-color);
+      inset: rem(14);
+      border-color: var(--border-separator-color);
+      border-bottom-color: var(--btn-primary-bg-color);
       animation-direction: reverse;
       animation-duration: 1.2s;
     }
@@ -46,66 +49,99 @@
 
   &__marker {
     position: absolute;
-    top: 35px;
-    left: 43px;
-    width: 26px;
-    height: 34px;
-    border: 7px solid var(--light-color);
+    top: rem(35);
+    left: rem(43);
+    width: rem(26);
+    height: rem(34);
+    border: rem(7) solid var(--text-light-color);
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     animation: loader-marker 1.4s ease-in-out infinite;
 
     &::after {
       position: absolute;
-      inset: 3px;
+      inset: rem(3);
       border-radius: 50%;
-      background-color: var(--primary-color);
+      background-color: var(--btn-primary-bg-color);
       content: '';
     }
   }
 
   &__pulse {
     position: absolute;
-    bottom: 20px;
-    left: 42px;
-    width: 28px;
-    height: 8px;
+    bottom: rem(20);
+    left: rem(42);
+    width: rem(28);
+    height: rem(8);
     border-radius: 50%;
-    background-color: var(--dark-color);
+    background-color: rgba(0, 0, 0, 0.4);
     opacity: 0.35;
     animation: loader-pulse 1.4s ease-in-out infinite;
   }
 
   &__title {
-    margin: 0 0 8px;
-    font-size: 24px;
+    margin: 0 0 rem(8);
+    font-size: rem(24);
     font-weight: 600;
     letter-spacing: 0.02em;
+    color: var(--text-light-color);
   }
 
   &__status {
-    min-width: 220px;
-    margin: 0 0 22px;
-    color: var(--light-transparent-font-color);
+    min-width: rem(220);
+    margin: 0 0 rem(22);
+    color: rgba(255, 255, 255, 0.7);
     text-align: center;
   }
 
   &__progress {
-    width: 220px;
-    height: 3px;
+    width: rem(220);
+    height: rem(3);
     overflow: hidden;
-    border-radius: 3px;
-    background-color: var(--light-transparent-color);
+    border-radius: rem(3);
+    background-color: rgba(255, 255, 255, 0.2);
 
     span {
       display: block;
       width: 45%;
       height: 100%;
       border-radius: inherit;
-      background-color: var(--light-color);
+      background-color: var(--text-light-color);
       animation: loader-progress 1.35s ease-in-out infinite;
     }
   }
+}
+
+.workshop__body {
+  display: grid;
+  grid-template-columns: rem(56) minmax(0, 1fr) minmax(rem(330), 31.25vw);
+  height: calc(100dvh - rem(58));
+  transition: grid-template-columns 0.2s ease;
+
+  &:has(> wm-workshop-left-sidebar.collapsed) {
+    grid-template-columns: rem(28) minmax(0, 1fr) minmax(rem(330), 31.25vw);
+  }
+
+  &:has(> wm-workshop-right-sidebar.collapsed) {
+    grid-template-columns: rem(56) minmax(0, 1fr) rem(28);
+  }
+
+  &:has(> wm-workshop-left-sidebar.collapsed):has(
+      > wm-workshop-right-sidebar.collapsed
+    ) {
+    grid-template-columns: rem(28) minmax(0, 1fr) rem(28);
+  }
+}
+
+.workshop__body--viewer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workshop__left-sidebar {
+  background-color: var(--bg-surface-tertiary-color);
+  position: relative;
+  z-index: 3;
+  overflow: visible;
 }
 
 @keyframes loader-orbit {
@@ -119,9 +155,8 @@
   100% {
     transform: translateY(0) rotate(-45deg);
   }
-
   50% {
-    transform: translateY(-8px) rotate(-45deg);
+    transform: translateY(rem(-8)) rotate(-45deg);
   }
 }
 
@@ -131,7 +166,6 @@
     opacity: 0.35;
     transform: scale(1);
   }
-
   50% {
     opacity: 0.15;
     transform: scale(0.7);
@@ -142,7 +176,6 @@
   from {
     transform: translateX(-110%);
   }
-
   to {
     transform: translateX(245%);
   }
@@ -157,36 +190,4 @@
       animation-duration: 4s;
     }
   }
-}
-
-.workshop__body {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) minmax(330px, 31.25vw);
-  height: calc(100dvh - 58px);
-  transition: grid-template-columns 0.2s ease;
-
-  &:has(> wm-workshop-left-sidebar.collapsed) {
-    grid-template-columns: 28px minmax(0, 1fr) minmax(330px, 31.25vw);
-  }
-
-  &:has(> wm-workshop-right-sidebar.collapsed) {
-    grid-template-columns: 56px minmax(0, 1fr) 28px;
-  }
-
-  &:has(> wm-workshop-left-sidebar.collapsed):has(
-      > wm-workshop-right-sidebar.collapsed
-    ) {
-    grid-template-columns: 28px minmax(0, 1fr) 28px;
-  }
-}
-
-.workshop__body--viewer {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.workshop__left-sidebar {
-  background-color: var(--dark-primary-color);
-  position: relative;
-  z-index: 3;
-  overflow: visible;
 }

@@ -1,11 +1,13 @@
+@use 'functions' as *;
+
 .toast-stack {
   position: fixed;
   left: 50%;
-  bottom: 34px;
+  bottom: rem(34);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: rem(8);
   z-index: 9999;
 }

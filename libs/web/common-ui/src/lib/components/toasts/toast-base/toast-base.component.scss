@@ -1,19 +1,22 @@
+@use 'functions' as *;
+
 :host {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: rem(8);
   z-index: 9999;
 }
 
 .toast {
-  min-width: 240px;
-  max-width: 480px;
-  border-radius: 8px;
+  min-width: rem(240);
+  max-width: rem(480);
+  border-radius: rem(8);
   color: var(--dark-color);
-  box-shadow: 0 8px 16px var(--dark-primary-transparent-color);
-  font-size: 16px;
+  box-shadow: 0 rem(8) rem(16) rgb(from var(--shadow-color) r g b / 16%);
+  font-size: rem(16);
   opacity: 0;
-  transform: translateY(16px);
+  transform: translateY(rem(16));
+
   transition:
     opacity 0.2s ease-out,
     transform 0.2s ease-out;

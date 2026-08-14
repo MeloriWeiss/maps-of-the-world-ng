@@ -18,15 +18,32 @@
   gap: rem(12);
   padding: rem(20);
   border-radius: rem(10);
-  background: var(--light-color);
+  background: var(--bg-popover-color);
+  box-shadow: 0 rem(4) rem(12) rgb(from var(--shadow-color) r g b / 5%);
+
+  h2 {
+    font-family: 'Play', sans-serif;
+    font-weight: 700;
+    font-size: rem(20);
+    margin: 0 0 rem(4) 0;
+    color: var(--text-popover-primary-color);
+  }
 
   input,
   select,
   textarea {
     padding: rem(10);
-    border: 1px solid var(--primary-color);
+    border: rem(1) solid var(--border-popover-color);
     border-radius: rem(6);
     font: inherit;
+    background-color: var(--bg-main-color);
+    color: var(--text-primary-color);
+    transition: border-color 0.2s ease;
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--bg-surface-variant-color);
+    }
   }
 }
 
@@ -38,11 +55,35 @@
   button {
     padding: rem(8) rem(16);
     border-radius: rem(6);
-    background: var(--primary-color);
-    color: var(--light-color);
+    border: none;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 0.85;
+      outline: none;
+    }
+
+    &:first-child {
+      background: var(--btn-secondary-bg-color);
+      color: var(--btn-secondary-text-color);
+    }
+
+    &[type='submit'] {
+      background: var(--btn-primary-bg-color);
+      color: var(--btn-primary-text-color);
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
   }
 }
 
 .form-error {
-  color: var(--error-color);
+  color: var(--red-color);
 }

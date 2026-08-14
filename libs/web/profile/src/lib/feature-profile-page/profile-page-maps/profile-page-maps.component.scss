@@ -1,8 +1,10 @@
 @use 'functions' as *;
 @use 'media' as *;
+@use 'mixins' as *;
 
 .primary-bg {
   padding: fluid(28, 16);
+  background-color: rgb(from var(--bg-surface-primary-color) r g b / 85%);
 }
 
 .maps-header {
@@ -20,16 +22,16 @@
 
 .eyebrow {
   margin-bottom: rem(6);
-  color: var(--dark-primary-color);
+  color: var(--text-on-surface-main-color);
   font-size: rem(12);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: rem(1.2);
   text-transform: uppercase;
 }
 
 .profile-subtitle {
   margin-bottom: rem(8);
-  color: var(--dark-color);
+  color: var(--text-on-surface-title-color);
   font-family: 'Platypi', serif;
   font-size: fluid(28, 22);
   font-weight: 400;
@@ -37,7 +39,7 @@
 
 .profile-description {
   max-width: rem(620);
-  color: var(--dark-gray-font-color);
+  color: var(--text-on-surface-muted-color);
   font-family: 'Play', sans-serif;
   font-size: rem(14);
   line-height: 1.45;
@@ -50,10 +52,15 @@
   place-items: center;
   padding: rem(10) rem(18);
   border-radius: rem(10);
-  background-color: var(--dark-primary-color);
-  color: var(--light-color);
+  background-color: var(--bg-surface-tertiary-color);
+  color: var(--text-light-color);
   font-weight: 700;
   text-decoration: none;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
 }
 
 .map-list-tabs {
@@ -63,7 +70,7 @@
   margin-bottom: rem(24);
   padding: rem(4);
   border-radius: rem(10);
-  background-color: var(--dark-primary-transparent-color);
+  background-color: var(--tabs-bg-color);
 }
 
 .map-list-tab {
@@ -75,15 +82,24 @@
   min-height: rem(38);
   border: 0;
   border-radius: rem(7);
-  color: var(--light-color);
+  color: var(--tabs-text-color);
   background-color: transparent;
   font: inherit;
   cursor: pointer;
 
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
   &:hover,
   &--active {
-    color: var(--dark-primary-color);
-    background-color: var(--light-color);
+    background-color: var(--tabs-active-bg-color);
+    color: var(--tabs-active-text-color);
+
+    .map-list-tab__count {
+      background-color: var(--btn-secondary-bg-color);
+      color: var(--text-primary-color);
+    }
   }
 }
 
@@ -91,9 +107,14 @@
   min-width: rem(24);
   padding: rem(2) rem(7);
   border-radius: rem(999);
-  color: var(--dark-primary-color);
-  background-color: var(--light-primary-color);
+  background-color: var(--bg-popover-hover-color);
+  color: var(--text-secondary-color);
   font-size: rem(12);
+  font-weight: 600;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .cards {
@@ -109,16 +130,20 @@
 .map-card,
 .state-card {
   overflow: hidden;
-  border: rem(1) solid var(--light-primary-color);
+  border: rem(1) solid var(--border-popover-color);
   border-radius: rem(20);
-  background-color: var(--light-color);
+  background-color: var(--bg-card-color);
 }
 
 .map-card {
   position: relative;
+  box-shadow: 0 rem(4) rem(12) rgb(from var(--shadow-color) r g b / 6%);
+  transition: box-shadow 0.2s ease;
 
   &:hover,
   &:focus-within {
+    box-shadow: 0 rem(6) rem(16) rgb(from var(--shadow-color) r g b / 12%);
+
     .map-card__delete {
       visibility: visible;
       opacity: 1;
@@ -136,25 +161,33 @@
   width: rem(38);
   height: rem(38);
   place-items: center;
-  border: rem(1) solid var(--light-primary-color);
+  border: rem(1) solid var(--border-popover-color);
   border-radius: 50%;
   visibility: hidden;
   pointer-events: none;
-  color: var(--dark-primary-color);
-  background-color: var(--light-color);
+  background-color: var(--bg-card-color);
+  color: var(--text-secondary-color);
   opacity: 0;
+  cursor: pointer;
+
   transition:
-    opacity 0.18s,
-    visibility 0.18s;
+    opacity 0.18s ease,
+    visibility 0.18s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  svg {
+    fill: currentColor;
+  }
 
   &:hover {
-    color: var(--dark-primary-color);
-    background-color: var(--light-primary-color);
+    background-color: var(--bg-popover-hover-color);
+    color: var(--red-color);
   }
 
   &:focus-visible {
     visibility: visible;
-    outline: rem(2) solid var(--primary-color);
+    outline: rem(2) solid var(--btn-primary-bg-color);
     outline-offset: rem(2);
     opacity: 1;
     pointer-events: auto;
@@ -181,14 +214,14 @@
 
 .map-card__heading {
   h3 {
-    color: var(--semi-dark-font-color);
+    color: var(--text-primary-color);
     font-family: 'Platypi', serif;
     font-size: rem(20);
   }
 
   p {
     margin-top: rem(8);
-    color: var(--light-gray-font-color);
+    color: var(--text-muted-color);
     line-height: 1.4;
   }
 }
@@ -198,9 +231,10 @@
   margin-top: rem(6);
   padding: rem(3) rem(8);
   border-radius: rem(999);
-  background-color: var(--light-primary-color);
-  color: var(--dark-primary-color);
+  background-color: var(--bg-popover-hover-color);
   font-size: rem(11);
+  font-weight: 500;
+  color: var(--text-secondary-color);
 }
 
 .map-card__actions {
@@ -212,9 +246,24 @@
 .publication-button {
   min-height: rem(42);
   padding: rem(8);
-  border: rem(1) solid var(--dark-primary-color);
   border-radius: rem(10);
-  color: var(--dark-primary-color);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: rem(14);
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  border: rem(1) solid var(--btn-secondary-text-color);
+  color: var(--btn-secondary-text-color);
+
+  &:hover {
+    background-color: var(--bg-popover-hover-color);
+  }
 
   &:disabled {
     cursor: wait;
@@ -224,17 +273,26 @@
 
 .map-card__metrics {
   grid-column: 1 / -1;
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
   font-size: rem(13);
 
   button {
     display: inline-flex;
     align-items: center;
     gap: rem(5);
+    background: none;
+    border: none;
+    padding: 0;
     color: inherit;
+    font-size: inherit;
+    cursor: pointer;
+
+    svg {
+      fill: currentColor;
+    }
 
     &.active {
-      color: var(--error-color);
+      color: var(--red-pastel-color);
     }
 
     &:disabled {
@@ -250,40 +308,43 @@
   place-content: center;
   gap: rem(10);
   padding: rem(24);
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
   text-align: center;
 
   strong {
-    color: var(--semi-dark-font-color);
+    color: var(--text-primary-color);
     font-size: rem(19);
   }
 
   a {
-    color: var(--dark-primary-color);
+    color: var(--btn-primary-bg-color);
     font-weight: 700;
+    text-decoration: underline;
   }
 }
 
 .error-message {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: rem(20);
   padding: rem(14);
-  border-left: rem(4) solid var(--error-color);
-  background-color: var(--light-color);
-  color: var(--error-color);
+  border-radius: 0 rem(8) rem(8) 0;
+  border-left: rem(4) solid var(--red-color);
+  background-color: var(--bg-popover-hover-color);
+  color: var(--red-color);
 
   button {
+    background: none;
+    border: none;
     color: inherit;
     font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
   }
 }
 
 @include mobile {
-  .primary-bg {
-    background: transparent;
-  }
-
   .map-card__actions {
     grid-template-columns: 1fr;
   }

@@ -3,11 +3,15 @@
 @use 'mixins' as *;
 
 .post-block {
-  background-color: var(--light-color);
+  background-color: var(--bg-card-color);
   border-radius: fluid(15, 10);
   padding: fluid(15, 12) fluid(25, 16) 0 fluid(25, 16);
   box-shadow: 0 fluid(4, 2) fluid(4, 2) 0
-    rgb(from var(--dark-color) r g b / 25%);
+    rgb(from var(--shadow-color) r g b / 6%);
+
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .post-header {
@@ -30,18 +34,22 @@
   font-family: 'Platypi', sans-serif;
   @include fluid-text(15, 11);
   line-height: fluid(21, 15);
-  color: var(--primary-color);
+  color: var(--text-muted-color);
 }
 
 .avatar-placeholder {
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
+
+  svg {
+    fill: currentColor;
+  }
 }
 
 .username {
   font-family: 'Platypi', serif;
   @include fluid-text(18, 14);
   line-height: fluid(25, 19);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
 }
 
 .post-content {
@@ -53,7 +61,7 @@
 .post-theme {
   @include fluid-text(22, 16);
   line-height: fluid(25, 19);
-  color: var(--semi-dark-font-color);
+  color: var(--text-primary-color);
 }
 
 .post-body {
@@ -61,7 +69,7 @@
   padding-bottom: fluid(38, 26);
   @include fluid-text(18, 11);
   line-height: fluid(21, 13);
-  color: var(--dark-color);
+  color: var(--text-primary-color);
 }
 
 .svg34 {
@@ -77,10 +85,24 @@
     display: flex;
     align-items: center;
     gap: rem(6);
-    color: var(--dark-primary-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--text-secondary-color);
+    transition: color 0.2s ease;
+
+    svg {
+      fill: currentColor;
+    }
+
+    &:hover:not(.active) {
+      color: var(--btn-primary-bg-color);
+    }
 
     &.active {
-      color: var(--error-pastel-color);
+      color: var(--red-pastel-color);
     }
   }
 }

@@ -1,38 +1,9 @@
 @use 'styles/fonts';
 @use 'styles/svg';
+@use 'styles/variables' as *;
 @use 'media' as *;
 @use 'functions' as *;
 @use 'mixins' as *;
-
-:root {
-  --dark-color: #000000;
-  --light-color: #ffffff;
-  --light-bg-color: #f4f4f4;
-  --light-transparent-color: #ffffff4c;
-  --gray-color: #4e4e4e;
-  --light-gray-color: #aaaaaa;
-  --primary-color: #948d81;
-  --dark-primary-color: #524e47;
-  --dark-primary-bright-color: #4b4339;
-  --dark-primary-transparent-color: #524e47b2;
-  --light-primary-color: #e9e6e3;
-  --blue-link-color: #0015ff;
-  --error-color: #da0000;
-  --error-pastel-color: #cb132b;
-  --success-color: #27914d;
-  --info-color: #366bbe;
-  --cyan-color: #16b7ff;
-  --dark-cyan-color: #0fa1e0;
-  --purple-color: #7f5af0;
-  --dark-purple-color: #6f4de0;
-  --light-error-color: #ffaca5;
-  --light-error-background-color: #ffe5e5;
-
-  --semi-dark-font-color: #2d2924;
-  --dark-gray-font-color: #414141;
-  --light-gray-font-color: #747474;
-  --light-transparent-font-color: #ffffffcc;
-}
 
 *,
 *::before,
@@ -44,15 +15,36 @@
 
 body {
   height: 100dvh;
-  background-color: var(--light-color);
-  color: var(--dark-color);
+  background-color: var(--bg-main-color);
+  color: var(--text-primary-color);
   font-family: 'Play', sans-serif;
   font-weight: 400;
   font-style: normal;
 
+  transition:
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
   @include mobile {
-    background-color: var(--light-bg-color);
+    background-color: var(--bg-mobile-color);
   }
+}
+
+.header,
+.profile-menu,
+.library-menu,
+.button,
+.create-discussion,
+.map-card,
+.catalog-card,
+.back-btn,
+.new-action-btn {
+  transition:
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 li {
@@ -86,16 +78,31 @@ button {
   padding-bottom: rem(10);
   border: none;
   cursor: pointer;
-  background: var(--gray-color);
-  color: var(--light-color);
+  background: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
   font-family: 'Platypi', serif;
   font-size: rem(15);
+
+  &:hover:not(:disabled) {
+    transform: translateY(rem(-2));
+    box-shadow: 0 rem(6) rem(20) var(--shadow-color);
+    filter: brightness(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 rem(2) rem(4) var(--shadow-color);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
   @include mobile {
     width: rem(216);
     padding: rem(9) rem(35) rem(14);
     margin: auto;
-    background-color: var(--primary-color);
   }
 }
 
@@ -115,13 +122,23 @@ button {
   gap: rem(6);
   font-size: rem(20);
   font-family: 'Play', sans-serif;
-  color: var(--light-color);
-  background-color: var(--primary-color);
+  background-color: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
   border: none;
   cursor: pointer;
   padding: rem(5) rem(10);
   border-radius: rem(10);
   margin-bottom: rem(22);
+  transition: opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateX(rem(-4));
+    filter: brightness(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateX(0);
+  }
 }
 
 .owl-carousel .owl-item img {
@@ -135,7 +152,8 @@ button {
 }
 
 .primary-bg {
-  background: var(--light-primary-color);
+  background: var(--bg-card-color);
+  border: rem(1) solid var(--border-popover-color);
   border-radius: rem(20);
 }
 
@@ -147,7 +165,7 @@ button {
 .sidebar-mobile {
   @include fluid-text(20, 14);
   line-height: rem(16);
-  color: var(--light-color);
+  color: var(--btn-primary-text-color);
   border: none;
   padding: rem(21) 0;
   width: 100%;
@@ -161,6 +179,30 @@ button {
   }
 }
 
+.new-action-btn {
+  background-color: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
+  border: none;
+  padding: rem(12) rem(16);
+  border-radius: rem(6);
+  cursor: pointer;
+  width: 100%;
+  font-family: 'Play', sans-serif;
+  text-align: center;
+  font-weight: 700;
+  transition: opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(rem(-1));
+    box-shadow: 0 rem(4) rem(12) var(--shadow-color);
+    filter: brightness(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
 .control-error-block__wrapper {
   display: none;
 }
@@ -171,5 +213,5 @@ button {
 }
 
 .control-error-text {
-  color: var(--error-color);
+  color: var(--red-color);
 }

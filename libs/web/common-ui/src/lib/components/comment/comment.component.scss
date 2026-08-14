@@ -3,7 +3,6 @@
 @use 'mixins' as *;
 
 .comment__wrapper {
-  //display: flex;
   display: grid;
   grid-template-columns: fluid(34, 21) 1fr;
   column-gap: fluid(11, 5);
@@ -23,7 +22,7 @@
   font-family: 'Platypi', sans-serif;
   font-weight: 400;
   @include fluid-text(12, 11);
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
 }
 
 .comment__username {
@@ -31,8 +30,7 @@
   font-family: 'Platypi', sans-serif;
   font-weight: 400;
   max-width: fluid(180, 70);
-
-  color: var(--dark-color);
+  color: var(--text-primary-color);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -42,16 +40,28 @@
   @include fluid-text(14, 13);
   font-family: 'Play', sans-serif;
   font-weight: 400;
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
 }
 
 .comment__reply-btn {
   display: flex;
   align-items: center;
   gap: rem(2);
-  color: var(--light-gray-font-color);
+  color: var(--text-muted-color);
   font-size: rem(11);
   margin-top: fluid(5, 3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  svg {
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: var(--btn-primary-bg-color);
+  }
 }
 
 .svg34 {

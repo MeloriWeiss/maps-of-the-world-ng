@@ -1,0 +1,342 @@
+:root {
+  // Общие
+  --dark-color: #000000;
+  --light-color: #ffffff;
+
+  --red-color: #da0000;
+  --red-pastel-color: #cb132b;
+
+  --cyan-color: #16b7ff;
+  --dark-cyan-color: #0fa1e0;
+
+  --purple-color: #7f5af0;
+  --dark-purple-color: #6f4de0;
+
+  --green-color: #27914d;
+
+  --shadow-color: #000000;
+
+  // Полупрозрачные
+  --light-color-30: rgb(from var(--light-color) r g b / 30%);
+
+  // Курсоры
+  --cursor-map-pin:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'%3E%3Cpath fill='%23b4643d' stroke='%23201d19' stroke-width='2' d='M16 1C8.3 1 2 7.3 2 15c0 10.5 14 23 14 23s14-12.5 14-23C30 7.3 23.7 1 16 1Z'/%3E%3Ccircle cx='16' cy='15' r='5' fill='%23f5f0e7'/%3E%3C/svg%3E")
+      16 39,
+    crosshair;
+}
+
+:root,
+[data-theme='light'] {
+  // Фоны страниц
+  --bg-main-color: var(--light-color);
+  --bg-mobile-color: #f4f4f4;
+  --bg-surface-main-color: #524e47;
+
+  // Тексты
+  --text-inverse-color: var(--light-color);
+  --text-primary-color: #000000;
+  --text-secondary-color: #524e47;
+  --text-accent-color: #000000;
+  --text-muted-color: #86837e;
+  --text-light-color: var(--light-color);
+
+  --text-on-surface-title-color: #000000;
+  --text-on-surface-main-color: #2d2924;
+  --text-on-surface-muted-color: #747474;
+
+  // Компоненты и поверхности
+  --bg-section-color: var(--light-color);
+  --bg-checkerboard-color: #e9e6e3;
+  --bg-surface-primary-color: #e9e6e3;
+  --bg-surface-secondary-color: var(--light-color);
+  --bg-surface-tertiary-color: #524e47;
+  --bg-surface-variant-color: #86837e;
+  --bg-surface-light-color: var(--light-color);
+
+  // Границы
+  --border-default-color: var(--light-color);
+  --border-dark-color: #2d2924;
+
+  // Контекстные меню / Выпадающие окна
+  --bg-popover-color: var(--light-color);
+  --bg-popover-hover-color: #f4f4f4;
+  --text-popover-primary-color: #2d2924;
+  --text-popover-muted-color: #747474;
+  --border-popover-color: #e9e6e3;
+  --border-separator-color: #e9e6e3;
+
+  // Карточки и формы
+  --bg-card-color: var(--light-color);
+  --bg-input-color: var(--light-color);
+  --text-card-title-color: #000000;
+  --text-input-placeholder-color: #747474;
+  --border-input-color: #86837e;
+
+  // Кнопки
+  --btn-primary-bg-color: #86837e;
+  --btn-primary-text-color: var(--light-color);
+  --btn-secondary-bg-color: #e9e6e3;
+  --btn-secondary-text-color: #524e47;
+
+  // Вкладки
+  --tabs-bg-color: var(--bg-surface-variant-color);
+  --tabs-text-color: var(--btn-primary-text-color);
+  --tabs-active-bg-color: var(--light-color);
+  --tabs-active-text-color: var(--border-dark-color);
+
+  // Презентационные страницы и контент (Главная, О нас и др.)
+  --page-ink-color: #201d19;
+  --page-paper-color: #f5f0e7;
+  --page-paper-deep-color: #e8dfd0;
+
+  --accent-main-color: #b4643d;
+  --accent-light-color: #d99a67;
+  --btn-text-color: var(--light-color);
+
+  --page-line-color: #cfc4b3;
+  --page-muted-color: #766f65;
+
+  --hotspot-glow-color: rgb(from var(--accent-main-color) r g b / 40%);
+  --hotspot-bg-color: var(--accent-main-color);
+
+  // Курсоры
+  --cursor-map-pin:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'%3E%3Cpath fill='%23b4643d' stroke='%23201d19' stroke-width='2' d='M16 1C8.3 1 2 7.3 2 15c0 10.5 14 23 14 23s14-12.5 14-23C30 7.3 23.7 1 16 1Z'/%3E%3Ccircle cx='16' cy='15' r='5' fill='%23f5f0e7'/%3E%3C/svg%3E")
+      16 39,
+    crosshair;
+}
+
+[data-theme='dark'] {
+  // Фоны страниц
+  --bg-main-color: #1e1a15;
+  --bg-mobile-color: #1e1a15;
+  --bg-surface-main-color: #302b25;
+
+  // Тексты
+  --text-inverse-color: #2c2823;
+  --text-primary-color: #e3e3e3;
+  --text-secondary-color: #efe5d8;
+  --text-accent-color: #fcf7f0;
+  --text-muted-color: #c4b5a2;
+  --text-light-color: #fcf7f0;
+
+  --text-on-surface-title-color: #1e1a15;
+  --text-on-surface-main-color: #302b25;
+  --text-on-surface-muted-color: #766f65;
+
+  // Компоненты и поверхности
+  --bg-section-color: #27221c;
+  --bg-checkerboard-color: #3a332c;
+  --bg-surface-primary-color: #efe5d8;
+  --bg-surface-secondary-color: #302b25;
+  --bg-surface-tertiary-color: #302b25;
+  --bg-surface-variant-color: #c4b5a2;
+  --bg-surface-light-color: #fcf7f0;
+
+  // Границы
+  --border-default-color: #a59a8b;
+  --border-dark-color: #302b25;
+
+  // Контекстные меню / Выпадающие окна
+  --bg-popover-color: #27221c;
+  --bg-popover-hover-color: #302b25;
+  --text-popover-primary-color: #fcf7f0;
+  --text-popover-muted-color: #aaaaaa;
+  --border-popover-color: #414141;
+  --border-separator-color: #414141;
+
+  // Карточки и формы
+  --bg-card-color: #302b25;
+  --bg-input-color: #1e1a15;
+  --text-card-title-color: #fcf7f0;
+  --text-input-placeholder-color: #747474;
+  --border-input-color: #414141;
+
+  // Кнопки
+  --btn-primary-bg-color: #efe5d8;
+  --btn-primary-text-color: #1e1a15;
+  --btn-secondary-bg-color: #27221c;
+  --btn-secondary-text-color: #efe5d8;
+
+  // Вкладки
+  --tabs-bg-color: var(--bg-surface-variant-color);
+  --tabs-text-color: var(--btn-primary-text-color);
+  --tabs-active-bg-color: var(--btn-primary-bg-color);
+  --tabs-active-text-color: var(--btn-primary-text-color);
+
+  // Презентационные страницы и контент (Главная, О нас и др.)
+  --page-ink-color: #efe5d8;
+  --page-paper-color: #1e1a15;
+  --page-paper-deep-color: #27221c;
+
+  --accent-main-color: #d99a67;
+  --accent-light-color: #524e47;
+  --btn-text-color: #1e1a15;
+
+  --page-line-color: #3a332c;
+  --page-muted-color: #a59a8b;
+
+  --hotspot-glow-color: rgb(from var(--accent-main-color) r g b / 60%);
+  --hotspot-bg-color: #ff8a43;
+
+  // Курсоры
+  --cursor-map-pin:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'%3E%3Cpath fill='%23d99a67' stroke='%23efe5d8' stroke-width='2' d='M16 1C8.3 1 2 7.3 2 15c0 10.5 14 23 14 23s14-12.5 14-23C30 7.3 23.7 1 16 1Z'/%3E%3Ccircle cx='16' cy='15' r='5' fill='%231e1a15'/%3E%3C/svg%3E")
+      16 39,
+    crosshair;
+}
+
+[data-theme='steampunk'] {
+  // Фоны страниц
+  --bg-main-color: #2b211a;
+  --bg-mobile-color: #211914;
+  --bg-surface-main-color: #413227;
+
+  // Тексты
+  --text-inverse-color: #211914;
+  --text-primary-color: #f1e4d3;
+  --text-secondary-color: #d1b499;
+  --text-accent-color: #fca311;
+  --text-muted-color: #8c725e;
+  --text-light-color: #f1e4d3;
+
+  --text-on-surface-title-color: #211914;
+  --text-on-surface-main-color: #2b211a;
+  --text-on-surface-muted-color: #5c4737;
+
+  // Компоненты и поверхности
+  --bg-section-color: #362920;
+  --bg-checkerboard-color: #4a3a2e;
+  --bg-surface-primary-color: #d1b499;
+  --bg-surface-secondary-color: #413227;
+  --bg-surface-tertiary-color: #413227;
+  --bg-surface-variant-color: #8c725e;
+  --bg-surface-light-color: #f1e4d3;
+
+  // Границы
+  --border-default-color: #5c4737;
+  --border-dark-color: #2b211a;
+
+  // Контекстные меню / Выпадающие окна
+  --bg-popover-color: #362920;
+  --bg-popover-hover-color: #413227;
+  --text-popover-primary-color: #f1e4d3;
+  --text-popover-muted-color: #9c8470;
+  --border-popover-color: #5c4737;
+  --border-separator-color: #5c4737;
+
+  // Карточки и формы
+  --bg-card-color: #413227;
+  --bg-input-color: #211914;
+  --text-card-title-color: #f1e4d3;
+  --text-input-placeholder-color: #8c725e;
+  --border-input-color: #5c4737;
+
+  // Кнопки
+  --btn-primary-bg-color: #d97706;
+  --btn-primary-text-color: #211914;
+  --btn-secondary-bg-color: #413227;
+  --btn-secondary-text-color: #d1b499;
+
+  // Вкладки
+  --tabs-bg-color: var(--bg-surface-variant-color);
+  --tabs-text-color: var(--btn-primary-text-color);
+  --tabs-active-bg-color: var(--btn-primary-bg-color);
+  --tabs-active-text-color: var(--btn-primary-text-color);
+
+  // Презентационные страницы и контент (Главная, О нас и др.)
+  --page-ink-color: #f1e4d3;
+  --page-paper-color: #2b211a;
+  --page-paper-deep-color: #211914;
+  --accent-main-color: #d97706;
+  --accent-light-color: #4a3a2e;
+  --btn-text-color: #211914;
+  --page-line-color: #5c4737;
+  --page-muted-color: #8c725e;
+  --hotspot-bg-color: #f59e0b;
+  --hotspot-glow-color: rgb(from var(--hotspot-bg-color) r g b / 50%);
+
+  // Курсоры
+  --cursor-map-pin:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'%3E%3Cpath fill='%23d97706' stroke='%235c4737' stroke-width='2' d='M16 1C8.3 1 2 7.3 2 15c0 10.5 14 23 14 23s14-12.5 14-23C30 7.3 23.7 1 16 1Z'/%3E%3Ccircle cx='16' cy='15' r='5' fill='%23f1e4d3'/%3E%3C/svg%3E")
+      16 39,
+    crosshair;
+}
+
+[data-theme='neon-sunset'] {
+  // Фоны страниц
+  --bg-main-color: #0b0914;
+  --bg-mobile-color: #05040a;
+  --bg-surface-main-color: #161224;
+
+  // Тексты
+  --text-inverse-color: #0b0914;
+  --text-primary-color: #f3f0ff;
+  --text-secondary-color: #c084fc;
+  --text-accent-color: #06b6d4;
+  --text-muted-color: #635b7a;
+  --text-light-color: #f3f0ff;
+
+  --text-on-surface-title-color: #0b0914;
+  --text-on-surface-main-color: #120e21;
+  --text-on-surface-muted-color: #2a2345;
+
+  // Компоненты и поверхности
+  --bg-section-color: #120e21;
+  --bg-checkerboard-color: #1d1833;
+  --bg-surface-primary-color: #c084fc;
+  --bg-surface-secondary-color: #161224;
+  --bg-surface-tertiary-color: #161224;
+  --bg-surface-variant-color: #635b7a;
+  --bg-surface-light-color: #f3f0ff;
+
+  // Границы
+  --border-default-color: #251f3d;
+  --border-dark-color: #120e21;
+
+  // Контекстные меню / Выпадающие окна
+  --bg-popover-color: #120e21;
+  --bg-popover-hover-color: #161224;
+  --text-popover-primary-color: #f3f0ff;
+  --text-popover-muted-color: #7c7396;
+  --border-popover-color: #2a2345;
+  --border-separator-color: #2a2345;
+
+  // Карточки и формы
+  --bg-card-color: #161224;
+  --bg-input-color: #05040a;
+  --text-card-title-color: #f3f0ff;
+  --text-input-placeholder-color: #635b7a;
+  --border-input-color: #2a2345;
+
+  // Кнопки
+  --btn-primary-bg-color: #d946ef;
+  --btn-primary-text-color: #0b0914;
+  --btn-secondary-bg-color: #161224;
+  --btn-secondary-text-color: #06b6d4;
+
+  // Вкладки
+  --tabs-bg-color: var(--bg-surface-variant-color);
+  --tabs-text-color: var(--btn-primary-text-color);
+  --tabs-active-bg-color: var(--btn-primary-bg-color);
+  --tabs-active-text-color: var(--btn-primary-text-color);
+
+  // Презентационные страницы и контент (Главная, О нас и др.)
+  --page-ink-color: #f3f0ff;
+  --page-paper-color: #0b0914;
+  --page-paper-deep-color: #05040a;
+  --accent-main-color: #d946ef;
+  --accent-light-color: #1d1833;
+  --btn-text-color: #0b0914;
+  --page-line-color: #251f3d;
+  --page-muted-color: #635b7a;
+  --hotspot-bg-color: #00f5ff;
+  --hotspot-glow-color: rgb(from var(--hotspot-bg-color) r g b / 70%);
+
+  // Курсоры
+  --cursor-map-pin:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'%3E%3Cpath fill='%23d946ef' stroke='%2306b6d4' stroke-width='2' d='M16 1C8.3 1 2 7.3 2 15c0 10.5 14 23 14 23s14-12.5 14-23C30 7.3 23.7 1 16 1Z'/%3E%3Ccircle cx='16' cy='15' r='5' fill='%23f3f0ff'/%3E%3C/svg%3E")
+      16 39,
+    crosshair;
+}

@@ -1,5 +1,5 @@
 <header class="header">
-  <div class="header-left-side">
+  <div class="header__left-side">
     <a [routerLink]="['/']" class="linked-block">
       <img src="/assets/imgs/new-logo.png" class="company-logo" alt="Логотип" />
     </a>
@@ -28,14 +28,18 @@
     ></div>
   </div>
 
-  <div [class.is-open]="isMenuOpen()" class="header-right-side">
-    <nav>
-      <ul class="header-nav-list">
+  <div
+    [class.is-open]="isMenuOpen()"
+    [@slideInOut]="isMenuOpen() ? 'open' : 'closed'"
+    class="header__right-side"
+  >
+    <nav class="header__nav">
+      <ul class="header__nav-list">
         <li>
           <a
             [routerLink]="['workshop']"
             routerLinkActive="active"
-            class="header-nav-link"
+            class="header__nav-link"
             (click)="closeMenu()"
             >Мастерская</a
           >
@@ -44,7 +48,7 @@
           <a
             [routerLink]="['forum']"
             routerLinkActive="active"
-            class="header-nav-link"
+            class="header__nav-link"
             (click)="closeMenu()"
             >Форум</a
           >
@@ -59,7 +63,7 @@
             <button
               wmPopoverTrigger
               type="button"
-              class="header-nav-link library-trigger"
+              class="header__nav-link library-trigger"
               aria-haspopup="menu"
               [attr.aria-expanded]="libraryMenu.isOpen()"
             >
@@ -101,68 +105,118 @@
           <a
             [routerLink]="['about']"
             routerLinkActive="active"
-            class="header-nav-link"
+            class="header__nav-link"
             (click)="closeMenu()"
             >О нас</a
           >
         </li>
-      </ul>
-    </nav>
 
-    <wm-popover #profileMenu ariaLabel="Меню профиля">
-      <button
-        wmPopoverTrigger
-        type="button"
-        class="linked-block avatar-link"
-        aria-haspopup="menu"
-        [attr.aria-expanded]="profileMenu.isOpen()"
-        aria-label="Открыть меню профиля"
-      >
-        @if (currentAccount.avatarUrl(); as avatarUrl) {
-          <img class="avatar-link__image" [src]="avatarUrl" alt="" />
-        } @else {
-          <svg icon="avatar" class="svg40"></svg>
-        }
-      </button>
-
-      <nav wmPopoverContent class="profile-menu" aria-label="Профиль">
-        @if (isAuthorized) {
+        <li class="mobile-avatar-item">
           <a
             [routerLink]="['profile', 'me']"
             (click)="closeMenu()"
             role="menuitem"
-            class="profile-menu__item"
+            class="profile-menu__item avatar-link"
           >
-            Профиль
+            @if (currentAccount.avatarUrl(); as avatarUrl) {
+              <img class="avatar-link__image" [src]="avatarUrl" alt="" />
+            } @else {
+              <svg icon="avatar" class="svg40"></svg>
+            }
           </a>
-          <button
-            (click)="logout()"
-            type="button"
-            role="menuitem"
-            class="profile-menu__item profile-menu__item--separated"
-          >
-            Выйти
-          </button>
-        } @else {
-          <a
-            [routerLink]="['login']"
-            (click)="closeMenu()"
-            role="menuitem"
-            class="profile-menu__item"
-          >
-            Войти
-          </a>
+        </li>
+      </ul>
+    </nav>
 
-          <a
-            [routerLink]="['register']"
-            (click)="closeMenu()"
-            role="menuitem"
-            class="profile-menu__item"
+    <div class="theme-picker mobile-theme-picker">
+      <div class="theme-picker__title">Тема</div>
+      <div class="theme-picker__grid">
+        @for (theme of themeService.themes; track theme.id) {
+          <button
+            type="button"
+            class="theme-circle theme-circle--{{ theme.id }}"
+            [class.is-active]="themeService.currentTheme() === theme.id"
+            [attr.title]="theme.title"
+            (click)="changeTheme(theme.id)"
           >
-            Регистрация
-          </a>
+            <span class="theme-circle__check">✓</span>
+          </button>
         }
-      </nav>
-    </wm-popover>
+      </div>
+    </div>
+
+    <div class="desktop-profile-popover">
+      <wm-popover #profileMenu ariaLabel="Меню профиля">
+        <button
+          wmPopoverTrigger
+          type="button"
+          class="linked-block avatar-link"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="profileMenu.isOpen()"
+          aria-label="Открыть меню профиля"
+        >
+          @if (currentAccount.avatarUrl(); as avatarUrl) {
+            <img class="avatar-link__image" [src]="avatarUrl" alt="" />
+          } @else {
+            <svg icon="avatar" class="svg40"></svg>
+          }
+        </button>
+
+        <nav wmPopoverContent class="profile-menu" aria-label="Профиль">
+          @if (isAuthorized) {
+            <a
+              [routerLink]="['profile', 'me']"
+              (click)="closeMenu()"
+              role="menuitem"
+              class="profile-menu__item"
+            >
+              Профиль
+            </a>
+            <button
+              (click)="logout()"
+              type="button"
+              role="menuitem"
+              class="profile-menu__item profile-menu__item--separated"
+            >
+              Выйти
+            </button>
+          } @else {
+            <a
+              [routerLink]="['login']"
+              (click)="closeMenu()"
+              role="menuitem"
+              class="profile-menu__item"
+            >
+              Войти
+            </a>
+
+            <a
+              [routerLink]="['register']"
+              (click)="closeMenu()"
+              role="menuitem"
+              class="profile-menu__item"
+            >
+              Регистрация
+            </a>
+          }
+          <div class="theme-picker">
+            <div class="theme-picker__title">Тема</div>
+            <div class="theme-picker__grid">
+              @for (theme of themeService.themes; track theme.id) {
+                <button
+                  type="button"
+                  class="theme-circle theme-circle--{{ theme.id }}"
+                  [class.is-active]="themeService.currentTheme() === theme.id"
+                  [attr.title]="theme.title"
+                  (click)="changeTheme(theme.id)"
+                >
+                  <span class="theme-circle__check">✓</span>
+                </button>
+              }
+            </div>
+          </div>
+        </nav>
+      </wm-popover>
+    </div>
   </div>
 </header>

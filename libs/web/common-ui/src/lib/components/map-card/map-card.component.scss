@@ -1,20 +1,33 @@
-@use '../../../../../common-ui/src/lib/styles/functions' as *;
-@use '../../../../../common-ui/src/lib/styles/media' as *;
-@use '../../../../../common-ui/src/lib/styles/mixins' as *;
+@use 'functions' as *;
+@use 'media' as *;
+@use 'mixins' as *;
 
 :host {
   display: block;
   width: fluid(269, 177);
-  background: var(--dark-primary-color);
-  color: var(--light-color);
+  background: var(--bg-card-color);
+  color: var(--text-primary-color);
   border-radius: rem(20);
   position: relative;
+  box-shadow: 0 rem(3) rem(10) rgb(from var(--shadow-color) r g b / 6%);
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(rem(-2));
+    box-shadow: 0 rem(5) rem(14) rgb(from var(--shadow-color) r g b / 12%);
+  }
 }
 
 .map-card__image {
   width: 100%;
   border-radius: rem(20);
-  border: fluid(2, 1) solid var(--light-transparent-font-color);
+  border: fluid(2, 1) solid var(--border-popover-color);
+  transition: border-color 0.3s ease;
 }
 
 .label__non-likeable {
@@ -53,14 +66,25 @@
   display: flex;
   justify-content: end;
   align-items: center;
-  color: var(--light-color);
+  color: var(--text-secondary-color);
   font-size: rem(13);
   font-family: 'Platypi', sans-serif;
   cursor: pointer;
+  text-decoration: none;
+  transition: color 0.18s ease;
+
+  svg {
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: var(--btn-primary-bg-color);
+  }
 }
 
 .svg36 {
   @include square(fluid(36, 23));
+  fill: currentColor;
 }
 
 .svg16 {

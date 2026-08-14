@@ -1,77 +1,90 @@
+@use 'functions' as *;
+@use 'media' as *;
+
+:host {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  background-color: rgb(from var(--shadow-color) r g b / 45%);
+}
+
 .layers__modal {
-  width: min(420px, calc(100vw - 32px));
-  padding: 28px;
-  border: 1px solid var(--light-transparent-color);
-  border-radius: 18px;
-  color: var(--light-color);
-  background-color: var(--dark-primary-color);
-  box-shadow: 0 20px 55px var(--dark-primary-transparent-color);
+  width: min(rem(420), calc(100vw - rem(32)));
+  padding: rem(28);
+  border: rem(1) solid var(--border-popover-color);
+  border-radius: rem(18);
+  background-color: var(--bg-card-color);
+  box-shadow: 0 rem(20) rem(55) rgb(from var(--shadow-color) r g b / 25%);
+  color: var(--text-secondary-color);
+
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .layers__modal-title {
-  margin-bottom: 10px;
-  color: var(--light-color);
+  margin-bottom: rem(10);
+  color: var(--text-primary-color);
   font-family: 'Platypi', serif;
-  font-size: 24px;
+  font-size: rem(24);
   font-weight: 600;
   line-height: 1.25;
 }
 
 .layers__modal-text {
-  margin-bottom: 26px;
-  color: var(--light-transparent-font-color);
-  font-size: 15px;
+  margin-bottom: rem(26);
+  color: var(--text-muted-color);
+  font-size: rem(15);
   line-height: 1.55;
 }
 
 .layers__modal-actions {
   display: flex;
-  gap: 10px;
+  gap: rem(10);
 }
 
 .layers__modal-btn {
   flex: 1;
-  min-height: 42px;
-  padding: 10px 16px;
-  border: 1px solid var(--light-transparent-color);
-  border-radius: 10px;
-  color: var(--light-color);
+  min-height: rem(42);
+  padding: rem(10) rem(16);
+  color: var(--btn-secondary-text-color);
   background-color: transparent;
+  border-radius: rem(10);
+  border: rem(1) solid var(--btn-secondary-text-color);
   cursor: pointer;
   font: inherit;
   font-weight: 700;
+
   transition:
-    color 0.18s,
-    background-color 0.18s,
-    border-color 0.18s;
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+
+  &:hover {
+    background-color: var(--bg-popover-hover-color);
+    border-color: var(--text-secondary-color);
+  }
+
+  &:focus-visible {
+    outline: rem(2) solid var(--btn-primary-bg-color);
+    outline-offset: rem(2);
+  }
 }
 
 .layers__modal-btn--danger {
-  border-color: var(--light-color);
-  color: var(--dark-primary-color);
-  background-color: var(--light-color);
+  border-color: var(--error-color);
+  color: var(--error-color);
+  background-color: transparent;
+
+  &:hover {
+    background-color: rgb(from var(--error-color) r g b / 15%);
+    border-color: var(--error-color);
+    color: var(--error-color);
+  }
 }
 
-.layers__modal-btn:hover {
-  border-color: var(--primary-color);
-}
-
-.layers__modal-btn--danger:hover {
-  border-color: var(--light-primary-color);
-  background-color: var(--light-primary-color);
-}
-
-.layers__modal-btn:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-@media (max-width: 480px) {
+@media (max-width: rem(480)) {
   .layers__modal-actions {
     flex-direction: column;
   }
-}
-:host {
-  height: 100%;
-  background-color: var(--primary-color);
 }

@@ -5,7 +5,7 @@
   display: grid;
   padding: 1rem;
   place-content: center;
-  background-color: var(--dark-primary-transparent-color);
+  background-color: rgb(from var(--shadow-color) r g b / 45%);
   backdrop-filter: blur(0.25rem);
 }
 

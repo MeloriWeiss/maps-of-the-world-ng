@@ -23,7 +23,7 @@
   align-items: center;
   font-size: rem(15);
   line-height: rem(17);
-  color: var(--light-transparent-font-color);
+  color: var(--text-muted-color);
 }
 
 .discussions-forums-list {
@@ -36,7 +36,7 @@
   padding: rem(7) rem(30) rem(8) rem(15);
   font-size: rem(18);
   line-height: rem(21);
-  color: var(--light-color);
+  color: var(--text-light-color);
   display: flex;
   justify-content: space-between;
   border-radius: rem(5);
@@ -50,35 +50,32 @@
 
   &.active,
   &:hover {
-    background-color: var(--light-color);
-    color: var(--dark-primary-color);
+    background-color: var(--btn-primary-bg-color);
+    color: var(--btn-primary-text-color);
   }
 }
 
 .sidebar {
   display: block;
   border-radius: rem(10);
-  background-color: var(--dark-primary-transparent-color);
   min-height: rem(400);
+  background-color: var(--bg-surface-main-color);
+  box-shadow: 0 rem(4) rem(12) rgb(from var(--shadow-color) r g b / 5%);
 
   @include tablet {
     display: none;
   }
 }
 
-.new-action-btn {
-  background-color: var(--primary-color);
-  text-align: center;
-  font-weight: 700;
-}
-
 .sidebar-mobile {
   display: none;
+
   @include tablet {
     display: flex;
     justify-content: space-between;
     font-weight: 400;
-    background-color: var(--dark-primary-transparent-color);
+    background-color: var(--bg-surface-main-color);
+    color: var(--text-light-color);
     padding-left: rem(8);
     padding-right: rem(12);
   }
@@ -86,4 +83,5 @@
 
 .svg15 {
   transform: rotate(90deg);
+  fill: currentColor;
 }

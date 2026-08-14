@@ -1,3 +1,5 @@
+@use 'functions' as *;
+
 :host {
   position: relative;
   display: block;
@@ -7,7 +9,7 @@
 }
 
 .virtual-list__spacer {
-  width: 1px;
+  width: rem(1);
   pointer-events: none;
 }
 

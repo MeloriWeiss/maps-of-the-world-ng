@@ -4,6 +4,7 @@
     <textarea
       [formControl]="commentControl"
       (input)="onTextareaInput($event)"
+      (keydown.control.enter)="submit()"
       rows="1"
       class="comment-input__field"
       type="text"
@@ -14,4 +15,3 @@
     </button>
   </div>
 </div>
-(keydown.control.enter)="submit()"

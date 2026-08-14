@@ -15,9 +15,17 @@
 .profile-header-wrapper {
   border-radius: rem(20);
   margin-bottom: rem(45);
+
   background:
-    radial-gradient(circle at 88% 12%, var(--primary-color), transparent 30%),
-    var(--light-primary-color);
+    radial-gradient(
+      circle at 88% 12%,
+      var(--bg-surface-variant-color),
+      transparent 30%
+    ),
+    var(--bg-surface-primary-color);
+
+  box-shadow: 0 rem(4) rem(12) rgb(from var(--shadow-color) r g b / 6%);
+  transition: background-color 0.3s ease;
 
   @include tablet {
     margin-bottom: rem(20);
@@ -52,7 +60,7 @@
 .profile__username {
   @include fluid-text(26, 18);
   line-height: fluid(36, 25);
-  color: var(--dark-color);
+  color: var(--text-on-surface-title-color);
   font-family: 'Platypi', sans-serif;
 
   @include mobile {
@@ -79,40 +87,47 @@
   min-height: rem(34);
   padding: rem(6) rem(12);
   border-radius: rem(9);
-  color: var(--dark-primary-color);
-  background-color: var(--light-color);
+  color: var(--text-secondary-color);
+  background-color: var(--bg-card-color);
   font-size: rem(13);
   font-weight: 700;
   text-decoration: none;
-  transition: background-color 0.2s;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 
   span {
     font-size: rem(17);
   }
 
   &:hover {
-    background-color: var(--primary-color);
+    background-color: var(--btn-primary-bg-color);
+    color: var(--btn-primary-text-color);
   }
 }
 
 .profile__bio {
   max-width: rem(640);
   margin-top: rem(8);
-  color: var(--dark-gray-font-color);
+  color: var(--text-on-surface-main-color);
   line-height: 1.45;
+  opacity: 0.85;
 }
 
 .profile__bio-empty {
   display: inline-block;
   margin-top: rem(8);
-  color: var(--dark-primary-color);
+  color: var(--text-on-surface-main-color);
   font-size: rem(14);
   font-weight: 700;
+  text-decoration: underline;
 }
 
 .profile__member-since {
   margin-top: rem(8);
-  color: var(--light-gray-font-color);
+  color: var(--text-on-surface-muted-color);
+  opacity: 0.6;
   font-size: rem(13);
 }
 
@@ -121,7 +136,8 @@
   gap: fluid(36, 18);
   margin-top: rem(22);
   padding-top: rem(18);
-  border-top: rem(1) solid var(--primary-color);
+  border-top: rem(1) solid var(--border-dark-color);
+  opacity: 0.9;
 
   @include mobile {
     width: 100%;
@@ -133,15 +149,17 @@
 .profile-summary__item {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: start;
   gap: rem(3);
 
   dt {
-    color: var(--light-gray-font-color);
+    color: var(--text-on-surface-main-color);
+    opacity: 0.65;
     font-size: rem(12);
   }
 
   dd {
-    color: var(--dark-primary-color);
+    color: var(--text-on-surface-main-color);
     font-family: 'Platypi', serif;
     font-size: fluid(22, 18);
     font-weight: 700;
@@ -150,6 +168,7 @@
   @include mobile {
     flex: 1;
     text-align: center;
+    max-width: rem(80);
   }
 }
 
@@ -159,6 +178,62 @@
 
 .profile__nav {
   margin-bottom: rem(30);
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.profile__tabs-list {
+  background-color: var(--tabs-bg-color);
+  display: flex;
+  gap: rem(4);
+  width: 100%;
+  min-width: rem(430);
+  padding: rem(4);
+  border-radius: rem(12);
+
+  @include mobile {
+    min-width: max-content;
+  }
+}
+
+.profile__tabs-item {
+  flex: 1 0 0;
+
+  @include mobile {
+    flex-basis: auto;
+  }
+}
+
+.profile__tabs-link {
+  line-height: rem(21);
+  padding: rem(8) rem(20);
+  border-radius: rem(8);
+  color: var(--tabs-text-color);
+  display: block;
+  font-size: rem(16);
+  font-family: 'Play', sans-serif;
+  text-decoration: none;
+  text-align: center;
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+
+  @include mobile {
+    font-size: rem(14);
+    padding: rem(7) rem(18);
+  }
+
+  &.active,
+  &:hover {
+    background-color: var(--tabs-active-bg-color);
+    color: var(--tabs-active-text-color);
+  }
 }
 
 .page-content {
@@ -186,7 +261,9 @@
   overflow: hidden;
   padding: 0;
   border-radius: 50%;
+  border: none;
   line-height: 0;
+  cursor: pointer;
 
   &:disabled {
     cursor: wait;
@@ -208,29 +285,37 @@
   padding: rem(7) rem(5) 0;
   align-content: start;
   justify-items: center;
-  color: var(--light-color);
-  background-color: var(--dark-primary-transparent-color);
+  background-color: var(--light-color-30);
+  color: var(--text-light-color);
   font-size: rem(11);
   font-weight: 700;
   line-height: 1.2;
   opacity: 0;
-  transition: opacity 0.18s;
+  transition: opacity 0.18s ease;
 }
 
 .profile__avatar-menu {
   display: grid;
   min-width: rem(210);
   padding: rem(6);
+  border-radius: rem(10);
+  background-color: var(--bg-popover-color);
+  border: rem(1) solid var(--border-popover-color);
+  box-shadow: 0 rem(8) rem(24) rgb(from var(--shadow-color) r g b / 12%);
 
   button {
     padding: rem(10) rem(12);
     border-radius: rem(8);
-    color: var(--dark-primary-color);
+    border: none;
     font: inherit;
     text-align: left;
+    cursor: pointer;
+    color: var(--text-popover-primary-color);
+    background-color: transparent;
+    transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: var(--light-primary-color);
+      background-color: var(--bg-popover-hover-color);
     }
 
     &:disabled {

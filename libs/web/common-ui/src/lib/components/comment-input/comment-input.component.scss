@@ -7,9 +7,10 @@
 }
 
 .comment-input {
-  background-color: var(--primary-color);
+  background-color: var(--bg-popover-hover-color);
   border-radius: rem(10);
   padding: rem(8) fluid(16, 8) rem(8) rem(8);
+  border: rem(1) solid var(--border-popover-color);
 
   @include tablet {
     padding: rem(8);
@@ -22,7 +23,8 @@
   gap: fluid(12, 8);
 
   @include tablet {
-    background-color: var(--light-primary-color);
+    background-color: var(--bg-main-color);
+    border: rem(1) solid var(--border-popover-color);
     border-radius: rem(8);
     padding: 0 rem(8);
   }
@@ -38,12 +40,17 @@
   font-weight: 400;
   line-height: rem(19);
   border-radius: fluid(10, 8);
-  background-color: var(--light-primary-color);
-  color: var(--light-gray-font-color);
-  padding: rem(8) rem(12);
+  background-color: var(--bg-main-color);
+  color: var(--text-primary-color);
   border: none;
   outline: none;
   resize: none;
+  transition: color 0.2s ease;
+  padding: rem(8) rem(12);
+
+  &::placeholder {
+    color: var(--text-input-placeholder-color);
+  }
 
   @include tablet {
     padding: rem(10) 0;
@@ -70,6 +77,21 @@
   align-self: center;
   padding: rem(8) rem(12);
   border-radius: rem(7);
-  background-color: var(--dark-primary-color);
-  color: var(--light-color);
+  border: none;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: rem(13);
+  cursor: pointer;
+  background-color: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }

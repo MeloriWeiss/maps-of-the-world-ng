@@ -31,6 +31,7 @@
   width: 100%;
   overflow: hidden;
   position: relative;
+  background-color: var(--bg-main-color);
 }
 
 .auth-background {
@@ -65,7 +66,8 @@
     flex: 0;
     display: block;
     width: fluid(1080, 370);
-    background-color: var(--light-color);
+    background-color: var(--bg-card-color);
+    box-shadow: 0 rem(4) rem(24) var(--shadow-color);
     padding: rem(40) rem(16) rem(60);
     border-radius: rem(15);
   }

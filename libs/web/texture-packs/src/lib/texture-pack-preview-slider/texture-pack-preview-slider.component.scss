@@ -19,11 +19,11 @@
     aspect-ratio: 1;
     border-radius: rem(14);
     object-fit: cover;
-    background-color: var(--light-bg-color);
+    background-color: var(--bg-main-color);
   }
 
   ::ng-deep .carousel-arrows {
-    color: var(--dark-primary-color);
+    color: var(--text-primary-color);
   }
 
   ::ng-deep .carousel-arrows .arrow-prev {

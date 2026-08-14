@@ -1,11 +1,13 @@
-﻿:host {
+﻿@use 'functions' as *;
+
+:host {
   position: relative;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) 35px;
+  grid-template-rows: minmax(0, 1fr) rem(35);
   min-width: 0;
   min-height: 0;
-  background: var(--semi-dark-font-color);
-  border-right: 1px solid var(--primary-color);
+  background: var(--bg-surface-main-color);
+  border-right: rem(1) solid var(--border-input-color);
 }
 
 .workspace-status {
@@ -13,28 +15,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  color: var(--gray-color);
-  background: var(--light-bg-color);
-  font-size: 16px;
+  padding: 0 rem(24);
+  color: var(--text-secondary-color);
+  background: var(--bg-mobile-color);
+  font-size: rem(16);
 
   &__zoom {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: rem(10);
 
     input {
-      width: 130px;
-      accent-color: var(--primary-color);
+      width: rem(130);
+      accent-color: var(--btn-primary-bg-color);
     }
 
     output,
     button {
-      padding: 3px 10px;
-      color: var(--light-bg-color);
-      background: var(--primary-color);
-      border-radius: 5px;
-      font-size: 16px;
+      padding: rem(3) rem(10);
+      color: var(--btn-primary-text-color);
+      background: var(--btn-primary-bg-color);
+      border-radius: rem(5);
+      font-size: rem(16);
     }
   }
 }

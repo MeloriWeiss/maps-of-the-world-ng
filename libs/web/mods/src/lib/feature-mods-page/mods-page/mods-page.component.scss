@@ -23,7 +23,7 @@
 
 .mode__breadcrumbs-item {
   font-size: rem(20);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
   font-family: Play, sans-serif;
   line-height: rem(23);
 
@@ -36,6 +36,7 @@
   @include tablet-above {
     @include visually-hidden;
   }
+
   @include tablet {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -44,9 +45,18 @@
 }
 
 .new-action-btn {
-  background-color: var(--primary-color);
+  background-color: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
   text-align: center;
   font-weight: 700;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
 }
 
 .sidebar-mobile {
@@ -55,8 +65,11 @@
   @include tablet {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-weight: 400;
-    background-color: var(--dark-primary-transparent-color);
+    border-radius: rem(6);
+    background-color: var(--bg-surface-main-color);
+    color: var(--text-light-color);
     padding-left: rem(8);
     padding-right: rem(12);
   }
@@ -64,7 +77,7 @@
 
 .mode__card {
   @include tablet {
-    background-color: var(--primary-color);
+    background-color: var(--bg-surface-main-color);
     border-radius: rem(20);
   }
 }
@@ -75,7 +88,7 @@
   justify-content: space-between;
   align-items: center;
   padding: fluid(30, 15) fluid(20, 16) fluid(20, 10) fluid(30, 16);
-  color: var(--light-color);
+  color: var(--text-light-color);
   font-weight: 400;
   @include fluid-text(22, 14);
   line-height: rem(25);
@@ -100,7 +113,7 @@
     display: flex;
     justify-content: space-between;
     font-weight: 400;
-    background-color: var(--dark-primary-transparent-color);
+    background-color: var(--bg-surface-main-color);
     padding-left: rem(8);
     padding-right: rem(12);
   }
@@ -113,8 +126,9 @@
 
 .mode__card-body {
   padding: rem(30) fluid(45, 0) fluid(35, 25) fluid(40, 0);
-  background-color: var(--light-primary-color);
+  background-color: var(--bg-main-color);
   border-radius: fluid(30, 15);
+  transition: background-color 0.3s ease;
 }
 
 .back-btn {
@@ -132,10 +146,10 @@
   }
 
   @include tablet-above {
-    background-color: var(--light-color);
+    background-color: var(--bg-card-color);
     border-radius: fluid(15, 10);
     box-shadow: 0 fluid(4, 2) fluid(4, 2)
-      rgb(from var(--dark-color) r g b / 25%);
+      rgb(from var(--shadow-color) r g b / 6%);
   }
 }
 
@@ -147,10 +161,11 @@
 
   @include tablet {
     border-radius: rem(15);
-    box-shadow: 0 rem(4) rem(4) 0 rgb(from var(--dark-color) r g b / 25%);
-    background: var(--light-color);
+    box-shadow: 0 rem(4) rem(4) 0 rgb(from var(--shadow-color) r g b / 6%);
+    background: var(--bg-card-color);
   }
 }
+
 .mode__header {
   display: flex;
   justify-content: space-between;
@@ -167,7 +182,7 @@
   font-family: 'Play', sans-serif;
   font-weight: 400;
   line-height: fluid(28, 19);
-  color: var(--semi-dark-font-color);
+  color: var(--text-primary-color);
   margin-bottom: rem(6);
 
   @include tablet {
@@ -190,6 +205,8 @@
   @include tablet-above {
     @include visually-hidden;
   }
+
+  fill: currentColor;
 }
 
 .mode__author-name {
@@ -197,7 +214,7 @@
   font-family: 'Platypi', serif;
   font-weight: 400;
   line-height: fluid(28, 19);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
 
   @include tablet-above {
     margin-bottom: rem(12);
@@ -209,7 +226,7 @@
   font-family: 'Play', sans-serif;
   font-weight: 400;
   line-height: fluid(21, 13);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
 }
 
 .mode__stats {
@@ -223,13 +240,25 @@
   height: fit-content;
   @include fluid-text(20, 11);
   line-height: fluid(28, 15);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
   font-weight: 400;
   font-family: 'Platypi', serif;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  svg {
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: var(--btn-primary-bg-color);
+  }
 }
 
 .mode__divider {
-  border: rem(1) solid var(--primary-color);
+  border: rem(1) solid var(--border-popover-color);
   height: 0;
   margin: 0 fluid(40, 11);
 
@@ -249,6 +278,7 @@
 
 .svg15 {
   transform: rotate(90deg);
+  fill: currentColor;
 }
 
 .svg24 {

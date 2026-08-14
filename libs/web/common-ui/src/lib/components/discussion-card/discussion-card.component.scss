@@ -1,17 +1,27 @@
-﻿@use '../../../../../common-ui/src/lib/styles/functions' as *;
-@use '../../../../../common-ui/src/lib/styles/media' as *;
-@use '../../../../../common-ui/src/lib/styles/mixins' as *;
+﻿@use 'functions' as *;
+@use 'media' as *;
+@use 'mixins' as *;
 
 .discussion-card {
   padding: rem(9) fluid(67, 17) rem(9) fluid(47, 31);
-  background-color: var(--light-color);
+  background-color: var(--bg-card-color);
   border-radius: fluid(15, 10);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: 'Platypi', serif;
   font-weight: 400;
-  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgb(from var(--dark-color) r g b / 25%);
+  box-shadow: 0 fluid(4, 2) fluid(4, 2) rgb(from var(--shadow-color) r g b / 8%);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(rem(-2));
+    box-shadow: 0 fluid(6, 3) fluid(8, 4)
+      rgb(from var(--shadow-color) r g b / 12%);
+  }
 }
 
 .header {
@@ -22,13 +32,13 @@
   font-family: 'Play', sans-serif;
   @include fluid-text(20, 14);
   line-height: fluid(23, 16);
-  color: var(--semi-dark-font-color);
+  color: var(--text-primary-color);
 }
 
 .discussion-username {
   @include fluid-text(18, 11);
   line-height: fluid(25, 15);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
 }
 
 .discussion-info {
@@ -39,7 +49,7 @@
 .time-ago {
   @include fluid-text(15, 11);
   line-height: fluid(21, 15);
-  color: var(--primary-color);
+  color: var(--text-muted-color);
   justify-self: start;
 }
 
@@ -53,11 +63,15 @@
   @include fluid-text(18, 11);
   @include flex-center();
   line-height: fluid(25, 15);
-  color: var(--dark-primary-color);
+  color: var(--text-secondary-color);
   gap: rem(3);
 
   @include tablet {
     flex-direction: row-reverse;
+  }
+
+  &:hover {
+    color: var(--btn-primary-bg-color);
   }
 }
 
@@ -69,4 +83,5 @@
 
 .svg35 {
   @include square(fluid(35, 10));
+  fill: currentColor;
 }

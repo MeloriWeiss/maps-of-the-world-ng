@@ -4,7 +4,7 @@
 
 :host {
   @include flex-center();
-  color: var(--dark-primary-color);
+  color: var(--text-primary-color);
   gap: rem(10);
   font-family: 'Play', sans-serif;
   font-weight: 400;
@@ -16,18 +16,19 @@
     gap: rem(12);
   }
 
-  &.light {
-    color: var(--light-color);
+  &.pagination-header {
+    color: var(--text-light-color);
 
     .svg {
-      color: var(--light-color);
+      color: inherit;
     }
 
     .pagination-number {
-      color: var(--light-color);
+      color: inherit;
 
       &.active {
-        background-color: var(--light-transparent-color);
+        background-color: var(--light-color-30);
+        color: var(--text-light-color);
       }
     }
   }
@@ -39,16 +40,21 @@
   cursor: pointer;
   padding: rem(5);
   margin: rem(-5);
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:disabled {
     cursor: default;
-    opacity: 0.35;
+    opacity: 0.3;
   }
 }
 
 .svg {
   position: relative;
-  top: rem(4);
+  top: rem(1);
+  fill: currentColor;
 }
 
 .next-page-icon {
@@ -57,18 +63,32 @@
 
 .pagination-numbers {
   @include flex-center();
-  gap: rem(2);
+  gap: rem(4);
 }
 
 .pagination-number {
   @include square(fluid(35, 26));
+  @include flex-center();
   text-align: center;
   border: none;
   background: none;
   border-radius: 50%;
   cursor: pointer;
-}
+  color: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
 
-.pagination-number.active {
-  background-color: var(--light-color);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover:not(.active) {
+    background-color: rgb(from var(--text-primary-color) r g b / 8%);
+  }
+
+  &.active {
+    background-color: var(--btn-primary-bg-color);
+    color: var(--btn-primary-text-color);
+  }
 }

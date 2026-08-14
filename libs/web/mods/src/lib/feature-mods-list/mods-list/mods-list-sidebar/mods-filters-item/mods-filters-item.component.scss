@@ -1,15 +1,19 @@
 @use 'functions' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+}
 
 .sidebar-content-list-btn {
   padding: rem(7) rem(26);
   font-size: rem(18);
   line-height: rem(21);
-  color: var(--light-color);
+  color: var(--text-light-color);
   display: grid;
   grid-template-columns: rem(143) 1fr;
   align-items: center;
   border-radius: rem(5);
-  transition: all 0.3s;
   border: none;
   background: none;
   text-align: start;
@@ -17,34 +21,37 @@
   cursor: pointer;
   width: 100%;
   position: relative;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+
+  .open-filter-button {
+    color: inherit;
+  }
+
+  .filter-checkbox-name {
+    color: inherit;
+
+    &::before {
+      border: rem(1) solid var(--text-light-color);
+    }
+  }
+
+  .checkbox-input:checked + .filter-checkbox-name::after {
+    background-color: var(--bg-surface-light-color);
+  }
 
   &.active,
   &:hover {
-    background-color: var(--light-color);
-    color: var(--dark-primary-color);
+    background-color: var(--bg-surface-primary-color);
+    color: var(--bg-surface-main-color);
 
-    .open-filter-button {
-      color: var(--dark-primary-color);
+    .filter-checkbox-name::before {
+      border-color: var(--bg-surface-main-color);
     }
 
-    .filter-checkbox-name {
-      color: var(--dark-primary-color);
-    }
-
-    .checkbox-input {
-      + .filter-checkbox-name::before {
-        border: rem(1) solid var(--primary-color);
-      }
-
-      &:checked {
-        + .filter-checkbox-name::before {
-          border-color: var(--dark-primary-color);
-        }
-
-        + .filter-checkbox-name::after {
-          background-color: var(--dark-primary-color);
-        }
-      }
+    .checkbox-input:checked + .filter-checkbox-name::after {
+      background-color: var(--bg-surface-main-color);
     }
   }
 
@@ -63,9 +70,11 @@
   margin: rem(-5);
   border: none;
   background: none;
-  color: var(--light-color);
   cursor: pointer;
   font-size: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.3s ease;
 }
 
@@ -74,6 +83,7 @@
   display: flex;
   flex-direction: column;
   gap: rem(8);
+  width: 100%;
 }
 
 .filters-body-gap {
@@ -84,13 +94,15 @@
   display: grid;
   grid-template-columns: rem(143) 1fr;
   cursor: pointer;
+  align-items: center;
 }
 
 .filter-checkbox-name {
   font-size: rem(18);
   line-height: rem(21);
-  color: var(--light-color);
   position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
 .checkbox-input {
@@ -101,28 +113,43 @@
   + .filter-checkbox-name::before {
     content: '';
     display: inline-block;
-    width: rem(10);
-    height: rem(10);
-    border: rem(1) solid var(--light-color);
-    border-radius: 0;
+    width: rem(14);
+    height: rem(14);
+    border: rem(1) solid var(--text-light-color);
+    border-radius: rem(3);
     margin-right: rem(12);
-    position: relative;
+    background-color: transparent;
+
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
   }
 
   &:checked {
     + .filter-checkbox-name::before {
-      border-color: var(--light-color);
-    }
-
-    + .filter-checkbox-name::after {
-      content: '';
-      position: absolute;
-      width: rem(6);
-      height: rem(6);
-      background-color: var(--light-color);
-      margin: rem(1);
-      left: rem(1);
-      top: rem(8);
+      background-color: var(--bg-surface-light-color);
+      border-color: var(--text-light-color);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 24 24' fill='none' stroke='%23524e47' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: rem(10);
     }
   }
+
+  .sidebar-content-list-btn:hover & {
+    + .filter-checkbox-name::before {
+      border-color: var(--bg-surface-main-color);
+    }
+
+    &:checked + .filter-checkbox-name::before {
+      background-color: var(--bg-surface-main-color);
+      border-color: var(--bg-surface-main-color);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 24 24' fill='none' stroke='%23efe5d8' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    }
+  }
+}
+
+.svg16 {
+  @include square(rem(16));
+  fill: currentColor;
 }

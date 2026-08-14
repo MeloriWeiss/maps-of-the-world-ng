@@ -1,4 +1,6 @@
-﻿:host {
+﻿@use 'functions' as *;
+
+:host {
   display: block;
   min-height: 0;
 }
@@ -7,10 +9,11 @@
   box-sizing: border-box;
   height: 100%;
   min-height: 0;
-  background: var(--semi-dark-font-color);
-  border-radius: 6px;
-  font-size: 12px;
-  padding: 6px;
+  font-size: rem(12);
+  padding: rem(6);
+  border-radius: rem(6);
+  background: var(--bg-section-color);
+  color: var(--text-primary-color);
 }
 
 .nodes-panel__virtual-list {
@@ -18,52 +21,62 @@
 }
 
 .nodes-panel__empty {
-  color: rgb(from var(--light-color) r g b / 65%);
-  padding: 6px;
+  color: var(--text-muted-color);
+  padding: rem(6);
 }
 
 .node-item {
   display: flex;
   align-items: center;
-  min-height: 28px;
+  min-height: rem(28);
   width: 100%;
   cursor: grab;
-  padding: 0 6px;
-  border-radius: 5px;
-  gap: 4px;
+  padding: 0 rem(6);
+  border-radius: rem(5);
+  gap: rem(4);
+  border: none;
+  background: transparent;
+  color: var(--text-primary-color);
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: rgb(from var(--light-color) r g b / 6%);
+    background: var(--bg-popover-hover-color);
   }
-}
 
-.node-item:active {
-  cursor: grabbing;
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 .node-item--active {
   background: rgb(from var(--cyan-color) r g b / 22%);
+
+  &:hover {
+    background: rgb(from var(--cyan-color) r g b / 30%);
+  }
 }
 
 .node-item__expander {
-  width: 18px;
+  width: rem(18);
   text-align: center;
 }
 
 .node-item__dot {
-  opacity: 0.35;
+  color: var(--text-muted-color);
+  opacity: 0.5;
 }
 
 .node-item__icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: rgb(from var(--light-color) r g b / 8%);
-  font-size: 10px;
+  width: rem(18);
+  height: rem(18);
+  border-radius: rem(4);
+  border: rem(1) solid var(--border-input-color);
+  font-size: rem(10);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgb(from var(--light-color) r g b / 90%);
+  background: var(--bg-mobile-color);
+  color: var(--text-secondary-color);
   font-weight: 700;
 }
 
@@ -72,58 +85,68 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--light-primary-color);
+  color: var(--text-primary-color);
 }
 
 .node-item__name-input {
   min-width: 0;
-  height: 22px;
+  height: rem(22);
   flex: 1;
-  padding: 0 4px;
-  color: var(--light-color);
-  background: var(--semi-dark-font-color);
-  border: 1px solid var(--cyan-color);
-  border-radius: 3px;
+  padding: 0 rem(4);
+  color: var(--text-primary-color);
+  background: var(--bg-input-color);
+  border-radius: rem(3);
   outline: none;
+  font-size: rem(12);
+  border: rem(1) solid var(--cyan-color);
 }
 
 .node-item__icon-btn {
   border: none;
   background: none;
-  width: 18px;
-  height: 18px;
+  width: rem(18);
+  height: rem(18);
   cursor: pointer;
   opacity: 0.75;
-  color: var(--light-color);
+  color: var(--text-secondary-color);
   padding: 0;
-  border-radius: 3px;
+  border-radius: rem(3);
+
+  transition:
+    background-color 0.15s ease,
+    opacity 0.15s ease;
 
   &:hover {
-    background: rgb(from var(--light-color) r g b / 12%);
+    background: var(--bg-popover-hover-color);
     opacity: 1;
   }
 }
 
 .node-context-menu {
-  min-width: 140px;
-  padding: 6px;
-  border-radius: 6px;
-  background: var(--semi-dark-font-color);
-  border: 1px solid rgb(from var(--light-color) r g b / 12%);
-  box-shadow: 0 8px 20px rgb(from var(--dark-color) r g b / 35%);
+  min-width: rem(140);
+  padding: rem(6);
+  border-radius: rem(6);
+  box-shadow: 0 rem(8) rem(20) var(--shadow-color);
+  background: var(--bg-popover-color);
+  border: rem(1) solid var(--border-popover-color);
 }
 
 .node-context-menu__action {
   width: 100%;
   border: none;
   background: transparent;
-  color: var(--light-error-background-color);
+  color: var(--red-color);
   text-align: left;
   cursor: pointer;
-  border-radius: 4px;
-  padding: 6px 8px;
+  border-radius: rem(4);
+  padding: rem(6) rem(8);
+  font-weight: 500;
+
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 
   &:hover {
-    background: rgb(from var(--error-color) r g b / 20%);
+    background: rgb(from var(--red-color) r g b / 12%);
   }
 }
