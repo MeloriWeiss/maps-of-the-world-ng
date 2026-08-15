@@ -1,5 +1,5 @@
 export default {
-  displayName: 'forum',
+  displayName: 'web-forum',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/forum',

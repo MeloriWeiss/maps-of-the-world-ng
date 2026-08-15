@@ -1,2 +1,3 @@
+yarn lint:workspace
 npx lint-staged
 yarn test

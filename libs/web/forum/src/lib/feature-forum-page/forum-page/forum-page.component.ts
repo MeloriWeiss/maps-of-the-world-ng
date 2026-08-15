@@ -16,7 +16,7 @@ import {
   ForumService,
 } from '@wm/web/data-access/forum';
 import { CommentItem } from '@wm/web/data-access/shared';
-import { CommentsSectionComponent, SeoService } from '@wm/web/web-shared';
+import { CommentsSectionComponent, SeoService } from '@wm/web/shared';
 import { ForumSidebarComponent } from '../../ui';
 import { ForumPostComponent } from './forum-post/forum-post.component';
 

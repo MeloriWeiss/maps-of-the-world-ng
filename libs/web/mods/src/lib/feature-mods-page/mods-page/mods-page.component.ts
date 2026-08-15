@@ -14,7 +14,7 @@ import {
   NavigationHistoryService,
   CommentsSectionComponent,
   SeoService,
-} from '@wm/web/web-shared';
+} from '@wm/web/shared';
 
 @Component({
   selector: 'wm-mods-page',

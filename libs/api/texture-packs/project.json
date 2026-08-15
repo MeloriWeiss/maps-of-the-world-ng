@@ -1,0 +1,20 @@
+{
+  "name": "api-texture-packs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/texture-packs/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/api/texture-packs/jest.config.ts",
+        "tsConfig": "libs/api/texture-packs/tsconfig.spec.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

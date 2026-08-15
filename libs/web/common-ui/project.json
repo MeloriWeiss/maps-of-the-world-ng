@@ -1,5 +1,5 @@
 {
-  "name": "common-ui",
+  "name": "web-common-ui",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/web/common-ui/src",
   "prefix": "wm",

@@ -15,7 +15,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UserDto } from '../dto';
-import { AccessRequest, JwtAccessGuard } from '@wm/api/api-auth';
+import { AccessRequest, JwtAccessGuard } from '@wm/api/auth';
 
 @ApiTags('Users')
 @Controller('users')

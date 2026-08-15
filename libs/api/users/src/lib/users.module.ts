@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersController } from './controllers';
 import { UsersService } from './services';
 import { DatabaseMainModule } from '@wm/api/database-main';
-import { ApiAuthModule } from '@wm/api/api-auth';
+import { ApiAuthModule } from '@wm/api/auth';
 
 @Module({
   imports: [DatabaseMainModule, ApiAuthModule],

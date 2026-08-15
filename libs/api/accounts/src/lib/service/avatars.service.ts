@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import {
   imageExtension,
@@ -7,7 +7,7 @@ import {
   ObjectStorage,
   UploadedImageFile,
   validateUploadedImage,
-} from '@wm/api/api-shared';
+} from '@wm/api/shared';
 import { PrismaMainService } from '@wm/api/database-main';
 
 @Injectable()

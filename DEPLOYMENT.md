@@ -26,6 +26,9 @@
   - [5. Production ENV](#5-production-env)
   - [6. Первый запуск с MinIO](#6-первый-запуск-с-minio)
   - [7. Первый запуск с Cloudflare R2](#7-первый-запуск-с-cloudflare-r2)
+  - [Смена провайдера объектного хранилища](#смена-провайдера-объектного-хранилища)
+    - [MinIO → R2](#minio--r2)
+    - [R2 → MinIO](#r2--minio)
   - [8. Проверка backend](#8-проверка-backend)
     - [Создание production-суперадминистратора](#создание-production-суперадминистратора)
   - [9. Reverse proxy](#9-reverse-proxy)
@@ -523,8 +526,8 @@ sudo ufw allow from 172.19.0.0/16 to 172.17.0.1 port 5432 proto tcp comment 'gmh
 ```bash
 cd /opt/gm-helper/backend
 cp docker/examples/.env.prod.example docker/.env.prod
-cp docker/examples/.env.minio.prod.example docker/.env.minio.prod
-chmod 600 docker/.env.prod docker/.env.minio.prod
+cp docker/examples/.env.object-storage.minio.prod.example docker/.env.object-storage.prod
+chmod 600 docker/.env.prod docker/.env.object-storage.prod
 ```
 
 Сгенерируйте два разных JWT-секрета и два разных секрета MinIO:
@@ -546,17 +549,17 @@ JWT_REFRESH_SECRET=<different-jwt-refresh-secret>
 JWT_ACCESS_EXPIRES=15m
 JWT_REFRESH_EXPIRES=30d
 MAIN_API_PORT=3000
+```
+
+Настройте `docker/.env.object-storage.prod`:
+
+```env
 OBJECT_STORAGE_ENDPOINT=http://minio:9000
 OBJECT_STORAGE_REGION=us-east-1
 OBJECT_STORAGE_BUCKET=maps-of-the-world-prod
 OBJECT_STORAGE_ACCESS_KEY=gmhelper-api
 OBJECT_STORAGE_SECRET_KEY=<minio-application-secret>
 OBJECT_STORAGE_FORCE_PATH_STYLE=true
-```
-
-Настройте `docker/.env.minio.prod`:
-
-```env
 MINIO_ROOT_USER=gmhelper-admin
 MINIO_ROOT_PASSWORD=<different-minio-admin-secret>
 ```
@@ -566,8 +569,8 @@ MINIO_ROOT_PASSWORD=<different-minio-admin-secret>
 секреты:
 
 ```bash
-stat -c '%a %n' docker/.env.prod docker/.env.minio.prod
-if grep -Eq 'replace-with|root_prod|FDGGJHG|CXVCVSA' docker/.env.prod docker/.env.minio.prod; then echo 'ОШИБКА: остались демонстрационные значения'; else echo 'OK: демонстрационных значений нет'; fi
+stat -c '%a %n' docker/.env.prod docker/.env.object-storage.prod
+if grep -Eq 'replace-with|root_prod|FDGGJHG|CXVCVSA' docker/.env.prod docker/.env.object-storage.prod; then echo 'ОШИБКА: остались демонстрационные значения'; else echo 'OK: демонстрационных значений нет'; fi
 docker compose -f docker/docker-compose.prod.yml --profile minio config --quiet
 ```
 
@@ -596,8 +599,13 @@ docker compose -f docker/docker-compose.prod.yml --profile minio up -d --force-r
 
 ### 7. Первый запуск с Cloudflare R2
 
-Для R2 не создавайте `docker/.env.minio.prod`. Настройте в
-`docker/.env.prod` endpoint, bucket и ограниченный API token:
+Для R2 замените активную конфигурацию хранилища универсальным R2-пресетом и
+настройте в `docker/.env.object-storage.prod` endpoint, bucket и ограниченный API token:
+
+```bash
+cp docker/examples/.env.object-storage.r2.prod.example docker/.env.object-storage.prod
+chmod 600 docker/.env.object-storage.prod
+```
 
 ```env
 OBJECT_STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
@@ -613,6 +621,154 @@ OBJECT_STORAGE_FORCE_PATH_STYLE=false
 ```bash
 docker compose -f docker/docker-compose.prod.yml up -d --build
 ```
+
+### Смена провайдера объектного хранилища
+
+Замена `docker/.env.object-storage.prod` переключает только новые запросы API и
+сама по себе не переносит существующие объекты. Все `objectKey` должны сохраниться
+без изменений: PostgreSQL продолжает ссылаться на них после смены провайдера.
+
+Миграция выполняется в два прохода. Первый переносит основной объём при работающем
+API. Затем API кратковременно останавливается, выполняется финальная синхронизация
+и только после неё меняется провайдер. Исходное хранилище и его данные не удаляйте,
+пока новый провайдер не проверен и не создано несколько успешных backup.
+
+Для `mc` создайте временный root-only файл вне репозитория:
+
+```bash
+sudo install -m 0600 -o root -g root /dev/null /root/gmhelper-storage-migration.env
+sudoedit /root/gmhelper-storage-migration.env
+```
+
+Заполните его, не выводя секреты в терминал или историю команд:
+
+```env
+SOURCE_ENDPOINT=<source-s3-endpoint>
+SOURCE_ACCESS_KEY=<source-access-key>
+SOURCE_SECRET_KEY=<source-secret-key>
+SOURCE_BUCKET=<source-bucket>
+DESTINATION_ENDPOINT=<destination-s3-endpoint>
+DESTINATION_ACCESS_KEY=<destination-access-key>
+DESTINATION_SECRET_KEY=<destination-secret-key>
+DESTINATION_BUCKET=<destination-bucket>
+```
+
+Для MinIO внутри Compose-сети используйте endpoint `http://minio:9000`, для R2 —
+`https://<account-id>.r2.cloudflarestorage.com`. Оба бакета должны существовать до
+копирования. Команды первого и финального проходов одинаковы:
+
+```bash
+sudo docker run --rm --network docker_default \
+  --env-file /root/gmhelper-storage-migration.env \
+  --entrypoint /bin/sh quay.io/minio/mc:latest -c '
+    mc alias set source "$SOURCE_ENDPOINT" "$SOURCE_ACCESS_KEY" "$SOURCE_SECRET_KEY" --api S3v4 &&
+    mc alias set destination "$DESTINATION_ENDPOINT" "$DESTINATION_ACCESS_KEY" "$DESTINATION_SECRET_KEY" --api S3v4 &&
+    mc mirror --overwrite "source/$SOURCE_BUCKET" "destination/$DESTINATION_BUCKET" &&
+    mc diff "source/$SOURCE_BUCKET" "destination/$DESTINATION_BUCKET"
+  '
+```
+
+`mc diff` не должен выводить различия. Не добавляйте `--remove`: до завершения
+проверки миграция не должна удалять объекты ни в одном хранилище.
+
+Перед миграцией временно остановите только расписание backup объектного хранилища:
+
+```bash
+sudo systemctl stop gmhelper-object-storage-backup.timer
+```
+
+PostgreSQL backup останавливать не требуется.
+
+#### MinIO → R2
+
+1. Создайте R2-бакет и ограниченный API token с правами чтения, записи и удаления
+   объектов этого бакета.
+2. Заполните migration-файл: MinIO — `SOURCE_*`, R2 — `DESTINATION_*`.
+3. Выполните первый `mc mirror` при работающем API.
+4. Остановите только API, оставив MinIO работающим:
+
+   ```bash
+   docker compose -f docker/docker-compose.prod.yml --profile minio stop api
+   ```
+
+5. Повторите `mc mirror` для финальной синхронизации и убедитесь, что `mc diff`
+   не выводит различий.
+6. Активируйте универсальный R2-пресет, заполните реальные credentials и проверьте
+   права файла:
+
+   ```bash
+   cp docker/examples/.env.object-storage.r2.prod.example docker/.env.object-storage.prod
+   chmod 600 docker/.env.object-storage.prod
+   docker compose -f docker/docker-compose.prod.yml config --quiet
+   ```
+
+7. Запустите deployment без профиля MinIO:
+
+   ```bash
+   GMHELPER_STORAGE_MODE=r2 gmhelper-deploy
+   ```
+
+8. Проверьте healthcheck, старые изображения, загрузку и удаление тестового объекта.
+   После успешной проверки остановите старый MinIO, но не удаляйте его volume:
+
+   ```bash
+   docker compose -f docker/docker-compose.prod.yml --profile minio stop minio
+   ```
+
+#### R2 → MinIO
+
+1. Активируйте MinIO-пресет и заполните в нём разные application и root credentials.
+   Изменение env-файла ещё не меняет окружение уже работающего API с R2:
+
+   ```bash
+   cp docker/examples/.env.object-storage.minio.prod.example docker/.env.object-storage.prod
+   chmod 600 docker/.env.object-storage.prod
+   ```
+
+2. Запустите только MinIO и `minio-init`. Не пересоздавайте API на этом шаге:
+
+   ```bash
+   docker compose -f docker/docker-compose.prod.yml --profile minio up -d minio minio-init
+   ```
+
+3. Заполните migration-файл: R2 — `SOURCE_*`, MinIO — `DESTINATION_*`.
+4. Выполните первый `mc mirror` при работающем API с R2.
+5. Остановите только API:
+
+   ```bash
+   docker compose -f docker/docker-compose.prod.yml stop api
+   ```
+
+6. Повторите `mc mirror` для финальной синхронизации и убедитесь, что `mc diff`
+   не выводит различий.
+7. Проверьте Compose и запустите обычный MinIO deployment:
+
+   ```bash
+   docker compose -f docker/docker-compose.prod.yml --profile minio config --quiet
+   gmhelper-deploy
+   ```
+
+8. Проверьте healthcheck, старые изображения, загрузку и удаление тестового объекта.
+   Не удаляйте R2-бакет и token до завершения периода проверки и нескольких
+   успешных backup.
+
+После миграции в любом направлении обновите установленную копию backup-скрипта,
+проверьте backup нового провайдера и верните расписание:
+
+```bash
+sudo install -m 0750 -o root -g root \
+  scripts/backup-object-storage-production.sh \
+  /usr/local/sbin/gmhelper-object-storage-backup
+sudo systemctl start gmhelper-object-storage-backup.service
+sudo systemctl status gmhelper-object-storage-backup.service --no-pager
+sudo journalctl -u gmhelper-object-storage-backup.service -n 100 --no-pager
+sudo systemctl start gmhelper-object-storage-backup.timer
+systemctl list-timers gmhelper-object-storage-backup.timer --all
+sudo rm -f /root/gmhelper-storage-migration.env
+```
+
+Не выполняйте `docker compose down --volumes`, `docker volume prune` или удаление
+`docker_minio_data` в рамках миграции.
 
 ### 8. Проверка backend
 
@@ -947,7 +1103,7 @@ sudo du -h "$(docker inspect --format '{{.LogPath}}' api-prod)" "$(docker inspec
 
 PostgreSQL и объектное хранилище копируются независимыми скриптами и systemd
 timers. Ошибка одного источника не блокирует запуск backup другого. Скрипт
-объектного хранилища читает текущие `OBJECT_STORAGE_*` из `docker/.env.prod` и
+объектного хранилища читает текущие `OBJECT_STORAGE_*` из `docker/.env.object-storage.prod` и
 работает как с MinIO, так и с Cloudflare R2 через S3 API.
 
 Установите оба контура backup:
@@ -1006,6 +1162,39 @@ sudo find /var/backups/gm-helper -maxdepth 3 -printf '%M %u:%g %s %p\n'
 sudo du -sh /var/backups/gm-helper /var/backups/gm-helper/postgresql /var/backups/gm-helper/object-storage
 ```
 
+Посчитать существующие копии отдельно для PostgreSQL и объектного хранилища:
+
+```bash
+sudo find /var/backups/gm-helper/postgresql -mindepth 1 -maxdepth 1 -type f | wc -l
+sudo find /var/backups/gm-helper/object-storage -mindepth 1 -maxdepth 1 -type d | wc -l
+```
+
+Посмотреть даты, размеры и пути всех копий:
+
+```bash
+sudo find /var/backups/gm-helper -mindepth 2 -maxdepth 2 -printf '%TY-%Tm-%Td %TH:%TM  %s байт  %p\n' | sort
+```
+
+Проверить автозапуск, текущее состояние и расписание timers:
+
+```bash
+systemctl is-enabled gmhelper-postgresql-backup.timer gmhelper-object-storage-backup.timer
+systemctl is-active gmhelper-postgresql-backup.timer gmhelper-object-storage-backup.timer
+systemctl list-timers 'gmhelper-*-backup.timer' --all
+```
+
+Проверить результат последних запусков и их журналы:
+
+```bash
+sudo systemctl status gmhelper-postgresql-backup.service gmhelper-object-storage-backup.service --no-pager
+sudo journalctl -u gmhelper-postgresql-backup.service -u gmhelper-object-storage-backup.service -n 100 --no-pager
+```
+
+Нормальное состояние timer — `enabled` и `active`. Backup-сервисы имеют тип
+`oneshot`, поэтому между запусками обычно отображаются как `inactive (dead)`.
+Это не ошибка, если последний запуск завершился успешно, в журнале нет ошибок,
+а соответствующая копия появилась в `/var/backups/gm-helper`.
+
 Для временной интерактивной работы внутри каталога можно открыть root shell,
 а после просмотра сразу выйти:
 
@@ -1049,7 +1238,7 @@ lock, а `GMHELPER_BACKUP_MIN_FREE_KIB` — минимальный остато�
 блокируются: `pg_dump` создаёт согласованный снимок, а `mc mirror` копирует
 только завершённые S3-объекты.
 
-При переходе с MinIO на R2 обновите `OBJECT_STORAGE_*` в `docker/.env.prod` и
+При переходе с MinIO на R2 замените содержимое `docker/.env.object-storage.prod` и
 выполните ручной тест `gmhelper-object-storage-backup.service`. PostgreSQL timer
 и его настройки менять не требуется.
 
@@ -1100,8 +1289,9 @@ sudo find /var/backups/gm-helper -maxdepth 3 -printf '%M %u:%g %s %p\n'
 только backup-автоматизации не удаляйте `/etc/tmpfiles.d/gmhelper-maintenance.conf`
 и `/run/lock/gmhelper/maintenance.lock`.
 
-После изменения backup-скрипта или systemd units повторите команды `install`,
-выполните `sudo systemctl daemon-reload` и снова запустите ручной тест.
+После изменения backup-скрипта повторите для него команду `install` и запустите
+ручной тест. Перезапускать timer не требуется. После изменения systemd unit
+повторите его установку и выполните `sudo systemctl daemon-reload`.
 
 ### Частые ошибки
 

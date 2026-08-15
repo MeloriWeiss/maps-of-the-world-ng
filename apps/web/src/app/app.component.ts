@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NavigationManagerComponent } from '@wm/web/web-shared';
+import { NavigationManagerComponent } from '@wm/web/shared';
 import { ModalHostComponent, ToastHostComponent } from '@wm/web/common-ui';
 import { SiteVisitTrackerService } from './site-visit-tracker.service';
 

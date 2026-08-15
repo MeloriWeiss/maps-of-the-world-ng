@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   inject,
+  Renderer2,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -19,7 +20,7 @@ import {
   PaginationComponent,
   PaginationService,
 } from '@wm/web/common-ui';
-import { filter, finalize, switchMap } from 'rxjs';
+import { filter, finalize, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'wm-admin-users',
@@ -37,6 +38,7 @@ export class UsersComponent {
   readonly #router = inject(Router);
   readonly #paginationService = inject(PaginationService);
   readonly #modalService = inject(ModalService);
+  readonly #r2 = inject(Renderer2);
   readonly users = signal<AdminUserDto[]>([]);
   readonly total = signal(0);
   readonly page = signal(1);
@@ -109,8 +111,10 @@ export class UsersComponent {
       user.status === UserStatus.active
         ? UserStatus.blocked
         : UserStatus.active;
+
     this.actionError.set(null);
     this.pendingUserId.set(user.id);
+    this.#r2.addClass(document.body, 'no-scroll');
     this.#modalService
       .show<boolean>(ConfirmationModalComponent, {
         title:
@@ -123,6 +127,7 @@ export class UsersComponent {
         rejectBtnText: 'Отмена',
       })
       .pipe(
+        tap(() => this.#r2.removeClass(document.body, 'no-scroll')),
         filter((confirmed) => confirmed === true),
         switchMap(() => this.#adminService.updateStatus(user.id, status)),
         finalize(() => this.pendingUserId.set(null)),
@@ -139,6 +144,8 @@ export class UsersComponent {
     if (this.pendingUserId() !== null) return;
     this.actionError.set(null);
     this.pendingUserId.set(user.id);
+    this.#r2.addClass(document.body, 'no-scroll');
+
     this.#modalService
       .show<boolean>(ConfirmationModalComponent, {
         title:
@@ -150,6 +157,7 @@ export class UsersComponent {
         rejectBtnText: 'Отмена',
       })
       .pipe(
+        tap(() => this.#r2.removeClass(document.body, 'no-scroll')),
         filter((confirmed) => confirmed === true),
         switchMap(() => this.#adminService.updateRole(user.id, role)),
         finalize(() => this.pendingUserId.set(null)),

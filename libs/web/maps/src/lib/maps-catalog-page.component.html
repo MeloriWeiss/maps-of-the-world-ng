@@ -99,7 +99,10 @@
                   } @else {
                     <span>{{ map.likesCount }} отметок</span>
                   }
-                  <span>{{ map.commentsCount }} комментариев</span>
+                  <div class="map-card__comments">
+                    <svg icon="messages" class="svg16" aria-hidden="true"></svg>
+                    <span>{{ map.commentsCount }}</span>
+                  </div>
                 </div>
               </footer>
             </div>

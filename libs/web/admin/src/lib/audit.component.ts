@@ -12,7 +12,12 @@ import {
 } from './audit-entry.presenter';
 import { AdminAuditAction, AdminAuditTargetType } from './admin.models';
 import { AdminService } from './admin.service';
-import { DatePipe } from '@angular/common';
+import {
+  DatePipe,
+  LowerCasePipe,
+  SlicePipe,
+  UpperCasePipe,
+} from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -30,6 +35,9 @@ import {
     ReactiveFormsModule,
     SelectComponent,
     SelectOptionComponent,
+    SlicePipe,
+    LowerCasePipe,
+    UpperCasePipe,
   ],
   templateUrl: './audit.component.html',
   styleUrl: './audit.component.scss',

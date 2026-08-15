@@ -15,7 +15,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '@wm/web/data-access/auth';
 import { firstValueFrom } from 'rxjs';
 import { CurrentAccountStore } from '@wm/web/data-access/profile';
-import { ThemeService } from '@wm/web/web-shared';
+import { ThemeService } from '@wm/web/shared';
 import {
   animate,
   state,

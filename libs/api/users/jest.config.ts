@@ -1,5 +1,5 @@
 export default {
-  displayName: 'users',
+  displayName: 'api-users',
   preset: '../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

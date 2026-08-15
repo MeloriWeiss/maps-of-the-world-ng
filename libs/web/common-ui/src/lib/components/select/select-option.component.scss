@@ -1,14 +1,17 @@
+@use 'functions' as *;
+
 :host {
   display: block;
-  padding: 0.625rem 0.75rem;
-  border-radius: 0.5rem;
-  color: var(--semi-dark-font-color);
+  padding: rem(10) rem(12);
+  border-radius: rem(8);
+  color: var(--text-primary-color);
   cursor: pointer;
 }
 
 :host(:hover),
 :host(.wm-option--selected) {
-  background-color: var(--light-primary-color);
+  background-color: rgb(from var(--bg-surface-variant-color) r g b / 70%);
+  color: var(--text-light-color);
 }
 
 :host(.wm-option--selected) {

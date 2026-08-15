@@ -1,44 +1,82 @@
-<header>
-  <p class="eyebrow">Администрирование</p>
-  <h1>Обзор сайта</h1>
+<header class="admin-dashboard-header">
+  <p class="admin-dashboard-header__eyebrow">Администрирование</p>
+  <h1 class="admin-dashboard-header__title">Обзор сайта</h1>
 </header>
+
 @if (isLoading()) {
-  <p>Загрузка статистики…</p>
+  <p class="admin-dashboard__loading-text">Загрузка статистики…</p>
 }
+
 @if (dashboardError(); as error) {
-  <div class="request-error" role="alert">
-    <span>{{ error }}</span>
-    <button type="button" (click)="loadDashboard()">Повторить</button>
+  <div
+    class="admin-dashboard__error-banner dashboard-error-banner"
+    role="alert"
+  >
+    <span class="dashboard-error-banner__message">{{ error }}</span>
+
+    <button
+      class="dashboard-error-banner__btn"
+      type="button"
+      (click)="loadDashboard()"
+    >
+      Повторить
+    </button>
   </div>
 }
+
 @if (dashboard(); as data) {
-  <section class="stats" aria-label="Основные показатели">
-    <article>
-      <span>Пользователи</span><strong>{{ data.users }}</strong>
+  <section
+    class="admin-dashboard__metrics stats-grid"
+    aria-label="Основные показатели"
+  >
+    <article class="stats-grid__item stats-card">
+      <span class="stats-card__label">Пользователи</span>
+      <strong class="stats-card__value">{{ data.users }}</strong>
     </article>
-    <article>
-      <span>Заблокированы</span><strong>{{ data.blockedUsers }}</strong>
+
+    <article class="stats-grid__item stats-card">
+      <span class="stats-card__label">Заблокированы</span>
+      <strong class="stats-card__value">{{ data.blockedUsers }}</strong>
     </article>
-    <article>
-      <span>Карты</span><strong>{{ data.maps }}</strong>
+
+    <article class="stats-grid__item stats-card">
+      <span class="stats-card__label">Карты</span>
+      <strong class="stats-card__value">{{ data.maps }}</strong>
     </article>
-    <article>
-      <span>Наборы текстур</span><strong>{{ data.texturePacks }}</strong>
+
+    <article class="stats-grid__item stats-card">
+      <span class="stats-card__label">Наборы текстур</span>
+      <strong class="stats-card__value">{{ data.texturePacks }}</strong>
     </article>
-    <article>
-      <span>Темы форума</span><strong>{{ data.discussions }}</strong>
+
+    <article class="stats-grid__item stats-card">
+      <span class="stats-card__label">Темы форума</span>
+      <strong class="stats-card__value">{{ data.discussions }}</strong>
     </article>
-    <article>
-      <span>Комментарии</span><strong>{{ data.comments }}</strong>
+
+    <article class="stats-grid__item stats-card">
+      <span class="stats-card__label">Комментарии</span>
+      <strong class="stats-card__value">{{ data.comments }}</strong>
     </article>
   </section>
-  <section class="system-card" aria-labelledby="system-status-title">
-    <div class="system-card__heading">
-      <div>
-        <h2 id="system-status-title">Состояние системы</h2>
-        <p>Доступность основных сервисов на момент последней проверки.</p>
+
+  <section
+    class="admin-dashboard__panel dashboard-panel"
+    aria-labelledby="system-status-title"
+  >
+    <div class="dashboard-panel__header">
+      <div class="dashboard-panel__heading-text">
+        <h2 class="dashboard-panel__title" id="system-status-title">
+          Состояние системы
+        </h2>
+
+        <p class="dashboard-panel__description">
+          Доступность основных сервисов на момент последней проверки.
+        </p>
       </div>
+
       <button
+        class="dashboard-panel__action-btn"
         type="button"
         [disabled]="systemStatusLoading()"
         (click)="loadSystemStatus()"
@@ -46,23 +84,33 @@
         {{ systemStatusLoading() ? 'Проверяем…' : 'Проверить' }}
       </button>
     </div>
+
     @if (systemStatusError(); as error) {
-      <div class="request-error" role="alert">
-        <span>{{ error }}</span>
+      <div class="dashboard-panel__error dashboard-error-banner" role="alert">
+        <span class="dashboard-error-banner__message">{{ error }}</span>
       </div>
     }
+
     @if (systemStatus(); as system) {
-      <div class="system-grid">
-        <article>
-          <span>API</span><strong class="status-available">Доступен</strong>
-        </article>
-        <article>
-          <span>PostgreSQL</span>
+      <div class="dashboard-panel__system-grid system-status-grid">
+        <article class="system-status-grid__item system-status-card">
+          <span class="system-status-card__label">API</span>
+
           <strong
-            [class.status-available]="
+            class="system-status-card__value resource-status resource-status--available"
+            >Доступен
+          </strong>
+        </article>
+
+        <article class="system-status-grid__item system-status-card">
+          <span class="system-status-card__label">PostgreSQL</span>
+
+          <strong
+            class="system-status-card__value resource-status"
+            [class.resource-status--available]="
               system.resources.database.status === 'available'
             "
-            [class.status-unavailable]="
+            [class.resource-status--unavailable]="
               system.resources.database.status === 'unavailable'
             "
           >
@@ -72,15 +120,21 @@
                 : 'Недоступна'
             }}
           </strong>
-          <small>{{ system.resources.database.responseTimeMs }} мс</small>
+
+          <small class="system-status-card__ms"
+            >{{ system.resources.database.responseTimeMs }} мс
+          </small>
         </article>
-        <article>
-          <span>Хранилище</span>
+
+        <article class="system-status-grid__item system-status-card">
+          <span class="system-status-card__label">Хранилище</span>
+
           <strong
-            [class.status-available]="
+            class="system-status-card__value resource-status"
+            [class.resource-status--available]="
               system.resources.objectStorage.status === 'available'
             "
-            [class.status-unavailable]="
+            [class.resource-status--unavailable]="
               system.resources.objectStorage.status === 'unavailable'
             "
           >
@@ -90,69 +144,105 @@
                 : 'Недоступно'
             }}
           </strong>
-          <small>{{ system.resources.objectStorage.responseTimeMs }} мс</small>
+
+          <small class="system-status-card__ms"
+            >{{ system.resources.objectStorage.responseTimeMs }} мс
+          </small>
         </article>
-        <article>
-          <span>Время работы API</span><strong>{{ uptimeLabel() }}</strong>
+
+        <article class="system-status-grid__item system-status-card">
+          <span class="system-status-card__label">Время работы API</span>
+          <strong class="system-status-card__value">{{ uptimeLabel() }}</strong>
         </article>
-        <article>
-          <span>Версия</span><strong>{{ system.version }}</strong>
+
+        <article class="system-status-grid__item system-status-card">
+          <span class="system-status-card__label">Версия</span>
+          <strong class="system-status-card__value">
+            {{ system.version }}
+          </strong>
         </article>
-        <article>
-          <span>Проверено</span
-          ><strong>{{
-            system.checkedAt | date: 'dd.MM.yyyy, HH:mm:ss'
-          }}</strong>
+
+        <article class="system-status-grid__item system-status-card">
+          <span class="system-status-card__label">Проверено</span>
+          <strong class="system-status-card__value">
+            {{ system.checkedAt | date: 'dd.MM.yyyy, HH:mm:ss' }}
+          </strong>
         </article>
       </div>
     }
   </section>
-  <section class="chart-card activity-card">
-    <div class="chart-heading">
-      <div>
-        <h2>Посещаемость и регистрации</h2>
-        <p>Один визит учитывается за браузерную сессию.</p>
+
+  <section class="admin-dashboard__panel dashboard-panel">
+    <div class="dashboard-panel__header">
+      <div class="dashboard-panel__heading-text">
+        <h2 class="dashboard-panel__title">Посещаемость и регистрации</h2>
+        <p class="dashboard-panel__description">
+          Один визит учитывается за браузерную сессию.
+        </p>
       </div>
-      <div class="period-filter" aria-label="Период статистики">
+
+      <div
+        class="dashboard-panel__period-toggle period-toggle"
+        aria-label="Период статистики"
+      >
         <button
+          class="period-toggle__btn"
+          [class.period-toggle__btn--active]="selectedPeriod() === 1"
           type="button"
-          [class.active]="selectedPeriod() === 1"
           (click)="selectPeriod(1)"
         >
           День
         </button>
+
         <button
+          class="period-toggle__btn"
+          [class.period-toggle__btn--active]="selectedPeriod() === 7"
           type="button"
-          [class.active]="selectedPeriod() === 7"
           (click)="selectPeriod(7)"
         >
           Неделя
         </button>
+
         <button
+          class="period-toggle__btn"
+          [class.period-toggle__btn--active]="selectedPeriod() === 30"
           type="button"
-          [class.active]="selectedPeriod() === 30"
           (click)="selectPeriod(30)"
         >
           Месяц
         </button>
       </div>
     </div>
+
     <form
-      class="custom-period"
+      class="dashboard-panel__custom-period dashboard-period-form"
       [formGroup]="periodForm"
       (ngSubmit)="applyCustomPeriod()"
     >
-      <label>
-        С
-        <input type="date" formControlName="from" required />
+      <label class="dashboard-period-form__field">
+        <span class="dashboard-period-form__label">С</span>
+        <input
+          class="dashboard-period-form__input"
+          type="date"
+          formControlName="from"
+          required
+        />
       </label>
-      <label>
-        По
-        <input type="date" formControlName="to" required />
+
+      <label class="dashboard-period-form__field">
+        <span class="dashboard-period-form__label">По</span>
+        <input
+          class="dashboard-period-form__input"
+          type="date"
+          formControlName="to"
+          required
+        />
       </label>
-      <div class="custom-period__field">
-        <span>Шаг графика</span>
+
+      <div class="dashboard-period-form__field">
+        <span class="dashboard-period-form__label">Шаг графика</span>
         <wm-select
+          class="dashboard-period-form__select"
           ariaLabel="Выбрать шаг графика"
           [value]="periodForm.controls.interval.value"
           (valueChange)="selectInterval($event)"
@@ -164,40 +254,63 @@
           <wm-option value="year" label="Год">Год</wm-option>
         </wm-select>
       </div>
-      <button type="submit">Применить</button>
+
+      <button class="dashboard-period-form__btn" type="submit">
+        Применить
+      </button>
     </form>
+
     @if (analyticsLoading()) {
-      <p class="loading" aria-live="polite">Загрузка данных за период…</p>
+      <p class="dashboard-panel__loading-text" aria-live="polite">
+        Загрузка данных за период…
+      </p>
     }
+
     @if (analyticsError(); as error) {
-      <div class="request-error" role="alert">
-        <span>{{ error }}</span>
-        <button type="button" (click)="applyCustomPeriod()">Повторить</button>
+      <div class="dashboard-panel__error dashboard-error-banner" role="alert">
+        <span class="dashboard-error-banner__message">{{ error }}</span>
+        <button
+          class="dashboard-error-banner__btn"
+          type="button"
+          (click)="applyCustomPeriod()"
+        >
+          Повторить
+        </button>
       </div>
     }
+
     @if (intervalNotice(); as notice) {
-      <p class="interval-notice" role="status">{{ notice }}</p>
+      <p class="dashboard-panel__notice" role="status">{{ notice }}</p>
     }
+
     @if (analytics(); as activity) {
-      <div class="activity-summary">
-        <p>
-          <span>Посещения</span><strong>{{ activity.summary.visits }}</strong>
-        </p>
-        <p>
-          <span>Уникальные посетители</span
-          ><strong>{{ activity.summary.uniqueVisitors }}</strong>
-        </p>
-        <p>
-          <span>Регистрации</span
-          ><strong>{{ activity.summary.registered }}</strong>
-        </p>
+      <div class="dashboard-panel__summary chart-summary-grid">
+        <div class="chart-summary-grid__item summary-card">
+          <span class="summary-card__label">Посещения</span>
+          <strong class="summary-card__value">{{
+            activity.summary.visits
+          }}</strong>
+        </div>
+        <div class="chart-summary-grid__item summary-card">
+          <span class="summary-card__label">Уникальные посетители</span>
+          <strong class="summary-card__value">{{
+            activity.summary.uniqueVisitors
+          }}</strong>
+        </div>
+        <div class="chart-summary-grid__item summary-card">
+          <span class="summary-card__label">Регистрации</span>
+          <strong class="summary-card__value">{{
+            activity.summary.registered
+          }}</strong>
+        </div>
       </div>
-      <div class="activity-chart">
+
+      <div class="dashboard-panel__chart-wrap">
         <canvas
           baseChart
           type="line"
           [data]="activityChartData()"
-          [options]="activityChartOptions"
+          [options]="activityChartOptions()"
         >
           За выбранный период: посещений {{ activity.summary.visits }},
           уникальных посетителей {{ activity.summary.uniqueVisitors }},
@@ -206,13 +319,28 @@
       </div>
     }
   </section>
-  <section class="chart-card">
-    <h2>Распределение контента</h2>
-    <div class="chart">
-      <canvas baseChart type="doughnut" [data]="chartData()"
-        >Диаграмма распределения контента: карт {{ data.maps }}, наборов текстур
-        {{ data.texturePacks }}, тем форума {{ data.discussions }}.</canvas
+
+  <section class="admin-dashboard__panel dashboard-panel">
+    <div class="dashboard-panel__header">
+      <div class="dashboard-panel__heading-text">
+        <h2 class="dashboard-panel__title dashboard-panel__title--standalone">
+          Распределение контента
+        </h2>
+      </div>
+    </div>
+
+    <div
+      class="dashboard-panel__chart-wrap dashboard-panel__chart-wrap--doughnut"
+    >
+      <canvas
+        baseChart
+        type="doughnut"
+        [data]="chartData()"
+        [options]="doughnutChartOptions()"
       >
+        Диаграмма распределения контента: карт {{ data.maps }}, наборов текстур
+        {{ data.texturePacks }}, тем форума {{ data.discussions }}.
+      </canvas>
     </div>
   </section>
 }

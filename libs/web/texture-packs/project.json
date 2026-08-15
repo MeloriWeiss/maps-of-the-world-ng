@@ -1,5 +1,5 @@
 {
-  "name": "texture-packs",
+  "name": "web-texture-packs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/web/texture-packs/src",
   "prefix": "wm",

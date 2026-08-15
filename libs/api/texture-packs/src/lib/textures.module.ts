@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ApiAuthModule } from '@wm/api/api-auth';
+import { ApiAuthModule } from '@wm/api/auth';
 import { DatabaseMainModule } from '@wm/api/database-main';
-import { ObjectStorageModule } from '@wm/api/api-shared';
+import { ObjectStorageModule } from '@wm/api/shared';
 import { TexturesController } from './textures.controller';
 import { TexturesService } from './textures.service';
 import { TexturePacksController } from './texture-packs.controller';

@@ -72,4 +72,5 @@ package-lock.json
 !.env.example
 !docker/examples/
 !docker/examples/.env.prod.example
-!docker/examples/.env.minio.prod.example
+!docker/examples/.env.object-storage.minio.prod.example
+!docker/examples/.env.object-storage.r2.prod.example

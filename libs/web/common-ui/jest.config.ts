@@ -1,5 +1,5 @@
 export default {
-  displayName: 'common-ui',
+  displayName: 'web-common-ui',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/common-ui',

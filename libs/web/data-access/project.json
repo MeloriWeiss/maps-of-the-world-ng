@@ -1,5 +1,5 @@
 {
-  "name": "data-access",
+  "name": "web-data-access",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/web/data-access/src",
   "prefix": "wm",

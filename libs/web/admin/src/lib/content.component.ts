@@ -4,6 +4,7 @@ import {
   computed,
   DestroyRef,
   inject,
+  Renderer2,
   signal,
   WritableSignal,
 } from '@angular/core';
@@ -20,7 +21,7 @@ import {
   SelectOptionComponent,
 } from '@wm/web/common-ui';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { filter, finalize, Observable, switchMap } from 'rxjs';
+import { filter, finalize, Observable, switchMap, tap } from 'rxjs';
 import {
   AdminDiscussionDto,
   AdminMapDto,
@@ -52,6 +53,7 @@ export class ContentComponent {
   readonly #destroyRef = inject(DestroyRef);
   readonly #route = inject(ActivatedRoute);
   readonly #router = inject(Router);
+  readonly #r2 = inject(Renderer2);
   readonly #paginationService = inject(PaginationService);
   readonly #formBuilder = inject(NonNullableFormBuilder);
   #loadVersion = 0;
@@ -110,6 +112,8 @@ export class ContentComponent {
     if (this.pendingMapId() !== null) return;
     this.actionError.set(null);
     this.pendingMapId.set(item.id);
+    this.#r2.addClass(document.body, 'no-scroll');
+
     this.#confirmVisibility(item.name, item.isHidden)
       .pipe(
         switchMap(() =>
@@ -187,6 +191,8 @@ export class ContentComponent {
     if (this.pendingTexturePackId() !== null) return;
     this.actionError.set(null);
     this.pendingTexturePackId.set(item.id);
+    this.#r2.addClass(document.body, 'no-scroll');
+
     this.#confirmVisibility(item.name, item.isHidden)
       .pipe(
         switchMap(() =>
@@ -216,6 +222,8 @@ export class ContentComponent {
     if (this.pendingDiscussionId() !== null) return;
     this.actionError.set(null);
     this.pendingDiscussionId.set(item.id);
+    this.#r2.addClass(document.body, 'no-scroll');
+
     this.#confirmVisibility(item.title, item.isHidden)
       .pipe(
         switchMap(() =>
@@ -249,7 +257,10 @@ export class ContentComponent {
         agreeBtnText: isHidden ? 'Вернуть' : 'Скрыть',
         rejectBtnText: 'Отмена',
       })
-      .pipe(filter((confirmed) => confirmed === true));
+      .pipe(
+        tap(() => this.#r2.removeClass(document.body, 'no-scroll')),
+        filter((confirmed) => confirmed === true),
+      );
   }
 
   #loadActiveContent(page: number) {

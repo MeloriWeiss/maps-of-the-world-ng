@@ -158,13 +158,13 @@ injection. Поэтому бизнес-сервис не знает endpoint, б
 
 Основные файлы:
 
-- [`object-storage.interface.ts`](libs/api/textures/src/lib/object-storage.interface.ts) —
+- [`object-storage.interface.ts`](libs/api/shared/src/lib/object-storage/object-storage.interface.ts) —
   контракт хранилища;
-- [`s3-object-storage.service.ts`](libs/api/textures/src/lib/s3-object-storage.service.ts) —
+- [`s3-object-storage.service.ts`](libs/api/shared/src/lib/object-storage/s3-object-storage.service.ts) —
   S3-адаптер;
-- [`textures.service.ts`](libs/api/textures/src/lib/textures.service.ts) —
+- [`textures.service.ts`](libs/api/texture-packs/src/lib/textures.service.ts) —
   бизнес-логика;
-- [`textures.module.ts`](libs/api/textures/src/lib/textures.module.ts) —
+- [`textures.module.ts`](libs/api/texture-packs/src/lib/textures.module.ts) —
   регистрация provider;
 - [`schema.prisma`](libs/api/database-main/src/lib/prisma/schema.prisma) —
   модель метаданных `Texture`.
@@ -204,14 +204,16 @@ MinIO на R2 без изменения URL API.
 | `MINIO_ROOT_USER`                 | Администратор self-hosted MinIO                                 |
 | `MINIO_ROOT_PASSWORD`             | Пароль администратора self-hosted MinIO                         |
 
-`MINIO_ROOT_*` не используются API и не нужны для Cloudflare R2. В production
-они находятся в отдельном ENV-файле, доступном только контейнерам MinIO и
-`minio-init`.
+`MINIO_ROOT_*` не используются API и не нужны для Cloudflare R2. Для быстрого
+переключения провайдера production использует единый рабочий файл
+`docker/.env.object-storage.prod`. Docker Compose явно заменяет административные
+переменные MinIO пустыми значениями в окружении API, поэтому root-секрет туда не
+передаётся. Migrator файл объектного хранилища вообще не получает.
 
 Примеры конфигурации:
 
-- [`object-storage.minio.env.example`](docker/examples/object-storage.minio.env.example);
-- [`object-storage.r2.env.example`](docker/examples/object-storage.r2.env.example).
+- [`.env.object-storage.minio.prod.example`](docker/examples/.env.object-storage.minio.prod.example);
+- [`.env.object-storage.r2.prod.example`](docker/examples/.env.object-storage.r2.prod.example).
 
 ## Инварианты
 
@@ -227,4 +229,5 @@ MinIO на R2 без изменения URL API.
 
 Последний пункт важен при миграции: сначала нужно перенести содержимое бакета
 с сохранением всех `objectKey`, проверить целостность, а затем переключать
-ENV-конфигурацию API.
+ENV-конфигурацию API. Двусторонняя процедура MinIO ↔ R2 описана в разделе
+«Смена провайдера объектного хранилища» файла [`DEPLOYMENT.md`](DEPLOYMENT.md#смена-провайдера-объектного-хранилища).

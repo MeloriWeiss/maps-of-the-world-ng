@@ -1,5 +1,5 @@
 import { parseDurationToMs } from '../../utils';
-import { getFromEnv } from '@wm/api/api-shared';
+import { getFromEnv } from '@wm/api/shared';
 
 export const jwtConfig = {
   accessToken: {

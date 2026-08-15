@@ -1,5 +1,5 @@
 export default {
-  displayName: 'feature-home-page',
+  displayName: 'web-home',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/feature-home-page',

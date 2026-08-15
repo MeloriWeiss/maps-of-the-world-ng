@@ -18,8 +18,8 @@ import {
 } from '@angular/common/http';
 import { authInitializer, authInterceptor } from '@wm/web/auth';
 import { provideApiConfig } from '../provide-utils/provide-api-config';
-import { globalHttpErrorInterceptor } from '@wm/web/web-shared';
-import { SEO_CONFIG, SeoService } from '@wm/web/web-shared';
+import { globalHttpErrorInterceptor } from '@wm/web/shared';
+import { SEO_CONFIG, SeoService } from '@wm/web/shared';
 import { TitleStrategy } from '@angular/router';
 import { environment } from '../environments/environment';
 

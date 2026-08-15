@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { isProd } from '@wm/api/api-shared';
+import { isProd } from '@wm/api/shared';
 import { AuthTokens } from '@wm/shared/common';
 import { jwtConfig } from '../jwt';
 

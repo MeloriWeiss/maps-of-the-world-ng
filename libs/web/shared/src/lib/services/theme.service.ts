@@ -39,7 +39,7 @@ export class ThemeService {
   private initializeTheme() {
     const savedTheme = localStorage.getItem(this.STORAGE_THEME);
 
-    if (savedTheme) {
+    if (savedTheme && this.themes.some((theme) => theme.id === savedTheme)) {
       this.setTheme(savedTheme);
       return;
     }

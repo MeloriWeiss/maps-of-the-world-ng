@@ -1,5 +1,5 @@
 export default {
-  displayName: 'mods',
+  displayName: 'web-mods',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/mods',

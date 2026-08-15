@@ -34,7 +34,7 @@ if (( $(df --output=avail "${BACKUP_DIR}" | tail -n 1) < MIN_FREE_KIB )); then
   exit 1
 fi
 mkdir -- "${TEMP_DIR}"
-grep -E '^OBJECT_STORAGE_(ENDPOINT|BUCKET|ACCESS_KEY|SECRET_KEY)=' "${PROJECT_DIR}/docker/.env.prod" > "${STORAGE_ENV_FILE}"
+grep -E '^OBJECT_STORAGE_(ENDPOINT|BUCKET|ACCESS_KEY|SECRET_KEY)=' "${PROJECT_DIR}/docker/.env.object-storage.prod" > "${STORAGE_ENV_FILE}"
 [[ "$(wc -l < "${STORAGE_ENV_FILE}")" -eq 4 ]]
 docker run --rm --network docker_default --env-file "${STORAGE_ENV_FILE}" --volume "${TEMP_DIR}:/backup" --entrypoint /bin/sh quay.io/minio/mc:latest -c 'mc alias set source "$OBJECT_STORAGE_ENDPOINT" "$OBJECT_STORAGE_ACCESS_KEY" "$OBJECT_STORAGE_SECRET_KEY" && mc mirror --overwrite "source/$OBJECT_STORAGE_BUCKET" /backup'
 mv -- "${TEMP_DIR}" "${SNAPSHOT_DIR}"

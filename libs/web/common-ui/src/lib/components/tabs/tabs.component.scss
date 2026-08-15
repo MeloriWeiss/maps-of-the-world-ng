@@ -1,3 +1,6 @@
+@use 'functions' as *;
+@use 'media' as *;
+
 :host {
   display: block;
   max-width: 100%;
@@ -14,34 +17,40 @@
 
 .tabs__list {
   display: flex;
+  gap: rem(4);
   width: 100%;
   min-width: max-content;
   margin: 0;
-  padding: 0.25rem;
-  border-radius: 0.75rem;
-  background-color: var(--dark-primary-transparent-color);
+  padding: rem(4);
+  border-radius: rem(12);
+  background-color: var(--tabs-bg-color);
   list-style: none;
 }
 
 .tabs__item {
   flex: 1 0 0;
+
+  @include mobile {
+    flex-basis: auto;
+  }
 }
 
 .tabs__control {
   display: block;
   width: 100%;
-  padding: 0.5rem 1.25rem;
+  padding: fluid(8, 7) fluid(20, 18);
   border: 0;
-  border-radius: 0.5rem;
-  color: var(--light-color);
+  border-radius: rem(8);
+  color: var(--tabs-text-color);
   background: transparent;
-  font:
-    1rem/1.3125 'Play',
-    sans-serif;
+  font-family: 'Play', sans-serif;
+  font-size: fluid(16, 14);
+  line-height: 1.3125;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
+
   transition:
     background-color 0.2s,
     color 0.2s;
@@ -49,17 +58,6 @@
 
 .tabs__control:hover,
 .tabs__control--active {
-  color: var(--dark-primary-color);
-  background-color: var(--light-color);
-}
-
-@media (max-width: 30rem) {
-  .tabs__item {
-    flex-basis: auto;
-  }
-
-  .tabs__control {
-    padding: 0.4375rem 1.125rem;
-    font-size: 0.875rem;
-  }
+  color: var(--tabs-active-text-color);
+  background-color: var(--tabs-active-bg-color);
 }

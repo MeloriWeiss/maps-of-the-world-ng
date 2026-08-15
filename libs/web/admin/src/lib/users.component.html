@@ -1,79 +1,120 @@
-<header>
-  <div>
-    <p class="eyebrow">Управление доступом</p>
-    <h1>Пользователи</h1>
-    <p>Всего: {{ total() }}</p>
+<!-- Шапка страницы -->
+<header class="user-management-header">
+  <div class="user-management-header__info">
+    <p class="user-management-header__eyebrow">Управление доступом</p>
+    <h1 class="user-management-header__title">Пользователи</h1>
+    <p class="user-management-header__counter">Всего: {{ total() }}</p>
   </div>
-  <form class="search" (ngSubmit)="searchUsers()">
-    <label for="admin-user-search">Поиск</label>
+
+  <form
+    class="user-management-header__search user-search"
+    (ngSubmit)="searchUsers()"
+  >
+    <label class="user-search__label" for="admin-user-search">Поиск</label>
+
     <input
+      class="user-search__input"
       id="admin-user-search"
       name="search"
       [(ngModel)]="search"
       placeholder="Email или имя пользователя"
     />
-    <button type="submit">Найти</button>
+
+    <button class="user-search__btn" type="submit">Найти</button>
   </form>
 </header>
+
 @if (loadError(); as error) {
-  <div class="request-error" role="alert">
-    <span>{{ error }}</span>
-    <button type="button" (click)="loadUsers()">Повторить</button>
+  <div class="user-management__error-banner user-error-banner" role="alert">
+    <span class="user-error-banner__message">{{ error }}</span>
+
+    <button class="user-error-banner__btn" type="button" (click)="loadUsers()">
+      Повторить
+    </button>
   </div>
 }
+
 @if (actionError(); as error) {
-  <p class="action-error" role="alert">{{ error }}</p>
+  <p class="user-management__action-error" role="alert">{{ error }}</p>
 }
+
 @if (isLoading() && users().length === 0) {
-  <p>Загрузка пользователей…</p>
+  <p class="user-management__loading-text">Загрузка пользователей…</p>
 }
+
 @if (!isLoading() || users().length > 0) {
   <div
-    class="table-wrap"
-    [class.table-wrap--loading]="isLoading()"
+    class="user-management__table-wrap"
+    [class.user-management__table-wrap--loading]="isLoading()"
     [attr.aria-busy]="isLoading()"
   >
-    <table>
+    <table class="user-management__table">
       <colgroup>
-        <col class="user-column" />
-        <col class="role-column" />
-        <col class="status-column" />
-        <col class="date-column" />
-        <col class="actions-column" />
+        <col class="user-management__col user-management__col--user" />
+        <col class="user-management__col user-management__col--role" />
+        <col class="user-management__col user-management__col--status" />
+        <col class="user-management__col user-management__col--date" />
+        <col class="user-management__col user-management__col--actions" />
       </colgroup>
+
       <thead>
-        <tr>
-          <th>Пользователь</th>
-          <th>Роль</th>
-          <th>Статус</th>
-          <th>Дата регистрации</th>
-          <th><span class="visually-hidden">Действия</span></th>
+        <tr class="user-management__row user-management__row--header">
+          <th class="user-management__cell user-management__cell--head">
+            Пользователь
+          </th>
+
+          <th class="user-management__cell user-management__cell--head">
+            Роль
+          </th>
+
+          <th class="user-management__cell user-management__cell--head">
+            Статус
+          </th>
+
+          <th class="user-management__cell user-management__cell--head">
+            Дата регистрации
+          </th>
+
+          <th class="user-management__cell user-management__cell--head">
+            <span class="user-management__visually-hidden">Действия</span>
+          </th>
         </tr>
       </thead>
+
       <tbody>
         @for (user of users(); track user.id) {
-          <tr>
-            <td>
-              <strong>{{ user.username }}</strong
-              ><span>{{ user.email }}</span>
+          <tr class="user-management__row user-management__row--body">
+            <td class="user-management__cell user-management__cell--body">
+              <strong class="user-management__username">
+                {{ user.username }}
+              </strong>
+              <span class="user-management__user-email">{{ user.email }}</span>
             </td>
-            <td>
-              <span class="badge">{{ user.role }}</span>
+
+            <td class="user-management__cell user-management__cell--body">
+              <span class="user-badge">{{ user.role }}</span>
             </td>
-            <td>
+
+            <td class="user-management__cell user-management__cell--body">
               <span
-                class="status"
-                [class.blocked]="user.status === 'BLOCKED'"
-                >{{
-                  user.status === 'ACTIVE' ? 'Активен' : 'Заблокирован'
-                }}</span
+                class="user-status"
+                [class.user-status--blocked]="user.status === 'BLOCKED'"
               >
+                {{ user.status === 'ACTIVE' ? 'Активен' : 'Заблокирован' }}
+              </span>
             </td>
-            <td>{{ user.createdAt | date: 'dd.MM.yyyy, HH:mm' }}</td>
-            <td class="actions">
-              <div class="actions__inner">
+
+            <td
+              class="user-management__cell user-management__cell--body user-management__cell--date"
+            >
+              {{ user.createdAt | date: 'dd.MM.yyyy, HH:mm' }}
+            </td>
+
+            <td class="user-management__cell user-management__cell--body">
+              <div class="user-management__actions-group">
                 @if (isSuperAdmin() && user.role === 'USER') {
                   <button
+                    class="user-btn user-btn--primary"
                     type="button"
                     [disabled]="pendingUserId() !== null"
                     (click)="grantAdmin(user)"
@@ -85,8 +126,10 @@
                     }}
                   </button>
                 }
+
                 @if (isSuperAdmin() && user.role === 'ADMIN') {
                   <button
+                    class="user-btn user-btn--secondary"
                     type="button"
                     [disabled]="pendingUserId() !== null"
                     (click)="revokeAdmin(user)"
@@ -96,10 +139,13 @@
                     }}
                   </button>
                 }
+
                 @if (user.role !== 'SUPER_ADMIN') {
                   <button
+                    [class.user-btn--danger]="user.status === 'ACTIVE'"
+                    [class.user-btn--success]="user.status === 'BLOCKED'"
                     type="button"
-                    class="danger"
+                    class="user-btn"
                     [disabled]="pendingUserId() !== null"
                     (click)="toggleStatus(user)"
                   >
@@ -116,13 +162,23 @@
             </td>
           </tr>
         }
+
         @if (!isLoading() && users().length === 0) {
-          <tr>
-            <td colspan="5" class="empty">Пользователи не найдены.</td>
+          <tr class="user-management__row user-management__row--empty">
+            <td
+              colspan="5"
+              class="user-management__cell user-management__cell--empty"
+            >
+              Пользователи не найдены.
+            </td>
           </tr>
         }
       </tbody>
     </table>
   </div>
-  <wm-pagination class="pagination" aria-label="Страницы пользователей" />
+
+  <wm-pagination
+    class="user-management__pagination pagination"
+    aria-label="Страницы пользователей"
+  />
 }

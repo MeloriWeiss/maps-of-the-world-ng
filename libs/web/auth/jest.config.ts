@@ -1,5 +1,5 @@
 export default {
-  displayName: 'auth',
+  displayName: 'web-auth',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/auth',

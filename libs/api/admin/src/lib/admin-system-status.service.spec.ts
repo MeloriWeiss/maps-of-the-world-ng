@@ -1,4 +1,4 @@
-import { ObjectStorage } from '@wm/api/api-shared';
+import { ObjectStorage } from '@wm/api/shared';
 import { PrismaMainService } from '@wm/api/database-main';
 import { AdminSystemStatusService } from './admin-system-status.service';
 

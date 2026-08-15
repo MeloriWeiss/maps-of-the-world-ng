@@ -1,5 +1,5 @@
 {
-  "name": "maps",
+  "name": "api-maps",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/api/maps/src",
   "projectType": "library",

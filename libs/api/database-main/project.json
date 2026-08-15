@@ -1,5 +1,5 @@
 {
-  "name": "database-main",
+  "name": "api-database-main",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/api/database-main/src",
   "projectType": "library",

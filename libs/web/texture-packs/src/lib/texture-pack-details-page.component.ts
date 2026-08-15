@@ -17,7 +17,7 @@ import {
   TexturePacksService,
 } from '@wm/web/data-access/texture-packs';
 import { finalize, forkJoin } from 'rxjs';
-import { SeoService } from '@wm/web/web-shared';
+import { SeoService } from '@wm/web/shared';
 
 interface TextureDetailsCard extends TextureItemView {
   displaySize: string;

@@ -8,7 +8,7 @@ import { AppModule } from './app/app.module';
 import cookieParser from 'cookie-parser';
 import { json } from 'express';
 import { setupApp } from './setups';
-import { ApiLogger } from '@wm/api/api-shared';
+import { ApiLogger } from '@wm/api/shared';
 
 async function bootstrap() {
   const apiLogger = new ApiLogger();

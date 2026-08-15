@@ -1,5 +1,5 @@
 export default {
-  displayName: 'admin-web',
+  displayName: 'web-admin',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/admin',

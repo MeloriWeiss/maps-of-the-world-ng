@@ -1,5 +1,5 @@
 export default {
-  displayName: 'database-main',
+  displayName: 'api-database-main',
   preset: '../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

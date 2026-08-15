@@ -1,15 +1,50 @@
 <div class="admin-shell">
-  <aside class="admin-sidebar">
-    <a class="admin-brand" routerLink="/admin">Управление сайтом</a>
-    <nav aria-label="Разделы администрирования">
-      <a routerLink="dashboard" routerLinkActive="active">Обзор</a>
-      <a routerLink="users" routerLinkActive="active">Пользователи</a>
-      <a routerLink="content" routerLinkActive="active">Контент</a>
-      <a routerLink="audit" routerLinkActive="active">Журнал</a>
+  <aside class="admin-shell__sidebar admin-sidebar">
+    <a class="admin-sidebar__brand" routerLink="/admin">Управление сайтом</a>
+    <nav
+      class="admin-sidebar__nav admin-nav"
+      aria-label="Разделы администрирования"
+    >
+      <a
+        class="admin-nav__link"
+        routerLink="dashboard"
+        routerLinkActive="active"
+        >Обзор</a
+      >
+      <a class="admin-nav__link" routerLink="users" routerLinkActive="active"
+        >Пользователи</a
+      >
+      <a class="admin-nav__link" routerLink="content" routerLinkActive="active"
+        >Контент</a
+      >
+      <a class="admin-nav__link" routerLink="audit" routerLinkActive="active"
+        >Журнал</a
+      >
     </nav>
-    <a class="back-link" routerLink="/home">← Вернуться на сайт</a>
+
+    <a class="admin-sidebar__back-link back-link" routerLink="/home">
+      Вернуться на сайт
+    </a>
+
+    <div class="theme-picker">
+      <div class="theme-picker__title">Тема</div>
+      <div class="theme-picker__grid">
+        @for (theme of themeService.themes; track theme.id) {
+          <button
+            type="button"
+            class="theme-circle theme-circle--{{ theme.id }}"
+            [class.is-active]="themeService.currentTheme() === theme.id"
+            [attr.title]="theme.title"
+            (click)="changeTheme(theme.id)"
+          >
+            <span class="theme-circle__check">✓</span>
+          </button>
+        }
+      </div>
+    </div>
   </aside>
-  <main class="admin-content">
+
+  <main class="admin-shell__content admin-content">
     <router-outlet />
   </main>
 </div>

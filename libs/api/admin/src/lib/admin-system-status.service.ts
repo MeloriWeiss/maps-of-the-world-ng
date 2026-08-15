@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { OBJECT_STORAGE, ObjectStorage } from '@wm/api/api-shared';
+import { OBJECT_STORAGE, ObjectStorage } from '@wm/api/shared';
 import { Prisma, PrismaMainService } from '@wm/api/database-main';
 
 type SystemResourceStatus = 'available' | 'unavailable';

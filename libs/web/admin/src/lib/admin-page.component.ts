@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ThemeService } from '@wm/web/shared';
 
 @Component({
   selector: 'wm-admin-page',
@@ -8,4 +9,10 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   styleUrl: './admin-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminPageComponent {}
+export class AdminPageComponent {
+  themeService = inject(ThemeService);
+
+  changeTheme(theme: string) {
+    this.themeService.setTheme(theme);
+  }
+}

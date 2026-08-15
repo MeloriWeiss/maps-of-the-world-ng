@@ -1,12 +1,14 @@
+@use 'functions' as *;
+
 :host {
   position: fixed;
   z-index: 1000;
   inset: 0;
   display: grid;
-  padding: 1rem;
+  padding: rem(16);
   place-content: center;
   background-color: rgb(from var(--shadow-color) r g b / 45%);
-  backdrop-filter: blur(0.25rem);
+  backdrop-filter: blur(rem(4));
 }
 
 .modal-wrapper {

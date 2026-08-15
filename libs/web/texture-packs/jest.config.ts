@@ -1,5 +1,5 @@
 export default {
-  displayName: 'texture-packs',
+  displayName: 'web-texture-packs',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../../coverage/libs/web/texture-packs',

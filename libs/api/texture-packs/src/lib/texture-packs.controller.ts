@@ -19,7 +19,7 @@ import {
   JwtAccessGuard,
   OptionalAccessRequest,
   OptionalJwtAccessGuard,
-} from '@wm/api/api-auth';
+} from '@wm/api/auth';
 import {
   CreateTexturePackDto,
   TexturePackCatalogQueryDto,

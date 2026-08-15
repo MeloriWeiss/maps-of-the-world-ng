@@ -28,10 +28,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { AccessRequest, JwtAccessGuard } from '@wm/api/api-auth';
+import { AccessRequest, JwtAccessGuard } from '@wm/api/auth';
 import { AccountsService, AvatarsService } from '../service';
 import { AccountDto, ProfileSummaryDto, UpdateAccountDto } from '../dto';
-import { UploadedImageFile } from '@wm/api/api-shared';
+import { UploadedImageFile } from '@wm/api/shared';
 import { Response } from 'express';
 
 @ApiTags('Accounts')

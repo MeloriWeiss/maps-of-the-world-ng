@@ -6,7 +6,7 @@ import {
   OBJECT_STORAGE,
   ObjectStorage,
   validateUploadedImage,
-} from '@wm/api/api-shared';
+} from '@wm/api/shared';
 import { UploadedTextureFile } from './texture-file.interface';
 
 @Injectable()

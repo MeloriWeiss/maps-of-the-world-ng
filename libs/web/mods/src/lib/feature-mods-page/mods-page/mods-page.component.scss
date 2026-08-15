@@ -202,11 +202,11 @@
 }
 
 .mode__author-avatar {
+  fill: currentColor;
+
   @include tablet-above {
     @include visually-hidden;
   }
-
-  fill: currentColor;
 }
 
 .mode__author-name {

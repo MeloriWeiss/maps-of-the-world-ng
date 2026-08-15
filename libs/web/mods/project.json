@@ -1,5 +1,5 @@
 {
-  "name": "mods",
+  "name": "web-mods",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/web/mods/src",
   "prefix": "wm",

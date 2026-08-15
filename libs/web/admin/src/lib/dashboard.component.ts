@@ -1,13 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration } from 'chart.js';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe, DOCUMENT } from '@angular/common';
 import { SelectComponent, SelectOptionComponent } from '@wm/web/common-ui';
@@ -15,6 +16,7 @@ import { AdminService } from './admin.service';
 import { AdminDashboardDto } from './admin.models';
 import { AdminSystemStatusDto } from './admin.models';
 import { AdminUserAnalyticsDto, AnalyticsInterval } from './admin.models';
+import { ThemeService } from '@wm/web/shared';
 
 @Component({
   selector: 'wm-admin-dashboard',
@@ -31,6 +33,7 @@ import { AdminUserAnalyticsDto, AnalyticsInterval } from './admin.models';
 })
 export class DashboardComponent {
   readonly #adminService = inject(AdminService);
+  readonly #themeService = inject(ThemeService);
   readonly #destroyRef = inject(DestroyRef);
   readonly #formBuilder = inject(NonNullableFormBuilder);
   readonly #document = inject(DOCUMENT);
@@ -61,11 +64,62 @@ export class DashboardComponent {
     labels: [],
     datasets: [],
   });
-  readonly activityChartOptions: ChartConfiguration<'line'>['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-  };
+  // readonly activityChartOptions: ChartConfiguration<'line'>['options'] = {
+  //   responsive: true,
+  //   maintainAspectRatio: false,
+  //   scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+  // };
+
+  readonly activityChartOptions = computed<ChartOptions<'line'>>(() => {
+    this.#themeService.currentTheme();
+
+    const textColor = this.#getCssColor('--text-muted-color') || '#747474';
+    const gridColor = this.#getCssColor('--border-popover-color') || '#e9e6e3';
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor,
+            font: { family: 'inherit', size: 13, weight: 'bold' },
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: { color: textColor },
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor },
+          ticks: { color: textColor, precision: 0 },
+        },
+      },
+    };
+  });
+
+  readonly doughnutChartOptions = computed<ChartOptions<'doughnut'>>(() => {
+    this.#themeService.currentTheme();
+    const textColor = this.#getCssColor('--text-primary-color') || '#000000';
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: textColor,
+            font: { family: 'inherit', size: 14, weight: 'bold' },
+            padding: 16,
+          },
+        },
+      },
+    };
+  });
 
   constructor() {
     this.loadDashboard();
@@ -100,6 +154,12 @@ export class DashboardComponent {
       .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
         next: (dashboard) => {
+          const mapsColor =
+            this.#getCssColor('--accent-main-color') || '#948d81';
+          const texturesColor = this.#getCssColor('--cyan-color') || '#366bbe';
+          const discussionsColor =
+            this.#getCssColor('--purple-color') || '#7f5af0';
+
           this.dashboard.set(dashboard);
           this.chartData.set({
             labels: ['Карты', 'Наборы текстур', 'Темы форума'],
@@ -110,7 +170,8 @@ export class DashboardComponent {
                   dashboard.texturePacks,
                   dashboard.discussions,
                 ],
-                backgroundColor: ['#948d81', '#366bbe', '#7f5af0'],
+                backgroundColor: [mapsColor, texturesColor, discussionsColor],
+                borderWidth: 0,
               },
             ],
           });
@@ -162,9 +223,10 @@ export class DashboardComponent {
   }
 
   #loadAnalytics(from: Date, to: Date, interval: AnalyticsInterval) {
-    const visitsColor = this.#getCssColor('--info-color');
-    const uniqueVisitorsColor = this.#getCssColor('--success-color');
-    const registrationsColor = this.#getCssColor('--purple-color');
+    const visitsColor = this.#getCssColor('--cyan-color') || '#16b7ff';
+    const uniqueVisitorsColor = this.#getCssColor('--green-color') || '#27914d';
+    const registrationsColor = this.#getCssColor('--purple-color') || '#7f5af0';
+
     this.analyticsLoading.set(true);
     this.analyticsError.set(null);
     this.#adminService
@@ -188,21 +250,21 @@ export class DashboardComponent {
                 label: 'Посещения',
                 data: analytics.series.map((item) => item.visits),
                 borderColor: visitsColor,
-                backgroundColor: visitsColor,
+                backgroundColor: 'transparent',
                 tension: 0.25,
               },
               {
                 label: 'Уникальные посетители',
                 data: analytics.series.map((item) => item.uniqueVisitors),
                 borderColor: uniqueVisitorsColor,
-                backgroundColor: uniqueVisitorsColor,
+                backgroundColor: 'transparent',
                 tension: 0.25,
               },
               {
                 label: 'Регистрации',
                 data: analytics.series.map((item) => item.registrations),
                 borderColor: registrationsColor,
-                backgroundColor: registrationsColor,
+                backgroundColor: 'transparent',
                 tension: 0.25,
               },
             ],

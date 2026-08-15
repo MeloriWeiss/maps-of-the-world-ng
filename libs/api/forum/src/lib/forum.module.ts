@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ApiAuthModule } from '@wm/api/api-auth';
+import { ApiAuthModule } from '@wm/api/auth';
 import { DatabaseMainModule } from '@wm/api/database-main';
 import { ForumController } from './forum.controller';
 import { ForumService } from './forum.service';

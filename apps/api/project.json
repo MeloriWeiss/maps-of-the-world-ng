@@ -6,7 +6,7 @@
   "tags": [],
   "targets": {
     "build": {
-      "dependsOn": ["database-main:generate"],
+      "dependsOn": ["api-database-main:generate"],
       "executor": "nx:run-commands",
       "options": {
         "command": "webpack-cli build",

@@ -1,5 +1,5 @@
 {
-  "name": "admin-api",
+  "name": "api-admin",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/api/admin/src",
   "projectType": "library",

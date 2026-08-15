@@ -10,12 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  AccessRequest,
-  JwtAccessGuard,
-  Roles,
-  RolesGuard,
-} from '@wm/api/api-auth';
+import { AccessRequest, JwtAccessGuard, Roles, RolesGuard } from '@wm/api/auth';
 import { UserRole } from '@wm/shared/users';
 import { AdminService } from './admin.service';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';

@@ -1,5 +1,5 @@
 export default {
-  displayName: 'admin-api',
+  displayName: 'api-admin',
   preset: '../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

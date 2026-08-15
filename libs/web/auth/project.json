@@ -1,5 +1,5 @@
 {
-  "name": "auth",
+  "name": "web-auth",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/web/auth/src",
   "prefix": "wm",

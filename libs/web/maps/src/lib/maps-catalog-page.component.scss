@@ -36,7 +36,7 @@
   color: var(--text-secondary-color);
   font-size: rem(13);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: rem(1.5);
   text-transform: uppercase;
 }
 
@@ -51,6 +51,10 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: rem(24);
+
+  @include laptop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   @include mobile {
     grid-template-columns: minmax(0, 1fr);
@@ -77,7 +81,7 @@
 
 .catalog-pagination--header {
   flex: 0 0 auto;
-  margin-bottom: rem(6);
+  margin: 0 auto rem(6);
 }
 
 .map-card {
@@ -198,7 +202,8 @@
   }
 }
 
-.map-card__like {
+.map-card__like,
+.map-card__comments {
   display: inline-flex;
   align-items: center;
   gap: rem(5);
@@ -213,7 +218,9 @@
   svg {
     fill: currentColor;
   }
+}
 
+.map-card__like {
   &.active {
     color: var(--red-pastel-color);
   }

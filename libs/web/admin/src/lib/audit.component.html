@@ -1,16 +1,28 @@
-<header>
-  <p>Безопасность</p>
-  <h1>Журнал действий</h1>
-  <span>Записей: {{ total() }}</span>
+<header class="audit-header">
+  <p class="audit-header__eyebrow">Безопасность</p>
+  <h1 class="audit-header__title">Журнал действий</h1>
+  <span class="audit-header__counter">Записей: {{ total() }}</span>
 </header>
-<form class="filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
-  <label>
-    Администратор
-    <input formControlName="actor" placeholder="Ник, логин или email" />
+
+<form
+  class="audit-filters"
+  [formGroup]="filtersForm"
+  (ngSubmit)="applyFilters()"
+>
+  <label class="audit-filters__field">
+    <span class="audit-filters__label">Администратор</span>
+    <input
+      class="audit-filters__input"
+      formControlName="actor"
+      placeholder="Ник, логин или email"
+    />
   </label>
-  <div class="filter-field">
-    <span>Действие</span>
+
+  <div class="audit-filters__field">
+    <span class="audit-filters__label">Действие</span>
+
     <wm-select
+      class="audit-filters__select"
       ariaLabel="Фильтр по действию"
       placeholder="Все действия"
       [value]="filtersForm.controls.action.value"
@@ -28,9 +40,12 @@
       </wm-option>
     </wm-select>
   </div>
-  <div class="filter-field">
-    <span>Тип объекта</span>
+
+  <div class="audit-filters__field">
+    <span class="audit-filters__label">Тип объекта</span>
+
     <wm-select
+      class="audit-filters__select"
       ariaLabel="Фильтр по типу объекта"
       placeholder="Все объекты"
       [value]="filtersForm.controls.targetType.value"
@@ -47,57 +62,101 @@
       >
     </wm-select>
   </div>
-  <label>
-    ID объекта
-    <input formControlName="targetId" placeholder="Например, 42" />
+
+  <label class="audit-filters__field">
+    <span class="audit-filters__label"> ID объекта </span>
+    <input
+      class="audit-filters__input"
+      formControlName="targetId"
+      placeholder="Например, 42"
+    />
   </label>
-  <label>
-    С даты
-    <input type="date" formControlName="from" />
+
+  <label class="audit-filters__field">
+    <span class="audit-filters__label"> С даты </span>
+    <input class="audit-filters__input" type="date" formControlName="from" />
   </label>
-  <label>
-    По дату
-    <input type="date" formControlName="to" />
+
+  <label class="audit-filters__field">
+    <span class="audit-filters__label"> По дату </span>
+    <input class="audit-filters__input" type="date" formControlName="to" />
   </label>
-  <div class="filter-actions">
-    <button type="submit">Применить</button>
-    <button type="button" class="secondary" (click)="resetFilters()">
+
+  <div class="audit-filters__actions">
+    <button class="audit-filters__btn audit-filters__btn--submit" type="submit">
+      Применить
+    </button>
+
+    <button
+      class="audit-filters__btn audit-filters__btn--secondary"
+      type="button"
+      (click)="resetFilters()"
+    >
       Сбросить
     </button>
   </div>
 </form>
+
 @if (loadError(); as error) {
   <div class="request-error" role="alert">
-    <span>{{ error }}</span>
-    <button type="button" (click)="load()">Повторить</button>
+    <span class="request-error__message">{{ error }}</span>
+    <button class="request-error__btn" type="button" (click)="load()">
+      Повторить
+    </button>
   </div>
 }
+
 @if (isLoading() && items().length === 0) {
-  <p>Загрузка журнала…</p>
+  <p class="audit-status-text">Загрузка журнала…</p>
 }
+
 <div
   class="audit-list"
   [class.audit-list--loading]="isLoading()"
   [attr.aria-busy]="isLoading()"
 >
   @for (item of items(); track item.id) {
-    <article>
-      <div>
-        <strong>{{ item.actionLabel }}</strong>
+    <article
+      class="audit-list__item audit-card audit-card--action-{{
+        item.action | lowercase
+      }}"
+    >
+      <div class="audit-card__body">
+        <div class="audit-card__title-group">
+          <strong class="audit-card__action">{{ item.actionLabel }}</strong>
+          <span class="audit-card__target">{{ item.targetLabel }}</span>
+        </div>
+
         @if (item.changeLabel) {
-          <span>{{ item.changeLabel }}</span>
+          <p class="audit-card__change">{{ item.changeLabel }}</p>
         }
       </div>
-      <span>{{ item.targetLabel }}</span>
-      <span>
-        {{ item.actor.personalAccount?.nickname ?? item.actor.username }} ·
-        {{ item.createdAt | date: 'dd.MM.yyyy, HH:mm' }}
-      </span>
+
+      <div class="audit-card__meta">
+        <div class="audit-card__author">
+          <span class="audit-card__avatar" aria-hidden="true">
+            {{
+              item.actor.personalAccount?.nickname ?? item.actor.username
+                | slice: 0 : 1
+                | uppercase
+            }}
+          </span>
+          <span class="audit-card__author-name">
+            {{ item.actor.personalAccount?.nickname ?? item.actor.username }}
+          </span>
+        </div>
+        <time class="audit-card__time">
+          {{ item.createdAt | date: 'dd.MM.yyyy · HH:mm' }}
+        </time>
+      </div>
     </article>
   } @empty {
     @if (!isLoading() && !loadError()) {
-      <p>Действий пока не зафиксировано.</p>
+      <div class="audit-status-text">
+        <p>Действий пока не зафиксировано.</p>
+      </div>
     }
   }
 </div>
+
 <wm-pagination class="pagination" aria-label="Страницы журнала действий" />

@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { S3ObjectStorageService } from '@wm/api/api-shared';
+import { S3ObjectStorageService } from '@wm/api/shared';
 import { readFile } from 'node:fs/promises';
 
 const placeholderPng = Buffer.from(

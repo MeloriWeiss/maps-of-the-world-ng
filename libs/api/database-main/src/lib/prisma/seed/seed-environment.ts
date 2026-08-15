@@ -1,4 +1,4 @@
-import { isProd } from '@wm/api/api-shared';
+import { isProd } from '@wm/api/shared';
 
 export const assertDevelopmentSeedAllowed = (production = isProd) => {
   if (!production) return;

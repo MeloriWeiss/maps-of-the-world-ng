@@ -6,6 +6,7 @@
 - Product: **GameMaster Helper**, a browser platform for tabletop-RPG game masters and world authors. It combines a map workshop, public map and texture-pack catalogs, author profiles, likes/comments, a forum, and a private administration area. `Maps-of-the-World` is the historical repository name.
 - Stack: Nx monorepo, Angular 19 frontend, NestJS 11 backend, Prisma/PostgreSQL.
 - Package manager: Yarn 4 (`packageManager`: `yarn@4.17.0`).
+- Project `AGENTS.md` requires updating this memory only on an explicit user request, normally once at the end of a working session. Keep investigation and verification proportional to the task.
 
 ## Main Apps
 
@@ -22,19 +23,31 @@
 
 ## Libraries
 
+- Nx naming convention: every library under `libs/api/<library>` has project name `api-<library>`, and every library under `libs/web/<library>` has project name `web-<library>`. Directory names and TypeScript aliases do not repeat the scope (`libs/api/shared`, `@wm/api/shared`). `yarn lint:workspace` enforces the convention and runs from both the root lint command and the Husky pre-commit hook.
+
 - `libs/shared/shared`: shared DTOs and interfaces used by web and api.
-- `libs/api/api-auth`: auth endpoints, JWT guards/strategies, cookies, sessions.
+- `libs/api/auth`: auth endpoints, JWT guards/strategies, cookies, sessions.
 - `libs/api/admin`: protected administration API, moderation, user management, and audit log.
+- `libs/api/accounts`, `libs/api/maps`, `libs/api/forum`, `libs/api/texture-packs`: backend feature libraries.
 - `libs/api/users`: users controller/service.
 - `libs/api/database-main`: Prisma service, schema, migrations, seed scripts.
-- `libs/api/api-shared`: env/config helpers.
+- `libs/api/shared`: env/config helpers.
 - `libs/web/auth`: login/register UI, auth guards, interceptor, initializer.
 - `libs/web/layout`: base/auth layouts, header/footer.
-- `libs/web/home`, `libs/web/profile`, `libs/web/forum`, `libs/web/mods`: feature libs.
+- `libs/web/home`, `libs/web/profile`, `libs/web/forum`, `libs/web/maps`, `libs/web/mods`, `libs/web/texture-packs`: feature libs.
 - `libs/web/data-access`: frontend services/interfaces/tokens.
 - `libs/web/common-ui`: shared UI, pipes, SCSS mixins/functions.
+- `libs/web/shared`: web-wide infrastructure such as themes and SEO.
 - `libs/web/workshop`: main map editor/canvas workspace.
 - `libs/web/admin`: lazy-loaded administration dashboard and management pages.
+
+## Repository Tooling
+
+- Keep `tools/` and `scripts/` separate by responsibility.
+  - `tools/` contains workspace development tooling: custom ESLint rules, Nx generators, and `tools/scripts/validate-project-naming.mjs`.
+  - `scripts/` contains environment and operational automation: environment setup, production deployment, backups, and systemd units/timers.
+- Do not move operational scripts into `tools/`; production documentation and Husky hooks intentionally reference the root `scripts/` directory.
+- Husky pre-commit runs `yarn lint:workspace`, then `lint-staged`, then the full test suite. A successful naming check prints `Именование Nx-проектов и импортов корректно.`
 
 ## Domain
 
@@ -61,7 +74,7 @@
   - Workshop snapshots are stored in the existing `Map.body` string column.
 - API JSON request bodies accept up to 10 MB to accommodate workshop snapshots.
 - Textures are not standalone user-library entities. Every texture belongs to a `TexturePack`; do not restore a UI or API for creating ungrouped textures.
-- `libs/api/textures` implements texture-pack management:
+- `libs/api/texture-packs` implements texture-pack management:
   - `GET /api/texture-packs?page=&pageSize=` returns the server-paginated public catalog as `{ items, total, page, pageSize }`; default page size is 9.
   - `GET /api/texture-packs/authors/:userId` lists an author's published packs.
   - `GET /api/texture-packs/:id` returns public details of one published pack; `public/:id` and `published/:id` remain compatibility aliases.
@@ -85,6 +98,7 @@
   - Development always uses MinIO from `docker/docker-compose.dev.yml`.
   - Production can use either self-hosted MinIO or Cloudflare R2 without API code changes.
   - Switching providers does not migrate existing objects; preserve all `objectKey` values when copying a bucket.
+  - `DEPLOYMENT.md` contains the bidirectional MinIO ↔ R2 migration runbook: initial live mirror, short API stop, final mirror/diff, provider switch, verification, backup test, and delayed cleanup of the source storage.
   - The former one-time import from `.data/textures` has been removed and must not be restored.
   - `TexturesModule` imports `DatabaseMainModule`, `ApiAuthModule`, and the shared `ObjectStorageModule`; importing them only in root `AppModule` does not expose their providers in the feature module.
 - `libs/api/forum` implements the working forum API:
@@ -120,7 +134,7 @@
 - `GET /api/admin/system-status` is protected by admin roles and checks PostgreSQL plus S3-compatible object storage independently with a three-second timeout. It also returns API uptime, version, response times, and check time. There is no polling: the dashboard calls it on page creation and when the administrator presses the refresh button.
 - `ObjectStorage.checkAvailability()` performs a read-only signed S3 `HEAD` request against the configured bucket. Implementations and test fakes must preserve this contract.
 - The dashboard uses `ng2-charts@8.0.0` with `chart.js@4.5.1`. Chart registration stays inside the lazy admin route so it does not increase the initial public bundle.
-- `admin-web` now has its own standard Jest target/configuration. Current focused suites cover the admin guard, audit presenter, admin API rules/filters/analytics/system status, S3 availability, and texture storage consumers.
+- `web-admin` has its own standard Jest target/configuration. Current focused suites cover the admin guard, audit presenter, admin API rules/filters/analytics/system status, S3 availability, and texture storage consumers.
 - The admin route declares `index: false`; child routes inherit the parent SEO metadata and are emitted as `noindex, nofollow`.
 
 ## Docker and Object Storage
@@ -163,10 +177,13 @@
 - Production schema changes must follow expand-migrate-contract because the old API may run while migrations apply. Add compatible nullable/defaulted structures first, migrate data, and remove old structures or add `NOT NULL` only in a later release.
 - Production secrets live in ignored files:
   - `docker/.env.prod`, based on `docker/examples/.env.prod.example`;
-  - `docker/.env.minio.prod`, based on `docker/examples/.env.minio.prod.example`, only for self-hosted MinIO administration.
+  - `docker/.env.object-storage.prod`, copied from `docker/examples/.env.object-storage.minio.prod.example` or `docker/examples/.env.object-storage.r2.prod.example`; the working filename stays provider-neutral.
+  - The API receives both production env files. The migrator receives only `.env.prod`. With the MinIO preset, Compose replaces `MINIO_ROOT_*` with empty values in the API container so its administrative secret is not exposed there.
 - Backup automation exists in the repository but is intentionally not enabled on the current server yet:
   - PostgreSQL and object storage have independent scripts, systemd services, timers, logs, and retention settings;
-  - object-storage backup reads `OBJECT_STORAGE_*` and works with either MinIO or Cloudflare R2 through S3 API;
+  - object-storage backup reads `OBJECT_STORAGE_*` from `docker/.env.object-storage.prod` and works with either MinIO or Cloudflare R2 through S3 API;
+  - changing the repository backup script requires reinstalling it to `/usr/local/sbin/gmhelper-object-storage-backup` and running a manual service test; the timer itself does not need restarting unless its unit changed;
+  - `DEPLOYMENT.md` documents commands for counting PostgreSQL dumps and object-storage snapshots, inspecting backup dates/sizes, checking timer enablement/activity/schedule, and reading service logs. Backup services are `oneshot`, so `inactive (dead)` between successful scheduled runs is normal.
   - both jobs use the same maintenance lock as deploy and enforce minimum free space;
   - local backups live under root-only `/var/backups/gm-helper`; inspect them with `sudo`, do not weaken directory permissions;
   - local copies protect against operator errors but not physical disk loss; external backup remains future work.
@@ -196,6 +213,9 @@
 
 ## UI Notes
 
+- Global theme palettes live in `apps/web/src/styles/variables.scss`. The supported themes are `light`, `dark`, `steampunk`, and `neon-sunset`; `:root` uses the light palette as the fallback.
+- `ThemeService` in `libs/web/shared/src/lib/services/theme.service.ts` owns the current theme as a signal, applies it through `data-theme` on the document root, persists the selection in `localStorage` under `theme`, and defaults to the operating-system light/dark preference when the saved choice is absent or unsupported.
+- Theme switching is exposed in the public header (desktop and mobile) and the admin layout. UI code must consume semantic `*-color` CSS variables; new theme-dependent tokens belong in every theme block in `variables.scss`, not in an individual component.
 - The current public home page is a live HTML/CSS composition rather than a canvas-only experience. It has an interactive atlas hero, a three-step story section, three featured maps loaded through `MapsService`, and a final manifesto CTA.
 - Hovering the circular atlas map replaces the cursor with a route-point marker; featured-map previews currently keep their normal cursor behavior.
 - The public About page contains intro, mission, principles, ecosystem navigation, and invitation sections. It intentionally has no authors/founders section; its adjacent sections use distinct backgrounds.
@@ -365,6 +385,7 @@
 - Verified production-server update: `gmhelper-deploy` (MinIO) or `GMHELPER_STORAGE_MODE=r2 gmhelper-deploy` (R2).
 - After a successful production update: inspect with `docker image ls --filter dangling=true`, then run `docker image prune -f` and `docker system df`.
 - Lint all: `yarn lint`.
+- Validate Nx project/directory/import naming only: `yarn lint:workspace`.
 - Test all: `yarn test`.
 - Generate docs: `yarn docs:gen`.
 
@@ -383,7 +404,7 @@
 ## Caveats
 
 - PowerShell displayed `README.md` and some Russian strings as mojibake during inspection; be careful with file encoding.
-- Snapshot refreshed on 2026-08-14 after the administration, analytics, documentation, migration, system-status, deployment-safety, and login-validation work. The working tree contains current user/assistant changes; do not assume it is clean and do not discard or restage unrelated files.
+- Snapshot refreshed on 2026-08-15 after documenting the four client-side themes and the semantic color-token contract. The working tree may contain current user/assistant changes; do not assume it is clean and do not discard or restage unrelated files.
 - Prefer existing Nx project patterns and standalone Angular conventions.
 - Before implementing a feature, identify which entity owns the state and behavior.
 - Prefer encapsulation and polymorphism over central switches or mappings that must change whenever a new subtype is introduced.
@@ -392,11 +413,11 @@
 - Keep fixes narrowly scoped. Do not change adjacent layout or behavior unless it is necessary for the requested result.
 - Production deployment was installed and smoke-tested on 2026-08-09: API health, PostgreSQL persistence, MinIO persistence, container recreation, Nginx HTTPS proxying, migrations, and log rotation worked. Backup timers remained disabled as of 2026-08-12.
 - The production host is shared with Mailcow, Nextcloud, and Portainer. Never stop/remove unknown containers or use global destructive cleanup such as `docker system prune -a` or `docker volume prune`.
-- The environment-file refactor discussed on 2026-08-12 was fully reverted. Keep the established production split: `docker/.env.prod` contains API/JWT and `OBJECT_STORAGE_*`; `docker/.env.minio.prod` contains only MinIO administration credentials. The four original files in `docker/examples` remain valid examples; do not rename them without a new explicit deployment migration plan.
+- Production environment files were reorganized on 2026-08-15 with explicit user approval. `docker/.env.prod` contains provider-neutral API/JWT/database settings. `docker/.env.object-storage.prod` is the active provider-neutral storage file and is copied from either the MinIO or R2 preset. Only API and storage services receive it; the database migrator receives only `.env.prod`. The MinIO preset additionally contains `MINIO_ROOT_*`; Docker Compose overrides those variables with empty values in the API environment so the administrative secret is not passed to it.
 - The repository migration chain now includes `20260803232703_remove_theme_and_language`, `20260812230000_add_admin_roles`, `20260813190000_add_site_visits`, and `20260813210000_add_site_visit_visitor_id`. Production must apply them with `prisma migrate deploy`; do not replace migration deployment with `db push`.
 - The obsolete theme/language columns and values were intentionally removed without backup at the user's request. Do not restore them unless a new feature explicitly requires new schema/data.
 - Site-visit analytics requires both the `site_visits` table and its `visitor_id` column. A Prisma `42P01`/missing-table or PostgreSQL `42703`/missing-column error on `/api/admin/user-analytics` means the running database has not applied the complete migration chain.
-- Current verification on 2026-08-14 passed: API production build, web production build, `admin-api` lint/tests (12 tests), `admin-web` lint/tests (8 tests), `api-shared` tests (5 tests), `textures` lint/tests (14 tests), and `git diff --check`. `api-shared` has no lint target. The web build retains pre-existing initial-bundle and home-style budget warnings; admin/chart code remains lazy-loaded.
+- Current verification on 2026-08-15 passed: API production build, web production build, workspace naming validation, full lint, full tests, `api-admin` lint/tests (12 tests), `web-admin` lint/tests (8 tests), `api-shared` tests (5 tests), `api-texture-packs` lint/tests (14 tests), and `git diff --check`. `api-shared` has no lint target. The Sass mixed-declaration warning in `web-mods` was fixed without changing the effective styles. The web build retains the existing initial-bundle, home-style, and header-style budget warnings; admin/chart code remains lazy-loaded.
 
 ## Backend Repair Notes (2026-07-27)
 
