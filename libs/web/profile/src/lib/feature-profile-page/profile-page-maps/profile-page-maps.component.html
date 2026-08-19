@@ -1,13 +1,15 @@
 <div class="primary-bg">
-  <div class="maps-header">
-    <div>
+  <div class="profile-maps__header">
+    <div class="maps-header">
       <p class="eyebrow">
         {{ isOwnProfile ? 'Личная библиотека' : 'Карты автора' }}
       </p>
-      <h2 class="profile-subtitle">
+
+      <h2 class="maps-header__title">
         {{ isOwnProfile ? 'Мои карты' : 'Опубликованные карты' }}
       </h2>
-      <p class="profile-description">
+
+      <p class="maps-header__description">
         @if (isOwnProfile) {
           Создавайте карты в мастерской, возвращайтесь к черновикам и публикуйте
           готовые работы.
@@ -19,7 +21,7 @@
 
     @if (isOwnProfile) {
       <a
-        class="create-map-button"
+        class="maps-header__create-btn"
         [routerLink]="['/workshop']"
         [queryParams]="{ new: true }"
       >
@@ -29,28 +31,29 @@
   </div>
 
   @if (isOwnProfile) {
-    <div class="map-list-tabs" role="tablist" aria-label="Состояние карт">
+    <div class="profile-tabs" role="tablist" aria-label="Состояние карт">
       <button
-        class="map-list-tab"
+        class="profile-tabs__item"
         type="button"
         role="tab"
-        [class.map-list-tab--active]="activeList() === 'drafts'"
+        [class.profile-tabs__item--active]="activeList() === 'drafts'"
         [attr.aria-selected]="activeList() === 'drafts'"
         (click)="selectList('drafts')"
       >
         Черновики
-        <span class="map-list-tab__count">{{ draftMaps().length }}</span>
+        <span class="profile-tabs__count">{{ draftMaps().length }}</span>
       </button>
+
       <button
-        class="map-list-tab"
+        class="profile-tabs__item"
         type="button"
         role="tab"
-        [class.map-list-tab--active]="activeList() === 'published'"
+        [class.profile-tabs__item--active]="activeList() === 'published'"
         [attr.aria-selected]="activeList() === 'published'"
         (click)="selectList('published')"
       >
         Опубликованные
-        <span class="map-list-tab__count">{{ publishedMaps().length }}</span>
+        <span class="profile-tabs__count">{{ publishedMaps().length }}</span>
       </button>
     </div>
   }
@@ -101,21 +104,24 @@
               <svg icon="trash" class="svg20" aria-hidden="true"></svg>
             </button>
           }
+
           <img
             class="map-card__image"
             src="/assets/imgs/old-map-card.png"
             alt=""
           />
+
           <div class="map-card__body">
             <div class="map-card__heading">
-              <div>
-                <h3>{{ map.name }}</h3>
+              <div class="map-card__title-row">
+                <h3 class="map-card__title">{{ map.name }}</h3>
                 <span class="publication-badge">
                   {{ map.isPublished ? 'Опубликована' : 'Черновик' }}
                 </span>
               </div>
+
               @if (map.description) {
-                <p>{{ map.description }}</p>
+                <p class="map-card__description">{{ map.description }}</p>
               }
             </div>
 
@@ -128,6 +134,7 @@
                 >
                   Редактировать
                 </a>
+
                 <button
                   class="publication-button"
                   type="button"
