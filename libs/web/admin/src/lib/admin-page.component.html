@@ -23,25 +23,8 @@
     </nav>
 
     <a class="admin-sidebar__back-link back-link" routerLink="/home">
-      Вернуться на сайт
+      ← Вернуться на сайт
     </a>
-
-    <div class="theme-picker">
-      <div class="theme-picker__title">Тема</div>
-      <div class="theme-picker__grid">
-        @for (theme of themeService.themes; track theme.id) {
-          <button
-            type="button"
-            class="theme-circle theme-circle--{{ theme.id }}"
-            [class.is-active]="themeService.currentTheme() === theme.id"
-            [attr.title]="theme.title"
-            (click)="changeTheme(theme.id)"
-          >
-            <span class="theme-circle__check">✓</span>
-          </button>
-        }
-      </div>
-    </div>
   </aside>
 
   <main class="admin-shell__content admin-content">
