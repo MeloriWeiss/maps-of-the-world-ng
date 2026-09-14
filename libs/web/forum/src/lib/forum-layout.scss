@@ -1,0 +1,169 @@
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  min-height: calc(100svh - 66px);
+  background: var(--page-paper-color);
+  color: var(--page-ink-color);
+}
+.forum-shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 32px 28px 80px;
+}
+* {
+  box-sizing: border-box;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2 {
+  font-family: Play, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+a:not(.forum-button) {
+  color: inherit;
+  text-decoration: none;
+}
+button:not(.forum-button),
+input,
+select,
+textarea {
+  font: inherit;
+}
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent-main-color);
+  outline-offset: 3px;
+}
+input,
+textarea,
+select {
+  @include field-focus;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary-color);
+}
+.panel {
+  background: var(--bg-card-color);
+  border: 1px solid var(--border-separator-color);
+  border-radius: 28px;
+  min-width: 0;
+  box-shadow: 0 8px 28px rgb(from var(--shadow-color) r g b / 5%);
+}
+.forum-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-height: 44px;
+  flex-shrink: 0;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--btn-primary-bg-color);
+  color: var(--btn-primary-text-color);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+.forum-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.forum-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-input-color);
+  border-radius: 12px;
+  background: var(--bg-input-color);
+  color: var(--text-primary-color);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-secondary-color);
+  opacity: 1;
+}
+textarea {
+  resize: vertical;
+  line-height: 1.65;
+  min-height: 130px;
+}
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 4px 7px;
+  background: var(--btn-secondary-bg-color);
+  color: var(--btn-secondary-text-color);
+  border: 1px solid var(--border-separator-color);
+  border-radius: 999px;
+}
+.empty-state {
+  padding: 42px 20px;
+  text-align: center;
+  line-height: 1.7;
+}
+.empty-state p {
+  margin: 12px 0 20px;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+.error {
+  color: var(--red-color);
+  padding: 14px 0;
+  line-height: 1.5;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.breadcrumbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  margin-bottom: 24px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.breadcrumbs a {
+  text-decoration: underline;
+}
+@media (max-width: 700px) {
+  .forum-shell {
+    padding: 24px 16px 56px;
+  }
+}

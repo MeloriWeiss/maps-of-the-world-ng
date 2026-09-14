@@ -249,6 +249,14 @@
               {{ item.commentsCount }} комментариев
             </div>
 
+            @if (!item.isHidden) {
+              <a
+                class="content-card__action-btn"
+                [routerLink]="['/forum', item.id]"
+                >Открыть тему и модерировать ответы</a
+              >
+            }
+
             <button
               class="content-card__action-btn"
               type="button"

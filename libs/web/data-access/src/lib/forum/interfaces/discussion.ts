@@ -1,4 +1,9 @@
 export interface Discussion {
+  isPinned?: boolean;
+  isClosed?: boolean;
+  lastActivityAt?: string;
+  authorId?: number;
+  avatarUrl?: string | null;
   id: number;
   theme: string;
   author: string;
@@ -10,6 +15,8 @@ export interface Discussion {
 }
 
 export interface GetDiscussionsDto {
+  sort?: 'active' | 'new' | 'unanswered';
+  scope?: 'mine';
   page: number;
   pageSize?: number;
   search?: string;
@@ -43,6 +50,10 @@ export interface ForumComment {
 }
 
 export interface ForumDiscussionDetails {
+  isPinned: boolean;
+  isClosed: boolean;
+  canEdit: boolean;
+  lastActivityAt: string;
   id: number;
   title: string;
   post: string;
@@ -58,6 +69,9 @@ export interface ForumDiscussionDetails {
 
 export interface ForumDiscussionsPage {
   items: Array<{
+    isPinned: boolean;
+    isClosed: boolean;
+    lastActivityAt: string;
     id: number;
     title: string;
     createdAt: string;
@@ -81,4 +95,24 @@ export interface CreateForumDiscussion {
 export interface CreateForumComment {
   comment: string;
   parentId?: number;
+}
+
+export interface ForumMessage {
+  id: number;
+  repliesCount?: number;
+  text: string;
+  isHidden: boolean;
+  canEdit: boolean;
+  createdAt: string;
+  updatedAt: string;
+  author: ForumAuthor;
+  parent: { id: number; nickname: string } | null;
+}
+
+export interface ForumCommentsPage {
+  path?: Array<{ id: number; parentId: number | null; page: number }>;
+  items: ForumMessage[];
+  page: number;
+  pageSize: number;
+  total: number;
 }

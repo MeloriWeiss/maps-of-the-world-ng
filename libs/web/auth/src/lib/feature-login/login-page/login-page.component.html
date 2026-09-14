@@ -33,7 +33,9 @@
   </div>
 
   <p class="login-link">
-    Ещё нет аккаунта?&nbsp;<a [routerLink]="['/register']"
+    Ещё нет аккаунта?&nbsp;<a
+      [routerLink]="['/register']"
+      queryParamsHandling="preserve"
       >Зарегистрироваться</a
     >
   </p>

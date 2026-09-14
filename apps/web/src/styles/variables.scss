@@ -27,6 +27,15 @@
 }
 
 :root,
+[data-theme='light'],
+[data-theme='dark'],
+[data-theme='steampunk'],
+[data-theme='neon-sunset'] {
+  --btn-forum-primary-bg-color: var(--page-ink-color);
+  --btn-forum-primary-text-color: var(--page-paper-color);
+}
+
+:root,
 [data-theme='light'] {
   // Фоны страниц
   --bg-main-color: var(--light-color);

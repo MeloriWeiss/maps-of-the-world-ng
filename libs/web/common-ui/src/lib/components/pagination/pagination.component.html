@@ -1,5 +1,7 @@
 @if (currentPage(); as currentPage) {
   <button
+    type="button"
+    aria-label="Предыдущая страница"
     class="arrow-btn"
     [disabled]="currentPage === 1"
     (click)="changePage(currentPage - 1)"
@@ -7,8 +9,14 @@
     <svg icon="arrow" class="svg20 svg prev-page-icon"></svg>
   </button>
   <div class="pagination-numbers">
-    @for (page of visiblePages(); track page) {
+    @for (page of visiblePages(); track $index) {
       <button
+        type="button"
+        [disabled]="page === '...'"
+        [attr.aria-label]="
+          page === '...' ? 'Пропущенные страницы' : 'Страница ' + page
+        "
+        [attr.aria-current]="page === currentPage ? 'page' : null"
         (click)="changePage(page)"
         [class.active]="page === currentPage"
         class="pagination-number no-select"
@@ -18,6 +26,8 @@
     }
   </div>
   <button
+    type="button"
+    aria-label="Следующая страница"
     class="arrow-btn"
     [disabled]="currentPage === maxPage()"
     (click)="changePage(currentPage + 1)"

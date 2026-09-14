@@ -11,6 +11,8 @@ const targetTypeLabels: Record<string, string> = {
   MAP: 'Карта',
   TEXTURE_PACK: 'Набор текстур',
   FORUM_DISCUSSION: 'Тема форума',
+  forum: 'Тема форума',
+  'forum-comment': 'Сообщение форума',
 };
 
 const roleLabels: Record<string, string> = {
@@ -34,6 +36,9 @@ export const presentAdminAuditEntry = (
 });
 
 const actionLabel = (item: AdminAuditDto) => {
+  if (item.action === 'forum.moderate') return 'Изменил состояние темы';
+  if (item.action === 'forum.comment.hide') return 'Скрыл сообщение';
+  if (item.action === 'forum.comment.restore') return 'Восстановил сообщение';
   if (item.action === 'USER_ROLE_CHANGED') return 'Изменил роль';
   if (item.action === 'USER_STATUS_CHANGED') return 'Изменил статус';
   if (item.action === 'CONTENT_VISIBILITY_CHANGED') {
@@ -52,6 +57,22 @@ const targetLabel = (item: AdminAuditDto) => {
 };
 
 const changeLabel = (item: AdminAuditDto) => {
+  if (item.action === 'forum.moderate') {
+    const pinned = detailValue(item.details, 'isPinned');
+    const closed = detailValue(item.details, 'isClosed');
+    return (
+      [
+        typeof pinned === 'boolean'
+          ? pinned
+            ? 'Закреплена'
+            : 'Откреплена'
+          : '',
+        typeof closed === 'boolean' ? (closed ? 'Закрыта' : 'Открыта') : '',
+      ]
+        .filter(Boolean)
+        .join(', ') || null
+    );
+  }
   if (item.action === 'USER_ROLE_CHANGED') {
     const role = detailValue(item.details, 'role');
     return typeof role === 'string'

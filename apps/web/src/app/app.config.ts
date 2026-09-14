@@ -35,8 +35,9 @@ export const appConfig: ApplicationConfig = {
       routes,
       withComponentInputBinding(),
       withInMemoryScrolling({
-        scrollPositionRestoration: 'enabled',
-        anchorScrolling: 'enabled',
+        // RouterScrollService applies the route-specific scroll policy.
+        scrollPositionRestoration: 'disabled',
+        anchorScrolling: 'disabled',
       }),
     ),
     provideHttpClient(withInterceptors(appHttpInterceptors), withFetch()),

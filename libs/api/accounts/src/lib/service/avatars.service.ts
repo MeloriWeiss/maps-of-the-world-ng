@@ -9,6 +9,7 @@ import {
   validateUploadedImage,
 } from '@wm/api/shared';
 import { PrismaMainService } from '@wm/api/database-main';
+import { avatarPublicUrl } from '../avatar-url';
 
 @Injectable()
 export class AvatarsService {
@@ -82,9 +83,6 @@ export class AvatarsService {
   }
 
   publicUrl(userId: number, objectKey: string) {
-    if (objectKey.startsWith('https://') || objectKey.startsWith('http://')) {
-      return objectKey;
-    }
-    return `/api/accounts/profiles/${userId}/avatar?v=${encodeURIComponent(objectKey)}`;
+    return avatarPublicUrl(userId, objectKey);
   }
 }

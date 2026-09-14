@@ -173,6 +173,9 @@ model Forum {
   authorId      Int    @map("author_id")
   categoryId    Int    @map("category_id")
   isHidden      Boolean @default(false) @map("is_hidden")
+  isPinned      Boolean @default(false) @map("is_pinned")
+  isClosed      Boolean @default(false) @map("is_closed")
+  lastActivityAt DateTime @default(now()) @map("last_activity_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -184,6 +187,7 @@ model Forum {
   likes         ForumLike[]
 
   @@index([categoryId, createdAt])
+  @@index([isHidden, isPinned, lastActivityAt])
   @@map("forums")
 }
 
@@ -205,6 +209,7 @@ model ForumComment {
   forumId  Int    @map("forum_id")
   authorId Int    @map("author_id")
   parentId Int?   @map("parent_id")
+  isHidden Boolean @default(false) @map("is_hidden")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

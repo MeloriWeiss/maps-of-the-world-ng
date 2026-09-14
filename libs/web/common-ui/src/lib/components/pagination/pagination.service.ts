@@ -8,6 +8,9 @@ export class PaginationService {
 
   currentPage = signal<number | null>(null);
   maxPage = signal<number | null>(null);
+  readonly pageQueryParams = signal<
+    Record<string, string | number | boolean | null>
+  >({});
 
   pagesList = computed(() => {
     const maxPage = this.maxPage();
@@ -23,11 +26,15 @@ export class PaginationService {
   visiblePages = computed<Array<number | '...'>>(() => {
     const currentPage = this.currentPage();
     const maxPage = this.maxPage();
-    const pagesList = this.pagesList();
 
     if (!currentPage || !maxPage) return [];
 
-    return this.calculateVisiblePages(currentPage, maxPage, pagesList);
+    // The visible window needs at most seven entries, regardless of total size.
+    return this.calculateVisiblePages(
+      currentPage,
+      maxPage,
+      maxPage < 5 ? this.pagesList() : [],
+    );
   });
 
   calculateVisiblePages(
@@ -71,6 +78,7 @@ export class PaginationService {
       .navigate([], {
         relativeTo: this.#activatedRoute,
         queryParams: {
+          ...this.pageQueryParams(),
           page: page,
         },
         queryParamsHandling: 'merge',

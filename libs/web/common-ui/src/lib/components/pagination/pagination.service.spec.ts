@@ -10,7 +10,10 @@ describe('PaginationService', () => {
       providers: [
         PaginationService,
         { provide: ActivatedRoute, useValue: {} },
-        { provide: Router, useValue: { navigate: jest.fn() } },
+        {
+          provide: Router,
+          useValue: { navigate: jest.fn().mockResolvedValue(true) },
+        },
       ],
     });
     service = TestBed.inject(PaginationService);
@@ -31,5 +34,32 @@ describe('PaginationService', () => {
     service.maxPage.set(10);
 
     expect(service.visiblePages()).toEqual([1, '...', 4, 5, 6, '...', 10]);
+  });
+
+  it('does not allocate every page for a large result set', () => {
+    service.currentPage.set(500);
+    service.maxPage.set(1_000_000);
+    const pages = jest.spyOn(service, 'pagesList');
+    expect(service.visiblePages()).toEqual([
+      1,
+      '...',
+      499,
+      500,
+      501,
+      '...',
+      1_000_000,
+    ]);
+    expect(pages).not.toHaveBeenCalled();
+  });
+
+  it('clears a permalink target while preserving other query parameters', () => {
+    service.maxPage.set(5);
+    service.pageQueryParams.set({ comment: null });
+    service.changePage(2);
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith([], {
+      relativeTo: TestBed.inject(ActivatedRoute),
+      queryParams: { comment: null, page: 2 },
+      queryParamsHandling: 'merge',
+    });
   });
 });

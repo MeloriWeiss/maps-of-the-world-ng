@@ -1,34 +1,386 @@
-@if (discussion(); as item) {
-  <wm-desk-list
-    [pageable]="false"
-    [crumbs]="'Все обсуждения > ' + item.category.title + ' > ' + item.title"
-  >
-    <ng-template #sidebar>
-      <wm-forum-sidebar
-        [categories]="categories()"
-        [selectedCategory]="item.category.slug"
-        (createRequested)="newDiscussion()"
-      ></wm-forum-sidebar>
-    </ng-template>
-
-    <div cards class="forum-content">
-      <wm-forum-post
-        [title]="item.title"
-        [post]="item.post"
-        [author]="item.author.nickname"
-        [createdAt]="item.createdAt"
-        [likesCount]="item.likesCount"
-        [isLiked]="item.isLiked"
-        [canLike]="isAuthorized() && !isUpdating()"
-        (likeRequested)="toggleLike()"
-      ></wm-forum-post>
-
-      <wm-comments-section
-        [comments]="comments()"
-        (commentCreated)="createComment($event)"
-      ></wm-comments-section>
+<div class="forum-shell thread-shell">
+  <nav class="breadcrumbs" aria-label="Навигация">
+    <a routerLink="/forum">Все обсуждения</a>
+    @if (store.discussion(); as item) {
+      <span>/</span
+      ><a [routerLink]="['/forum/sections', item.category.slug]">{{
+        item.category.title
+      }}</a>
+    }
+  </nav>
+  @if (store.loading() && !store.discussion()) {
+    <p class="panel empty-state" role="status">Загружаем обсуждение…</p>
+  }
+  @if (store.error()) {
+    <div class="panel empty-state" role="alert">
+      <h1>Обсуждение недоступно</h1>
+      <p>{{ store.error() }}</p>
+      <button class="forum-button" type="button" (click)="reload()">
+        Повторить
+      </button>
     </div>
-  </wm-desk-list>
-} @else if (hasError()) {
-  <wm-error></wm-error>
-}
+  }
+  @if (store.discussion(); as item) {
+    <article class="panel topic-post">
+      <header>
+        <div class="actions">
+          <span class="eyebrow">{{ item.category.title }}</span>
+          @if (item.isPinned) {
+            <span class="badge">Закреплено</span>
+          }
+          @if (item.isClosed) {
+            <span class="badge">Закрыто</span>
+          }
+        </div>
+        <h1>{{ item.title }}</h1>
+        <div class="author-line">
+          <wm-avatar
+            [name]="item.author.nickname"
+            loading="eager"
+            [src]="
+              item.author.id === account.user()?.id && account.profile()
+                ? account.avatarUrl()
+                : item.author.avatarUrl
+            "
+          />
+          <a [routerLink]="['/profile', item.author.id]">{{
+            item.author.nickname
+          }}</a
+          ><span>·</span
+          ><time [attr.datetime]="item.createdAt">{{
+            item.createdAt | date: 'dd.MM.yyyy, HH:mm'
+          }}</time>
+        </div>
+      </header>
+      <p class="post-text">{{ item.post }}</p>
+      <footer class="actions">
+        <button
+          class="forum-button"
+          type="button"
+          [disabled]="!store.authorized() || store.pending()"
+          [attr.aria-pressed]="item.isLiked"
+          (click)="store.toggleLike()"
+        >
+          {{ item.isLiked ? '♥ Нравится' : '♡ Поддержать' }} ·
+          {{ item.likesCount }}
+        </button>
+        @if (item.canEdit) {
+          <a class="forum-button" [routerLink]="['/forum', item.id, 'edit']"
+            >Редактировать тему</a
+          >
+        }
+        <span class="reply-count">{{ item.commentsCount }} ответов</span>
+      </footer>
+    </article>
+    @if (store.moderator()) {
+      <section class="moderation actions" aria-label="Модерация темы">
+        <span class="eyebrow">Модерация</span
+        ><button
+          class="forum-button"
+          type="button"
+          [disabled]="store.pending()"
+          (click)="togglePinned()"
+        >
+          {{ item.isPinned ? 'Открепить' : 'Закрепить' }}</button
+        ><button
+          class="forum-button"
+          type="button"
+          [disabled]="store.pending()"
+          (click)="toggleClosed()"
+        >
+          {{ item.isClosed ? 'Открыть тему' : 'Закрыть тему' }}</button
+        ><a
+          class="forum-button"
+          routerLink="/admin/content"
+          [queryParams]="{ tab: 'discussions', search: item.title }"
+          >Управление видимостью</a
+        >
+      </section>
+    }
+    <section
+      class="replies"
+      aria-labelledby="replies-title"
+      [attr.aria-busy]="store.loading()"
+    >
+      <div class="replies-heading">
+        <h2 id="replies-title">
+          Обсуждение <span>{{ item.commentsCount }}</span>
+        </h2>
+        @if (!item.isClosed) {
+          <a
+            routerLink="."
+            fragment="reply-form"
+            queryParamsHandling="preserve"
+            >{{
+              store.authorized()
+                ? 'Написать ответ ↓'
+                : 'Присоединиться к обсуждению ↓'
+            }}</a
+          >
+        }
+      </div>
+      @for (row of store.tree.rows(); track row.key) {
+        @let comment = row.message;
+        @if (row.kind === 'message') {
+          <article
+            class="message"
+            [style.--reply-depth]="row.indent"
+            [class.nested]="row.depth > 0"
+            [wmRouteAnchor]="'comment-' + comment.id"
+            [class.highlighted]="commentId() === comment.id"
+          >
+            <header class="author-line">
+              <wm-avatar
+                [name]="comment.author.nickname"
+                [src]="
+                  comment.author.id === account.user()?.id && account.profile()
+                    ? account.avatarUrl()
+                    : comment.author.avatarUrl
+                "
+              />
+              <a [routerLink]="['/profile', comment.author.id]">{{
+                comment.author.nickname
+              }}</a>
+              @if (comment.author.id === item.author.id) {
+                <span class="badge">Автор темы</span>
+              }
+              <a
+                class="message-link"
+                [routerLink]="['/forum', item.id]"
+                [queryParams]="{ comment: comment.id }"
+                [fragment]="'comment-' + comment.id"
+                [attr.aria-label]="'Ссылка на сообщение ' + comment.id"
+                ><time [attr.datetime]="comment.createdAt">{{
+                  comment.createdAt | date: 'dd.MM.yyyy, HH:mm'
+                }}</time>
+              </a>
+            </header>
+            @if (comment.parent; as parent) {
+              <a
+                class="reply-reference"
+                [routerLink]="['/forum', item.id]"
+                [queryParams]="{ comment: parent.id }"
+                [fragment]="'comment-' + parent.id"
+                >↳ {{ parent.nickname }}</a
+              >
+            }
+            @if (comment.isHidden) {
+              <p class="hidden-message">
+                Сообщение скрыто модератором. Ответы на него сохранены.
+              </p>
+            } @else {
+              <p class="message-text">{{ comment.text }}</p>
+              @if (comment.updatedAt !== comment.createdAt) {
+                <p class="edited">
+                  Изменено {{ comment.updatedAt | date: 'dd.MM.yyyy, HH:mm' }}
+                </p>
+              }
+            }
+            <footer class="actions">
+              @if (store.canWrite() && !comment.isHidden) {
+                <button
+                  type="button"
+                  class="text-button"
+                  [disabled]="store.pending()"
+                  (click)="reply(comment)"
+                >
+                  Ответить
+                </button>
+              }
+              @if (comment.canEdit) {
+                <button
+                  type="button"
+                  class="text-button"
+                  [disabled]="store.pending()"
+                  (click)="edit(comment)"
+                >
+                  Редактировать
+                </button>
+              }
+              @if (store.moderator()) {
+                <button
+                  type="button"
+                  class="text-button"
+                  [disabled]="store.pending()"
+                  (click)="moderateComment(comment)"
+                >
+                  {{ comment.isHidden ? 'Восстановить' : 'Скрыть' }}
+                </button>
+              }
+              @if (comment.repliesCount || row.branch) {
+                <button
+                  type="button"
+                  class="text-button branch-toggle"
+                  [attr.aria-expanded]="row.branch?.expanded ?? false"
+                  (click)="store.tree.toggle(comment.id)"
+                >
+                  {{
+                    row.branch?.expanded
+                      ? '⌃ Скрыть ответы'
+                      : '⌄ Показать ответы'
+                  }}
+                  · {{ comment.repliesCount ?? 0 }}
+                </button>
+              }
+            </footer>
+          </article>
+          @if (composerMessageId() === comment.id) {
+            <ng-container [ngTemplateOutlet]="composer" />
+          }
+        } @else if (row.branch) {
+          @let branch = row.branch;
+          <div class="branch-status" [style.--reply-depth]="row.indent">
+            @if (branch.loading) {
+              <span role="status">Загружаем ответы…</span>
+            } @else if (branch.error) {
+              <span role="alert">Не удалось загрузить ответы.</span>
+              <button
+                class="text-button"
+                type="button"
+                (click)="store.tree.load(comment.id, branch.requestedPage)"
+              >
+                Повторить
+              </button>
+            } @else {
+              @if (branch.firstPage > 1) {
+                <button
+                  class="text-button"
+                  type="button"
+                  (click)="store.tree.load(comment.id, branch.firstPage - 1)"
+                >
+                  Показать предыдущие ответы
+                </button>
+              }
+              @if (branch.lastPage < branch.pageCount) {
+                <button
+                  class="text-button"
+                  type="button"
+                  (click)="store.tree.load(comment.id, branch.lastPage + 1)"
+                >
+                  Показать ещё ответы
+                </button>
+              }
+            }
+          </div>
+        }
+      } @empty {
+        <p class="panel empty-state" role="status">
+          {{
+            store.loading()
+              ? 'Загружаем ответы…'
+              : item.isClosed
+                ? 'В этой теме нет ответов.'
+                : 'Ответов пока нет. Начните обсуждение!'
+          }}
+        </p>
+      }
+      <nav class="pagination" aria-label="Страницы ответов">
+        <wm-pagination />
+      </nav>
+    </section>
+    @if (!composerMessageId()) {
+      <ng-container [ngTemplateOutlet]="composer" />
+    }
+    <ng-template #composer>
+      <section class="panel composer" wmRouteAnchor="reply-form">
+        <div class="composer-heading">
+          @if (account.user()) {
+            <wm-avatar
+              [src]="account.avatarUrl()"
+              [name]="account.profile()?.nickname ?? ''"
+            />
+          }
+          <h2>
+            {{ store.editing() ? 'Редактирование сообщения' : 'Ваш ответ' }}
+          </h2>
+        </div>
+        @if (item.isClosed) {
+          <p>
+            Тема закрыта модератором. Новые ответы и редактирование недоступны.
+          </p>
+        } @else if (!store.authorized()) {
+          <p>
+            Присоединяйтесь к разговору:
+            <a
+              routerLink="/login"
+              [queryParams]="{ returnUrl: '/forum/' + item.id }"
+              >войдите</a
+            >
+            или
+            <a
+              routerLink="/register"
+              [queryParams]="{ returnUrl: '/forum/' + item.id }"
+              >создайте аккаунт</a
+            >.
+          </p>
+        } @else {
+          @if (store.replyTo(); as target) {
+            <p class="reply-context">
+              Ответ {{ target.author.nickname }} · #{{ target.id }}
+            </p>
+          }
+          @if (store.replyTo() || store.editing()) {
+            <button
+              type="button"
+              class="text-button"
+              [disabled]="store.pending()"
+              (click)="cancelContext()"
+            >
+              Отменить
+              {{ store.editing() ? 'редактирование' : 'ответ на сообщение' }}
+            </button>
+          }
+          <form (submit)="$event.preventDefault(); submit()">
+            <label for="reply-text">Сообщение</label
+            ><textarea
+              id="reply-text"
+              [formControl]="text"
+              rows="5"
+              maxlength="5000"
+              [readOnly]="store.pending()"
+              placeholder="Поделитесь опытом, задайте вопрос или поддержите автора."
+              (keydown.control.enter)="submit()"
+            ></textarea>
+            <p class="edited">
+              {{ text.value.length }} / 5 000 · Ctrl + Enter — отправить
+            </p>
+            @if (text.touched && (!text.value.trim() || text.invalid)) {
+              <p class="error">Введите сообщение от 1 до 5 000 символов.</p>
+            }
+            <div class="actions">
+              <button
+                class="forum-button"
+                type="submit"
+                [disabled]="store.pending()"
+              >
+                {{
+                  store.pending()
+                    ? 'Сохраняем…'
+                    : store.editing()
+                      ? 'Сохранить'
+                      : 'Отправить ответ'
+                }}</button
+              ><button
+                class="forum-button"
+                type="button"
+                [attr.aria-expanded]="showPreview()"
+                aria-controls="reply-preview"
+                (click)="showPreview.set(!showPreview())"
+              >
+                {{ showPreview() ? 'Скрыть предпросмотр' : 'Предпросмотр' }}
+              </button>
+            </div>
+            @if (showPreview()) {
+              <p class="message-text preview" id="reply-preview">
+                {{ text.value || 'Здесь появится ваш ответ.' }}
+              </p>
+            }
+          </form>
+        }
+      </section>
+    </ng-template>
+  }
+  @if (store.actionError()) {
+    <p class="error" role="alert">{{ store.actionError() }}</p>
+  }
+</div>

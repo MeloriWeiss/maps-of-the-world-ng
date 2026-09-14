@@ -10,6 +10,7 @@ import {
   ForumDiscussionDetails,
   ForumDiscussionsPage,
   GetDiscussionsDto,
+  ForumCommentsPage,
 } from './interfaces/discussion';
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +34,8 @@ export class ForumService {
             pageSize: query.pageSize ?? 20,
             ...(query.search ? { search: query.search } : {}),
             ...(query.category ? { category: query.category } : {}),
+            ...(query.sort ? { sort: query.sort } : {}),
+            ...(query.scope ? { scope: query.scope } : {}),
           },
         },
       )
@@ -42,6 +45,11 @@ export class ForumService {
           items: page.items.map(
             (item): Discussion => ({
               id: item.id,
+              isPinned: item.isPinned,
+              isClosed: item.isClosed,
+              lastActivityAt: item.lastActivityAt,
+              authorId: item.author.id,
+              avatarUrl: item.author.avatarUrl,
               theme: item.title,
               author: item.author.nickname,
               createdAt: item.createdAt,
@@ -55,9 +63,73 @@ export class ForumService {
       );
   }
 
-  discussion(id: number) {
+  discussion(id: number, includeComments = true) {
     return this.#http.get<ForumDiscussionDetails>(
       `${this.#apiConfig.baseUrl}forum-discussions/${id}`,
+      { params: { includeComments } },
+    );
+  }
+
+  comments(id: number, page: number, commentId?: number) {
+    return this.#http.get<ForumCommentsPage>(
+      `${this.#apiConfig.baseUrl}forum-discussions/${id}/comments`,
+      {
+        params: { page, ...(commentId ? { commentId } : {}) },
+      },
+    );
+  }
+
+  commentBranch(
+    id: number,
+    page: number,
+    parentId?: number,
+    commentId?: number,
+  ) {
+    return this.#http.get<ForumCommentsPage>(
+      `${this.#apiConfig.baseUrl}forum-discussions/${id}/comments`,
+      {
+        params: {
+          view: 'tree',
+          page,
+          ...(parentId ? { parentId } : {}),
+          ...(commentId ? { commentId } : {}),
+        },
+      },
+    );
+  }
+
+  editDiscussion(id: number, request: CreateForumDiscussion) {
+    return this.#http.patch<{ id: number }>(
+      `${this.#apiConfig.baseUrl}forum-discussions/${id}`,
+      request,
+    );
+  }
+
+  editComment(id: number, commentId: number, comment: string) {
+    return this.#http.patch<{ id: number }>(
+      `${this.#apiConfig.baseUrl}forum-discussions/${id}/comments/${commentId}`,
+      { comment },
+    );
+  }
+
+  moderateDiscussion(
+    id: number,
+    request: { isPinned?: boolean; isClosed?: boolean },
+  ) {
+    return this.#http.patch<{
+      id: number;
+      isPinned: boolean;
+      isClosed: boolean;
+    }>(
+      `${this.#apiConfig.baseUrl}admin/forum-discussions/${id}/moderation`,
+      request,
+    );
+  }
+
+  moderateComment(id: number, commentId: number, isHidden: boolean) {
+    return this.#http.patch<{ id: number; isHidden: boolean }>(
+      `${this.#apiConfig.baseUrl}admin/forum-discussions/${id}/comments/${commentId}/visibility`,
+      { isHidden },
     );
   }
 

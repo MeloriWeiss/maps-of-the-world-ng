@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -16,13 +17,21 @@ import {
   JwtAccessGuard,
   OptionalAccessRequest,
   OptionalJwtAccessGuard,
+  Roles,
+  RolesGuard,
 } from '@wm/api/auth';
 import {
   CreateForumCommentDto,
   CreateForumDiscussionDto,
   ListForumDiscussionsDto,
+  ForumCommentsQueryDto,
+  ForumDetailsQueryDto,
+  EditForumCommentDto,
+  ModerateForumDto,
+  ForumCommentVisibilityDto,
 } from './forum.dto';
 import { ForumService } from './forum.service';
+import { UserRole } from '@wm/shared/users';
 
 @Controller()
 @ApiTags('forum')
@@ -51,8 +60,89 @@ export class ForumController {
   discussion(
     @Param('id', ParseIntPipe) id: number,
     @Req() request: OptionalAccessRequest,
+    @Query() query: ForumDetailsQueryDto,
   ) {
-    return this.forumService.discussion(id, request.user?.profileId);
+    return this.forumService.discussion(
+      id,
+      request.user?.profileId,
+      query.includeComments !== 'false',
+    );
+  }
+
+  @Get('forum-discussions/:id/comments')
+  @UseGuards(OptionalJwtAccessGuard)
+  @ApiOperation({
+    summary:
+      'Read comments or a tree branch; commentId in tree mode returns the root page and ancestor path',
+  })
+  comments(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: ForumCommentsQueryDto,
+    @Req() request: OptionalAccessRequest,
+  ) {
+    return this.forumService.comments(id, query, request.user?.profileId);
+  }
+
+  @Patch('forum-discussions/:id')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Edit my open discussion' })
+  editDiscussion(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateForumDiscussionDto,
+    @Req() request: AccessRequest,
+  ) {
+    return this.forumService.editDiscussion(id, request.user.profileId, dto);
+  }
+
+  @Patch('forum-discussions/:id/comments/:commentId')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({ summary: 'Edit my visible comment in an open discussion' })
+  editComment(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Body() dto: EditForumCommentDto,
+    @Req() request: AccessRequest,
+  ) {
+    return this.forumService.editComment(
+      id,
+      commentId,
+      request.user.profileId,
+      dto,
+    );
+  }
+
+  @Patch('admin/forum-discussions/:id/moderation')
+  @UseGuards(JwtAccessGuard, RolesGuard)
+  @Roles(UserRole.admin, UserRole.superAdmin)
+  @ApiOperation({
+    summary: 'Pin or close a discussion and record the moderation action',
+  })
+  moderateDiscussion(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ModerateForumDto,
+    @Req() request: AccessRequest,
+  ) {
+    return this.forumService.moderateDiscussion(id, request.user.userId, dto);
+  }
+
+  @Patch('admin/forum-discussions/:id/comments/:commentId/visibility')
+  @UseGuards(JwtAccessGuard, RolesGuard)
+  @Roles(UserRole.admin, UserRole.superAdmin)
+  @ApiOperation({
+    summary: 'Hide or restore a comment while preserving replies',
+  })
+  moderateComment(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Body() dto: ForumCommentVisibilityDto,
+    @Req() request: AccessRequest,
+  ) {
+    return this.forumService.moderateComment(
+      id,
+      commentId,
+      request.user.userId,
+      dto.isHidden,
+    );
   }
 
   @Post('forum-discussions')

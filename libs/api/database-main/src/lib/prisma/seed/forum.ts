@@ -23,6 +23,16 @@ const categories = [
     title: 'Мастерская ведущего',
     description: 'Подготовка и проведение настольных ролевых игр',
   },
+  {
+    slug: 'worldbuilding',
+    title: 'Создание миров',
+    description: 'География, история, народы и логика вашего мира',
+  },
+  {
+    slug: 'feedback',
+    title: 'Предложения и ошибки',
+    description: 'Идеи для GameMaster Helper и сообщения о неполадках',
+  },
 ] as const;
 
 const topics = [
@@ -146,9 +156,12 @@ export async function seedForum(
         updatedAt: new Date(
           createdAt.getTime() + (rootCount + repliesCount + 1) * 3_600_000,
         ),
+        lastActivityAt: new Date(
+          createdAt.getTime() + (rootCount + repliesCount + 1) * 3_600_000,
+        ),
       },
     });
   }
 
-  console.log('Forum: 4 categories, 55 discussions with nested comments');
+  console.log('Forum: 6 categories, 55 discussions with nested comments');
 }

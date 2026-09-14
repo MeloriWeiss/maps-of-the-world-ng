@@ -1,18 +1,226 @@
-@use 'functions' as *;
-
-:host {
-  display: block;
-  padding-top: fluid(68, 50);
-  padding-bottom: fluid(120, 85);
+@use '../../forum-layout' as *;
+.thread-shell {
+  max-width: 1000px;
 }
-
-.forum-content {
+.topic-post {
+  padding: 32px;
+}
+h1 {
+  font-size: clamp(27px, 4vw, 40px);
+  line-height: 1.2;
+  margin: 18px 0 22px;
+  overflow-wrap: anywhere;
+}
+.author-line {
   display: flex;
-  flex-direction: column;
-  gap: fluid(35, 15);
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-secondary-color);
+  overflow-wrap: anywhere;
+}
+.author-line wm-avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.author-line > a:first-of-type {
+  color: var(--text-primary-color);
+  font-weight: 600;
+}
+.post-text,
+.message-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.post-text {
+  margin: 30px 0;
+  font-size: 17px;
+}
+.topic-post > footer {
+  border-top: 1px solid var(--border-separator-color);
+  padding-top: 16px;
+}
+.reply-count {
+  margin-left: auto;
+  font-size: 13px;
+}
+.moderation {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px dashed var(--border-input-color);
+  border-radius: 8px;
+}
+.replies {
+  margin: 36px 0;
+}
+.replies-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 24px 0;
+}
+.replies-heading h2 {
+  font-size: 24px;
+}
+.replies-heading h2 span {
+  color: var(--text-secondary-color);
+  font-size: 16px;
+}
+.replies-heading > a {
+  font-size: 14px;
+  text-decoration: underline;
+}
+.message {
+  padding: 20px;
+  margin-block: 12px;
+  background: var(--bg-card-color);
+  border: 1px solid var(--border-separator-color);
+  border-radius: 24px;
+  margin-inline-start: calc(var(--reply-depth, 0) * 24px);
+  scroll-margin-top: 100px;
+}
+.message.highlighted {
+  background: var(--page-paper-deep-color);
+  border-color: var(--accent-main-color);
+}
+.message-text {
+  margin: 6px 0;
+}
+.message-link {
+  margin-left: auto;
+  font-size: 12px;
+}
+.reply-reference {
+  display: block;
+  font-size: 13px;
+  margin-top: 4px;
+  color: var(--text-secondary-color);
+}
+.text-button {
+  background: none;
+  border: 0;
+  color: var(--text-secondary-color);
+  padding: 5px 8px;
+  min-height: 32px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.edited {
+  font-size: 12px;
+  margin: 10px 0;
+  color: var(--text-secondary-color);
+}
+.hidden-message {
+  padding: 8px 0;
+  color: var(--text-secondary-color);
+  font-style: italic;
+}
+.composer {
+  padding: 26px;
+  scroll-margin-top: 100px;
+}
+.composer h2 {
+  font-size: 24px;
+  margin-bottom: 0;
+}
+.composer form label {
+  display: block;
+  margin: 16px 0 10px;
+}
+.composer > p {
+  line-height: 1.7;
+}
+.composer p > a {
+  text-decoration: underline;
+}
+.reply-context {
+  border-left: 3px solid var(--accent-main-color);
+  padding-left: 12px;
+}
+.preview {
+  border-top: 1px solid var(--border-separator-color);
+  padding-top: 16px;
+}
+@media (max-width: 700px) {
+  .topic-post,
+  .composer {
+    padding: 20px 16px;
+  }
+  .message-link {
+    margin-left: 0;
+  }
+  .reply-count {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
 }
 
-.search-input {
-  width: fluid(236, 142);
-  min-width: rem(142);
+.message.nested {
+  border-inline-start: 2px solid var(--border-separator-color);
+  padding-inline-start: 12px;
+}
+.message .author-line {
+  gap: 8px;
+}
+.message .author-line wm-avatar {
+  --avatar-size: 32px;
+}
+.message .message-text {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.message .actions {
+  gap: 4px;
+}
+.message .edited {
+  margin: 4px 0;
+  font-size: 11px;
+}
+.text-button:hover {
+  background: var(--btn-secondary-bg-color);
+  color: var(--btn-secondary-text-color);
+}
+.branch-toggle {
+  font-weight: 700;
+}
+.branch-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: calc(var(--reply-depth, 0) * 24px + 12px);
+  font-size: 13px;
+  color: var(--text-secondary-color);
+}
+.composer {
+  margin-block: 16px;
+}
+@media (max-width: 700px) {
+  .message {
+    margin-inline-start: calc(var(--reply-depth, 0) * 12px);
+  }
+  .branch-status {
+    margin-inline-start: calc(var(--reply-depth, 0) * 12px + 8px);
+  }
+  .message.nested {
+    padding-inline-start: 8px;
+  }
+}
+@media (pointer: coarse) {
+  .text-button {
+    min-height: 44px;
+  }
+}
+
+.composer-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
 }

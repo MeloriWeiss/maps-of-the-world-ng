@@ -63,6 +63,26 @@ describe('ForumService', () => {
     );
   });
 
+  it('returns public avatar URLs for the topic and legacy comment tree', async () => {
+    const authorAccount = {
+      userId: 7,
+      nickname: 'Author',
+      avatarUrl: 'avatars/3/photo.png',
+    };
+    findDiscussion.mockResolvedValue({
+      id: 1,
+      authorId: 3,
+      authorAccount,
+      _count: { likes: 0 },
+      comments: [{ id: 2, comment: 'Reply', parentId: null, authorAccount }],
+    });
+
+    const result = await service.discussion(1);
+    const url = '/api/accounts/profiles/7/avatar?v=avatars%2F3%2Fphoto.png';
+    expect(result.author.avatarUrl).toBe(url);
+    expect(result.comments[0].author.avatarUrl).toBe(url);
+  });
+
   it('creates a discussion for the authenticated account', async () => {
     findCategory.mockResolvedValue({ id: 2 });
     createDiscussion.mockResolvedValue({ id: 11 });

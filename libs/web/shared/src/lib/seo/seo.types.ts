@@ -7,6 +7,7 @@ export interface SeoMetadata {
   canonicalPath?: string;
   image?: string;
   type?: SeoPageType;
+  structuredData?: Record<string, unknown>;
 }
 
 export interface SeoConfig {

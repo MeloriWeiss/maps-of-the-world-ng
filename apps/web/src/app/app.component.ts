@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavigationManagerComponent } from '@wm/web/shared';
 import { ModalHostComponent, ToastHostComponent } from '@wm/web/common-ui';
 import { SiteVisitTrackerService } from './site-visit-tracker.service';
+import { RouterScrollService } from './router-scroll.service';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +21,7 @@ export class AppComponent {
   readonly #siteVisitTracker = inject(SiteVisitTrackerService);
 
   constructor() {
+    inject(RouterScrollService);
     this.#siteVisitTracker.track();
   }
 }

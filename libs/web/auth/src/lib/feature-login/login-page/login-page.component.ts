@@ -5,7 +5,7 @@ import {
   LabeledFormFieldWrapperComponent,
 } from '@wm/web/common-ui';
 import { LabeledCheckboxComponent } from '@wm/web/common-ui';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   FormControl,
   FormGroup,
@@ -15,6 +15,7 @@ import {
 import { firstValueFrom, tap } from 'rxjs';
 import { validateEmail } from '../../validators';
 import { authConfig } from '@wm/shared/auth';
+import { authReturnUrl } from '../../auth/auth-return-url';
 
 @Component({
   selector: 'wm-login-page',
@@ -31,6 +32,7 @@ import { authConfig } from '@wm/shared/auth';
 })
 export class LoginPageComponent {
   #router = inject(Router);
+  readonly #route = inject(ActivatedRoute);
   #authService = inject(AuthService);
 
   authConfig = authConfig;
@@ -62,7 +64,13 @@ export class LoginPageComponent {
         tap((res) => {
           if (!res) return;
 
-          this.#router.navigate(['/']).then();
+          this.#router
+            .navigateByUrl(
+              authReturnUrl(
+                this.#route.snapshot.queryParamMap.get('returnUrl'),
+              ),
+            )
+            .then();
         }),
       ),
     ).then();

@@ -53,6 +53,10 @@
   </div>
 
   <p class="register-link">
-    Уже есть аккаунт?&nbsp;<a [routerLink]="['/login']">Войти</a>
+    Уже есть аккаунт?&nbsp;<a
+      [routerLink]="['/login']"
+      queryParamsHandling="preserve"
+      >Войти</a
+    >
   </p>
 </form>

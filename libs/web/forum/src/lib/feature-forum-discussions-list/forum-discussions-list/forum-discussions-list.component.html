@@ -1,60 +1,245 @@
-@if (page$ | async; as page) {
-  <wm-desk-list
-    [title]="'Активные темы — ' + page.total"
-    [paginationInHeader]="true"
-  >
-    <wm-search-input
-      class="search-input"
-      [formControl]="searchControl"
-      searchControl
+<div class="forum-shell">
+  <header class="forum-hero">
+    <div>
+      <p class="eyebrow">GameMaster Helper / Сообщество</p>
+      <h1>Форум <em>создателей миров</em></h1>
+      <p class="hero-description">
+        Карты, истории и опыт за одним столом.<br />Делитесь находками и
+        создавайте вместе.
+      </p>
+    </div>
+    <a
+      class="forum-button"
+      routerLink="/forum/new"
+      [queryParams]="{ category: query().category }"
+      >+ Создать тему</a
     >
-      <svg icon="search" class="svg20"></svg>
-    </wm-search-input>
-
-    <ng-template #sidebar>
-      <wm-forum-sidebar
-        [categories]="(categories$ | async) ?? []"
-        [selectedCategory]="selectedCategory()"
-        (createRequested)="openCreateForm()"
-      ></wm-forum-sidebar>
-    </ng-template>
-
-    <ng-container cards>
-      @if (showCreateForm()) {
-        <form
-          class="create-discussion"
-          [formGroup]="createForm"
-          (ngSubmit)="createDiscussion()"
+  </header>
+  <div class="forum-layout">
+    <aside>
+      <nav class="panel category-nav" aria-label="Разделы форума">
+        <h2>Разделы</h2>
+        <a
+          routerLink="/forum"
+          [class.active]="!query().category && !query().scope"
+          [attr.aria-current]="
+            !query().category && !query().scope ? 'page' : null
+          "
+          >Все обсуждения</a
         >
-          <h2>Новое обсуждение</h2>
-          <input formControlName="title" placeholder="Название темы" />
-          <select formControlName="category">
-            <option value="" disabled>Выберите форум</option>
-            @for (category of (categories$ | async) ?? []; track category.id) {
-              <option [value]="category.slug">{{ category.title }}</option>
-            }
-          </select>
-          <textarea
-            formControlName="post"
-            rows="8"
-            placeholder="Текст публикации"
-          ></textarea>
-          @if (createError()) {
-            <p class="form-error">{{ createError() }}</p>
+        @for (category of store.categories(); track category.id) {
+          <a
+            [routerLink]="['/forum/sections', category.slug]"
+            [class.active]="query().category === category.slug"
+            [attr.aria-current]="
+              query().category === category.slug ? 'page' : null
+            "
+          >
+            <span>{{ category.title }}</span
+            ><span class="count">{{ category.discussionsCount }}</span>
+          </a>
+        }
+        @if (store.categoryError()) {
+          <button type="button" (click)="store.loadCategories()">
+            Повторить загрузку разделов
+          </button>
+        }
+        @if (account.user()) {
+          <a
+            routerLink="/forum"
+            [queryParams]="{ scope: 'mine' }"
+            [class.active]="query().scope === 'mine'"
+            [attr.aria-current]="query().scope === 'mine' ? 'page' : null"
+            >Мои темы</a
+          >
+        }
+      </nav>
+      <section class="community-note">
+        <p class="eyebrow">За одним столом</p>
+        <h2>Помогайте друг другу творить</h2>
+        <p>
+          Критикуйте работу, а не автора. Отмечайте спойлеры и указывайте
+          источники чужих материалов.
+        </p>
+        <a routerLink="/maps">Найти вдохновение в картах →</a>
+      </section>
+    </aside>
+    <section
+      class="topic-list"
+      aria-label="Обсуждения"
+      [attr.aria-busy]="store.loading()"
+    >
+      <div class="section-heading">
+        <h2>
+          {{
+            selectedCategory()?.title ??
+              (query().scope === 'mine' ? 'Мои темы' : 'Все обсуждения')
+          }}
+        </h2>
+        <p>
+          {{
+            selectedCategory()?.description ??
+              'Вопросы, находки и работы участников сообщества'
+          }}
+        </p>
+      </div>
+      <form
+        class="search-form"
+        (submit)="$event.preventDefault(); applySearch()"
+      >
+        <label for="forum-search">Поиск по темам, тексту и автору</label>
+        <div class="search-row">
+          <input
+            id="forum-search"
+            type="search"
+            [formControl]="search"
+            maxlength="120"
+            placeholder="Например, карта города или первая сессия"
+          /><button type="submit" class="forum-button">Найти</button>
+        </div>
+      </form>
+      <nav class="sort-tabs" aria-label="Порядок тем">
+        @for (sort of sorts; track sort.id) {
+          <a
+            [routerLink]="listPath()"
+            [queryParams]="{ sort: sort.id, page: 1 }"
+            queryParamsHandling="merge"
+            [class.active]="query().sort === sort.id"
+            [attr.aria-current]="query().sort === sort.id ? 'page' : null"
+            >{{ sort.label }}</a
+          >
+        }
+      </nav>
+      @if (query().search) {
+        <div class="search-summary">
+          <span>Поиск: «{{ query().search }}»</span>
+          <a
+            [routerLink]="listPath()"
+            [queryParams]="{ search: null, page: 1 }"
+            queryParamsHandling="merge"
+            >Сбросить поиск ×</a
+          >
+        </div>
+      }
+      @if (query().scope === 'mine' && !account.user()) {
+        <div class="panel empty-state">
+          <h3>Ваши обсуждения</h3>
+          <p>Войдите, чтобы увидеть созданные вами темы.</p>
+          <a
+            class="forum-button"
+            routerLink="/login"
+            [queryParams]="{ returnUrl: '/forum?scope=mine' }"
+            >Войти</a
+          >
+        </div>
+      } @else if (store.loading() && !store.items().length) {
+        <div class="panel empty-state" role="status">Загружаем обсуждения…</div>
+      } @else if (store.error()) {
+        <div class="panel empty-state" role="alert">
+          <p>{{ store.error() }}</p>
+          <button class="forum-button" type="button" (click)="retry()">
+            Повторить
+          </button>
+        </div>
+      } @else {
+        <p class="result-count" aria-live="polite">
+          @if (store.loading()) {
+            Обновляем обсуждения…
+          } @else {
+            Найдено тем: {{ store.total() }}
           }
-          <div class="create-discussion__actions">
-            <button type="button" (click)="cancelCreate()">Отмена</button>
-            <button type="submit" [disabled]="isCreating()">
-              Опубликовать
-            </button>
-          </div>
-        </form>
+        </p>
+        <div class="panel topics">
+          @if (store.items().length) {
+            <div class="topics-heading" aria-hidden="true">
+              <span>Тема / автор</span><span>Ответы</span
+              ><span>Активность</span>
+            </div>
+          }
+          @for (item of store.items(); track item.id) {
+            <article class="topic" [class.topic-pinned]="item.isPinned">
+              <div class="topic-main">
+                <div class="topic-labels">
+                  <a [routerLink]="['/forum/sections', item.category.slug]">{{
+                    item.category.title
+                  }}</a>
+                  @if (item.isPinned) {
+                    <span class="badge">Закреплено</span>
+                  }
+                  @if (item.isClosed) {
+                    <span class="badge">Закрыто</span>
+                  }
+                </div>
+                <h3>
+                  <a [routerLink]="['/forum', item.id]">{{ item.theme }}</a>
+                </h3>
+                <p class="topic-meta">
+                  <wm-avatar
+                    [name]="item.author"
+                    [src]="
+                      item.authorId === account.user()?.id && account.profile()
+                        ? account.avatarUrl()
+                        : item.avatarUrl
+                    "
+                  />
+                  <a [routerLink]="['/profile', item.authorId]">{{
+                    item.author
+                  }}</a>
+                  · {{ item.createdAt | date: 'dd.MM.yyyy' }}
+                </p>
+              </div>
+              <div class="topic-numbers">
+                <strong>{{ item.commentsCount }}</strong
+                ><span>ответов</span
+                ><small [attr.aria-label]="'Нравится: ' + item.likes"
+                  >♡ {{ item.likes }}</small
+                >
+              </div>
+              <div class="topic-activity">
+                <span>Активность</span
+                ><time [attr.datetime]="item.lastActivityAt">{{
+                  item.lastActivityAt | date: 'dd.MM.yyyy'
+                }}</time
+                ><small>{{ item.lastActivityAt | date: 'HH:mm' }}</small>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state">
+              <h3>
+                {{ query().search ? 'Ничего не нашлось' : 'Здесь пока тихо' }}
+              </h3>
+              <p>
+                {{
+                  query().search
+                    ? 'Попробуйте другие слова или выберите другой раздел.'
+                    : 'Начните разговор — поделитесь работой или задайте вопрос.'
+                }}
+              </p>
+              @if (
+                query().search ||
+                query().sort === 'unanswered' ||
+                query().page > 1
+              ) {
+                <a
+                  class="forum-button"
+                  [routerLink]="listPath()"
+                  [queryParams]="{ scope: query().scope }"
+                  >Показать все темы</a
+                >
+              }
+              <a
+                routerLink="/forum/new"
+                class="forum-button"
+                [queryParams]="{ category: query().category }"
+                >Создать тему</a
+              >
+            </div>
+          }
+        </div>
+        <nav class="pagination" aria-label="Страницы обсуждений">
+          <wm-pagination />
+        </nav>
       }
-      @for (discussion of page.items; track discussion.id) {
-        <wm-discussion-card [discussion]="discussion"></wm-discussion-card>
-      } @empty {
-        <p class="empty-state">Обсуждений пока нет.</p>
-      }
-    </ng-container>
-  </wm-desk-list>
-}
+    </section>
+  </div>
+</div>

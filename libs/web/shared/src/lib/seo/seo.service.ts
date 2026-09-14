@@ -20,6 +20,7 @@ export class SeoService extends TitleStrategy {
     null,
   );
   #canonicalLink: HTMLLinkElement | null = null;
+  #structuredDataElement: HTMLElement | null = null;
 
   override updateTitle(snapshot: RouterStateSnapshot) {
     const metadata = this.#findMetadata(snapshot.root);
@@ -77,6 +78,24 @@ export class SeoService extends TitleStrategy {
     });
     this.#meta.updateTag({ name: 'twitter:image', content: imageUrl });
     this.#setCanonical(canonicalUrl);
+    if (this.#structuredDataElement) {
+      this.#renderer.removeChild(
+        this.#document.head,
+        this.#structuredDataElement,
+      );
+      this.#structuredDataElement = null;
+    }
+    if (metadata.structuredData) {
+      const script: HTMLElement = this.#renderer.createElement('script');
+      this.#renderer.setAttribute(script, 'type', 'application/ld+json');
+      this.#renderer.setProperty(
+        script,
+        'textContent',
+        JSON.stringify(metadata.structuredData).replace(/</g, '\\u003c'),
+      );
+      this.#renderer.appendChild(this.#document.head, script);
+      this.#structuredDataElement = script;
+    }
   }
 
   #findMetadata(route: ActivatedRouteSnapshot): SeoMetadata | null {
@@ -108,6 +127,9 @@ export class SeoService extends TitleStrategy {
   }
 
   #setCanonical(url: string) {
+    this.#canonicalLink ??= this.#document.querySelector<HTMLLinkElement>(
+      'link[rel="canonical"]',
+    );
     if (!this.#canonicalLink) {
       const link = this.#renderer.createElement('link') as HTMLLinkElement;
       this.#renderer.setAttribute(link, 'rel', 'canonical');

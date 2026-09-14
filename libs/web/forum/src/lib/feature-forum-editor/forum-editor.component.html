@@ -1,0 +1,125 @@
+<div class="forum-shell" [wmUnsavedChanges]="store.dirty() || store.pending()">
+  <nav class="breadcrumbs" aria-label="Навигация">
+    <a routerLink="/forum">Форум</a><span> / </span
+    ><span>{{ id ? 'Редактирование темы' : 'Новая тема' }}</span>
+  </nav>
+  <header>
+    <p class="eyebrow">Поделитесь идеей с сообществом</p>
+    <h1>{{ id ? 'Редактирование темы' : 'Начните новый разговор' }}</h1>
+    <p>
+      Хороший вопрос или небольшая находка могут стать началом большого
+      приключения.
+    </p>
+  </header>
+  @if (store.loading()) {
+    <p class="empty-state" role="status">Загружаем редактор…</p>
+  }
+  @if (store.error()) {
+    <div class="error" role="alert">
+      {{ store.error() }}
+      @if (!store.ready()) {
+        <button class="forum-button" type="button" (click)="reload()">
+          Повторить
+        </button>
+      }
+    </div>
+  }
+  @if (store.ready()) {
+    <div class="editor-layout">
+      <form class="panel editor" [formGroup]="store.form" (ngSubmit)="submit()">
+        <label for="topic-title">Название темы</label
+        ><input
+          id="topic-title"
+          formControlName="title"
+          maxlength="160"
+          placeholder="Например, как сделать город на карте правдоподобным?"
+        />
+        @if (
+          store.form.controls.title.touched && store.form.controls.title.invalid
+        ) {
+          <p class="error">Введите название от 3 до 160 символов.</p>
+        }
+        <span class="field-label">Раздел</span>
+        <wm-select
+          ariaLabel="Раздел темы"
+          placeholder="Выберите подходящий раздел"
+          [value]="store.preview().category"
+          [disabled]="store.pending()"
+          (valueChange)="selectCategory($event)"
+        >
+          @for (category of store.categories(); track category.id) {
+            <wm-option [value]="category.slug" [label]="category.title">
+              {{ category.title }}
+            </wm-option>
+          }
+        </wm-select>
+        @if (
+          store.form.controls.category.touched &&
+          store.form.controls.category.invalid
+        ) {
+          <p class="error">Выберите раздел.</p>
+        }
+        <label for="topic-post">Текст темы</label
+        ><textarea
+          id="topic-post"
+          formControlName="post"
+          rows="14"
+          maxlength="20000"
+          placeholder="Расскажите о своей задумке, добавьте контекст и вопросы к сообществу."
+        ></textarea>
+        <p class="hint">
+          {{ store.preview().post.length }} / 20 000 · Переносы строк
+          сохраняются.
+        </p>
+        @if (
+          store.form.controls.post.touched && store.form.controls.post.invalid
+        ) {
+          <p class="error">Текст должен содержать от 10 до 20 000 символов.</p>
+        }
+        <div class="actions">
+          <button
+            class="forum-button"
+            type="submit"
+            [disabled]="store.pending()"
+          >
+            {{
+              store.pending()
+                ? 'Сохраняем…'
+                : id
+                  ? 'Сохранить изменения'
+                  : 'Опубликовать тему'
+            }}</button
+          ><button
+            class="forum-button"
+            type="button"
+            [attr.aria-expanded]="showPreview()"
+            aria-controls="topic-preview"
+            (click)="showPreview.set(!showPreview())"
+          >
+            {{ showPreview() ? 'Скрыть предпросмотр' : 'Предпросмотр' }}</button
+          ><a routerLink="/forum">Отмена</a>
+        </div>
+        <p class="hint" role="status">{{ store.draftStatus() }}</p>
+        @if (showPreview()) {
+          <section class="preview" id="topic-preview">
+            <h2>{{ store.preview().title || 'Название темы' }}</h2>
+            <p>
+              {{ store.preview().post || 'Здесь появится текст вашей темы.' }}
+            </p>
+          </section>
+        }
+      </form>
+      <aside class="tips">
+        <h2>Чтобы разговор получился</h2>
+        <ol>
+          <li>Дайте теме понятное название.</li>
+          <li>
+            Расскажите, что уже пробовали и какой результат хотите получить.
+          </li>
+          <li>Если показываете чужую работу, укажите автора и источник.</li>
+          <li>Предупреждайте о спойлерах к приключениям.</li>
+        </ol>
+      </aside>
+    </div>
+  }
+</div>

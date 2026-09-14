@@ -9,7 +9,7 @@ import {
   WritableSignal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ConfirmationModalComponent,
   ModalService,
@@ -36,6 +36,7 @@ import { AdminService } from './admin.service';
 @Component({
   selector: 'wm-admin-content',
   imports: [
+    RouterLink,
     TabsComponent,
     PaginationComponent,
     ReactiveFormsModule,

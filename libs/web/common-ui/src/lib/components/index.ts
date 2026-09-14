@@ -65,6 +65,7 @@ export {
 };
 
 export type { TabItem } from './tabs/tabs.component';
+export { AvatarComponent } from './avatar/avatar.component';
 
 export type { VirtualListItemContext } from './virtual-list/virtual-list.component';
 export type { PopoverAlignment } from './popover/popover.component';
