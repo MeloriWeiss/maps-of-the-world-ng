@@ -1,10 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Post,
+  Put,
+  Param,
+  ParseIntPipe,
   Req,
   Res,
   UseGuards,
@@ -12,6 +16,7 @@ import {
 import { AuthService } from '../services';
 import {
   ApiConflictResponse,
+  ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -26,6 +31,7 @@ import { JwtAccessGuard, JwtRefreshGuard } from '../jwt';
 import { AccessRequest, RefreshRequest } from '../interfaces';
 import { DefaultResponseDto } from '@wm/shared/common';
 import { UserResponseDto } from '@wm/shared/users';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -183,13 +189,64 @@ export class AuthController {
     return result;
   }
 
-  @UseGuards(JwtAccessGuard)
+  @UseGuards(JwtRefreshGuard)
   @Get('sessions')
-  async getSessions(@Req() req: AccessRequest) {
-    const { userId } = req.user;
+  @ApiOperation({ summary: 'List active sessions of the current user' })
+  @ApiOkResponse({
+    description: 'Sessions with device metadata and current session marker',
+  })
+  @ApiUnauthorizedResponse({ description: 'No active session' })
+  async getSessions(@Req() req: RefreshRequest) {
+    const { userId, sessionId } = req.user;
 
-    const sessions: GetSessionsDto = await this.authService.getSessions(userId);
+    const sessions: GetSessionsDto = await this.authService.getSessions(
+      userId,
+      sessionId,
+    );
 
     return sessions;
+  }
+
+  @UseGuards(JwtRefreshGuard)
+  @Delete('sessions/:id')
+  @ApiOperation({ summary: 'End one session belonging to the current user' })
+  @ApiOkResponse({
+    description:
+      'Session ended; cookies cleared when ending the current session',
+  })
+  @ApiUnauthorizedResponse({ description: 'No active session' })
+  @ApiBadRequestResponse({ description: 'Invalid session ID' })
+  async deleteSession(
+    @Req() req: RefreshRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.logoutSession(req.user.userId, id);
+    if (id === req.user.sessionId) clearAuthCookies(res);
+    return {
+      error: false,
+      message: 'Сессия завершена',
+    } satisfies DefaultResponseDto;
+  }
+
+  @UseGuards(JwtRefreshGuard)
+  @Put('password')
+  @ApiOperation({ summary: 'Change password and end all other sessions' })
+  @ApiOkResponse({ description: 'Password changed; current session preserved' })
+  @ApiBadRequestResponse({ description: 'Invalid current or new password' })
+  @ApiUnauthorizedResponse({ description: 'No active session' })
+  async changePassword(
+    @Req() req: RefreshRequest,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    await this.authService.changePassword(
+      req.user.userId,
+      req.user.sessionId,
+      dto,
+    );
+    return {
+      error: false,
+      message: 'Пароль изменён',
+    } satisfies DefaultResponseDto;
   }
 }

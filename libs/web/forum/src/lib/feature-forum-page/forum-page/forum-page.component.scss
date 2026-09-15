@@ -4,10 +4,13 @@
 }
 .topic-post {
   padding: 32px;
+  border-top: 3px solid var(--accent-main-color);
 }
 h1 {
+  font-family: Platypi, serif;
   font-size: clamp(27px, 4vw, 40px);
-  line-height: 1.2;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
   margin: 18px 0 22px;
   overflow-wrap: anywhere;
 }
@@ -38,6 +41,7 @@ h1 {
 .post-text {
   margin: 30px 0;
   font-size: 17px;
+  max-width: 75ch;
 }
 .topic-post > footer {
   border-top: 1px solid var(--border-separator-color);
@@ -68,7 +72,16 @@ h1 {
   font-size: 24px;
 }
 .replies-heading h2 span {
-  color: var(--text-secondary-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 28px;
+  padding: 2px 8px;
+  margin-inline-start: 6px;
+  border-radius: 9px;
+  background: var(--btn-secondary-bg-color);
+  color: var(--btn-secondary-text-color);
   font-size: 16px;
 }
 .replies-heading > a {
@@ -79,8 +92,9 @@ h1 {
   padding: 20px;
   margin-block: 12px;
   background: var(--bg-card-color);
+  color: var(--text-primary-color);
   border: 1px solid var(--border-separator-color);
-  border-radius: 24px;
+  border-radius: 20px;
   margin-inline-start: calc(var(--reply-depth, 0) * 24px);
   scroll-margin-top: 100px;
 }
@@ -98,10 +112,20 @@ h1 {
 .reply-reference {
   display: block;
   font-size: 13px;
-  margin-top: 4px;
+  margin: 12px 0 8px;
+  padding: 6px 10px;
+  border-inline-start: 2px solid var(--accent-main-color);
+  border-radius: 0 8px 8px 0;
+  background: var(--bg-surface-secondary-color);
   color: var(--text-secondary-color);
 }
-.text-button {
+button.text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.4;
+  max-width: 100%;
   background: none;
   border: 0;
   color: var(--text-secondary-color);
@@ -172,11 +196,14 @@ h1 {
   --avatar-size: 32px;
 }
 .message .message-text {
-  font-size: 14px;
-  line-height: 1.55;
+  margin: 14px 0;
+  font-size: 15px;
+  line-height: 1.75;
 }
 .message .actions {
   gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-separator-color);
 }
 .message .edited {
   margin: 4px 0;
@@ -186,8 +213,28 @@ h1 {
   background: var(--btn-secondary-bg-color);
   color: var(--btn-secondary-text-color);
 }
-.branch-toggle {
+button.branch-toggle {
   font-weight: 700;
+}
+.branch-chevron {
+  display: block;
+  flex: 0 0 16px;
+  fill: none;
+  stroke: var(--text-secondary-color);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.branch-chevron.is-expanded {
+  transform: rotate(180deg);
+}
+.branch-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--btn-secondary-bg-color);
+  color: var(--btn-secondary-text-color);
 }
 .branch-status {
   display: flex;
@@ -213,7 +260,7 @@ h1 {
   }
 }
 @media (pointer: coarse) {
-  .text-button {
+  button.text-button {
     min-height: 44px;
   }
 }

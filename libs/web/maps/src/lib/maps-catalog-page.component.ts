@@ -13,7 +13,11 @@ import {
   PaginationComponent,
   PaginationService,
 } from '@wm/web/common-ui';
-import { MapsService, PublishedMapSummary } from '@wm/web/data-access/maps';
+import {
+  LikeState,
+  MapsService,
+  PublishedMapSummary,
+} from '@wm/web/data-access/maps';
 import { AuthService } from '@wm/web/data-access/auth';
 import { finalize } from 'rxjs';
 import { SvgComponent } from '@wm/web/common-ui';
@@ -42,7 +46,7 @@ export class MapsCatalogPageComponent {
   readonly total = signal(0);
   readonly isLoading = signal(true);
   readonly hasError = signal(false);
-  readonly updatingLikeId = signal<number | null>(null);
+  readonly updatingLikeIds = signal<ReadonlySet<number>>(new Set());
   readonly isAuthorized = signal(false);
 
   constructor() {
@@ -79,26 +83,43 @@ export class MapsCatalogPageComponent {
   }
 
   toggleLike(map: PublishedMapSummary) {
-    if (!this.#authService.isAuthorized$.value || this.updatingLikeId()) return;
-    const isLiked = map.isLiked;
-    this.updatingLikeId.set(map.id);
-    const request = isLiked
+    if (
+      !this.#authService.isAuthorized$.value ||
+      this.updatingLikeIds().has(map.id)
+    )
+      return;
+
+    this.updatingLikeIds.update((ids) => new Set([...ids, map.id]));
+    this.#updateLike(map.id, {
+      isLiked: !map.isLiked,
+      likesCount: Math.max(0, map.likesCount + (map.isLiked ? -1 : 1)),
+    });
+    const request = map.isLiked
       ? this.#mapsService.unlike(map.id)
       : this.#mapsService.like(map.id);
     request
       .pipe(
-        finalize(() => this.updatingLikeId.set(null)),
+        finalize(() => {
+          this.updatingLikeIds.update((ids) => {
+            const next = new Set(ids);
+            next.delete(map.id);
+            return next;
+          });
+        }),
         takeUntilDestroyed(this.#destroyRef),
       )
-      .subscribe(({ isLiked: nextIsLiked, likesCount }) => {
-        this.maps.update((maps) =>
-          maps.map((item) =>
-            item.id === map.id
-              ? { ...item, isLiked: nextIsLiked, likesCount }
-              : item,
-          ),
-        );
+      .subscribe({
+        next: (state) => this.#updateLike(map.id, state),
+        error: () => this.#updateLike(map.id, map),
       });
+  }
+
+  #updateLike(mapId: number, { isLiked, likesCount }: LikeState) {
+    this.maps.update((maps) =>
+      maps.map((map) =>
+        map.id === mapId ? { ...map, isLiked, likesCount } : map,
+      ),
+    );
   }
 
   #readPage(params: ParamMap) {

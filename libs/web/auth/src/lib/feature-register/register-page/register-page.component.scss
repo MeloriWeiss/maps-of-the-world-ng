@@ -3,60 +3,32 @@
 @use 'mixins' as *;
 
 .register-form {
-  position: relative;
   width: fluid(570, 290);
-  padding: rem(20);
-  border-radius: rem(20);
-  background: rgb(from var(--bg-card-color) r g b / 70%);
-  backdrop-filter: blur(rem(8));
-  border: rem(1) solid rgb(from var(--border-input-color) r g b / 20%);
-  box-shadow: 0 rem(10) rem(40) var(--shadow-color);
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: rem(-40);
-    left: rem(-40);
-    width: rem(180);
-    height: rem(180);
-    border-radius: 50%;
-    background: rgb(from var(--purple-color) r g b / 25%);
-    filter: blur(rem(40));
-    z-index: -1;
-    pointer-events: none;
+.register-form .button {
+  transition: opacity 0.2s ease;
+
+  &,
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    box-shadow: none;
+    transform: none;
+    filter: none;
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: rem(-30);
-    right: rem(-30);
-    width: rem(150);
-    height: rem(150);
-    border-radius: 50%;
-    background: rgb(from var(--cyan-color) r g b / 20%);
-    filter: blur(rem(35));
-    z-index: -1;
-    pointer-events: none;
+  &:hover:not(:disabled) {
+    opacity: 0.9;
   }
 }
 
 .registration-header {
+  color: var(--text-primary-color);
   @include fluid-text(32, 18);
   line-height: fluid(37, 21);
   font-family: 'Platypi', serif;
-  font-weight: 500;
+  font-weight: 400;
   margin-bottom: fluid(46, 27);
-  color: var(--text-primary-color);
-
-  background: linear-gradient(
-    135deg,
-    var(--text-primary-color),
-    var(--text-secondary-color)
-  );
-
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .registration-body {
@@ -75,12 +47,5 @@
 
   a {
     color: var(--text-secondary-color);
-    text-decoration: underline;
-    font-weight: 700;
-    transition: color 0.2s ease;
-
-    &:hover {
-      color: var(--purple-color);
-    }
   }
 }

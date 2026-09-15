@@ -40,6 +40,23 @@ export const publicRoutes: Routes = [
         },
       },
       {
+        path: 'settings',
+        loadComponent: () =>
+          import('@wm/web/profile').then(
+            (module) => module.AccountSettingsComponent,
+          ),
+        canActivate: [canActivateAuth],
+        data: {
+          seo: {
+            title: 'Настройки аккаунта',
+            description:
+              'Смена пароля и управление сессиями GameMaster Helper.',
+            index: false,
+            canonicalPath: '/settings',
+          },
+        },
+      },
+      {
         path: 'profile/:id',
         loadChildren: () =>
           import('@wm/web/profile').then((module) => module.profileRoutes),

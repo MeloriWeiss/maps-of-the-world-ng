@@ -214,12 +214,23 @@
                   [attr.aria-expanded]="row.branch?.expanded ?? false"
                   (click)="store.tree.toggle(comment.id)"
                 >
-                  {{
-                    row.branch?.expanded
-                      ? '⌃ Скрыть ответы'
-                      : '⌄ Показать ответы'
-                  }}
-                  · {{ comment.repliesCount ?? 0 }}
+                  <svg
+                    class="branch-chevron"
+                    [class.is-expanded]="row.branch?.expanded"
+                    viewBox="0 0 16 16"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M4 6 8 10 12 6" />
+                  </svg>
+                  <span>{{
+                    row.branch?.expanded ? 'Скрыть ответы' : 'Показать ответы'
+                  }}</span>
+                  <span class="branch-count">{{
+                    comment.repliesCount ?? 0
+                  }}</span>
                 </button>
               }
             </footer>

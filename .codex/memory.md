@@ -1,4 +1,4 @@
-﻿# Project memory
+# Project memory
 
 Updated: 2026-09-14. Keep this file short; update only on explicit user request.
 
@@ -77,6 +77,16 @@ Updated: 2026-09-14. Keep this file short; update only on explicit user request.
 - common-ui RouteAnchorDirective (wmRouteAnchor) handles asynchronously rendered comment/composer targets afterNextRender, excluding popstate navigation.
 - Persistent forum lag was repeatedly reported. Extra requests, per-keystroke storage writes and scroll jumps were addressed in code, but the actual persistent-lag cause and runtime improvement remain unconfirmed without browser observation.
 
+## Account settings and latest UI, September 14
+
+- `/settings` is guarded/noindex, linked from avatar/mobile menus. AccountSettingsComponent: web-profile; AccountSettingsStore/device labels: data-access/auth. Sidebar switches Password/Sessions without resetting the form.
+- GET auth/sessions marks the current session; DELETE auth/sessions/:id is owner-scoped and clears cookies for the current session. PUT auth/password requires the current password and transactionally ends other sessions; login is serialized with password changes.
+- New JWTs include sid; access checks session existence/expiry. Refresh uses unique jti and SHA-256 before bcrypt (72-byte truncation fix). Legacy tokens require fresh login after deployment. No migration/deployment performed.
+- Settings reuses registration's validatePassword and shared authConfig.password, also used by API DTO. Field errors sit 4px below inputs. Keep existing-password login free of new-password strength rules.
+- Login/register styles restored from 5992bfd using current theme tokens; no form glows/blur/shadows. Submit buttons override global .button shadows/lift/filter. Admin sidebar has no theme switcher; orphan styles removed.
+- Forum visual pass: flatter hero/cards, clearer category/count badges, stronger titles and more readable messages. Reply toggle uses an aria-hidden SVG aligned with inline-flex; preserve 44px touch targets. Behavior/routes unchanged.
+- Email verification, password recovery and VK login were discussed only. User declined auth tests; session security changes remain untested at runtime.
+
 ## Commands and cautions
 
 - yarn start:web; yarn start:api (applies migrations first).
@@ -96,7 +106,17 @@ Updated: 2026-09-14. Keep this file short; update only on explicit user request.
 - Before experimental mode, targeted forum API/page and pagination tests passed, including avatar URL/store regressions. These results predate the latest buttons/select, navigation, autosave, input-focus and scroll changes; they do not verify current code.
 - Since experimental mode: no tests added or run, no build/typecheck/lint. Latest changes received source/diff review and git diff --check, which passed.
 - Browser inventory was empty. Visual/mobile checks, actual scrolling behavior and persistent-lag measurements remain unverified. Do not claim visual QA or measured Core Web Vitals.
-- Color tokens were checked for availability in four themes before the final button/input changes; no current visual/contrast verification of the final design.
+- Latest settings/forum color tokens were checked in all four themes; visual/contrast verification remains unavailable.
 - Earlier sitemap check found 12 URLs and a single /sitemap.xml reference in robots.txt; these files were not changed in the UI follow-ups.
 - Existing opt-in forum PostgreSQL test uses test identities and rolls back fixtures; FORUM_DATABASE_TESTS=1 enables it. Run only on explicit request.
 - Earlier web build had initial-bundle and existing home/header style-budget warnings. No current build was run.
+
+## Map catalog likes and refresh-token clarification, September 14
+
+- Map catalog previously disabled every like button during any like request; disabled opacity caused all likes to flicker. It did not refetch likes or the catalog on a like click.
+- Catalog now updates the selected map's like/count optimistically, reconciles with the mutation response, and rolls back those fields on error. Pending IDs are tracked per map, so different maps can be liked independently; repeat clicks on a pending map are blocked.
+- User rejected a separate store for this small fix. The temporary store was removed; state and handlers remain in MapsCatalogPageComponent. Prefer a proportionate local solution for this scenario.
+- Removed hover translation and hover shadow amplification from public catalog map cards. User dislikes cards lifting on hover; the shared common-ui map-card was not changed in this session.
+- Refresh-token comparison previously loaded all user sessions and ran bcrypt.compare against every stored hash via Promise.all. bcrypt considers only the first 72 bytes, so different valid JWTs with a common prefix could match the wrong session or undermine rotation/revocation.
+- Current refresh flow checks one session by signed sid + userId + expiry and compares bcrypt against SHA-256 hex of the entire token (64 ASCII bytes). Creation/rotation uses the same digest; random jti makes each issued refresh token distinct. Legacy tokens without sid require sign-in after deployment.
+- Source/diff review and git diff --check passed. No tests/build/typecheck/lint ran. Browser inventory was empty; runtime behavior remains unverified. Catalog markup/routes/SEO and theme colors were unchanged by the hover fix.

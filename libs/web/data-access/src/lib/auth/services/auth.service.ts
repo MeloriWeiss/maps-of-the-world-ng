@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
+import { GetSessionsDto } from '@wm/shared/auth';
 import { UserResponseDto } from '@wm/shared/users';
 import { LoginData, RegisterData } from '../interfaces';
 import { DefaultResponseDto } from '@wm/shared/common';
@@ -43,17 +44,12 @@ export class AuthService {
 
   refresh() {
     return this.#http
-      .post<UserResponseDto>(
+      .post<DefaultResponseDto>(
         `${this.#apiConfig.baseUrl}auth/refresh`,
         {},
         { context: new HttpContext().set(BYPASS_GLOBAL_ERROR, true) },
       )
-      .pipe(
-        tap((user) => {
-          this.isAuthorized$.next(true);
-          this.#currentAccountStore.authenticate(user);
-        }),
-      );
+      .pipe(tap(() => this.isAuthorized$.next(true)));
   }
 
   logout() {
@@ -85,7 +81,43 @@ export class AuthService {
   }
 
   getSessions() {
-    return this.#http.get<unknown>(`${this.#apiConfig.baseUrl}auth/sessions`);
+    return this.#http.get<GetSessionsDto>(
+      `${this.#apiConfig.baseUrl}auth/sessions`,
+      {
+        context: new HttpContext().set(BYPASS_GLOBAL_ERROR, true),
+      },
+    );
+  }
+
+  changePassword(data: { currentPassword: string; newPassword: string }) {
+    return this.#http.put<DefaultResponseDto>(
+      `${this.#apiConfig.baseUrl}auth/password`,
+      data,
+      {
+        context: new HttpContext().set(BYPASS_GLOBAL_ERROR, true),
+      },
+    );
+  }
+
+  endSession(id: number, isCurrent: boolean) {
+    return this.#http
+      .delete<DefaultResponseDto>(
+        `${this.#apiConfig.baseUrl}auth/sessions/${id}`,
+        {
+          context: new HttpContext().set(BYPASS_GLOBAL_ERROR, true),
+        },
+      )
+      .pipe(
+        tap(() => {
+          if (isCurrent) this.clearSession();
+        }),
+      );
+  }
+
+  clearSession() {
+    this.isAuthorized$.next(false);
+    this.#currentAccountStore.clear();
+    this.#router.navigate(['/login']).then();
   }
 
   restoreSession() {

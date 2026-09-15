@@ -39,6 +39,20 @@ export class JwtAccessStrategy extends PassportStrategy(
 
     if (!accessToken) throw new UnauthorizedException('Missing access token');
 
+    // Every access token must belong to a revocable device session.
+    if (!Number.isInteger(payload.sid))
+      throw new UnauthorizedException('Session refresh required');
+
+    const session = await this.prisma.userSession.findFirst({
+      where: {
+        id: payload.sid,
+        userId: payload.sub,
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true },
+    });
+    if (!session) throw new UnauthorizedException('Session ended');
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { role: true, status: true },

@@ -85,7 +85,7 @@
                       class="map-card__like"
                       type="button"
                       [class.active]="map.isLiked"
-                      [disabled]="updatingLikeId() !== null"
+                      [disabled]="updatingLikeIds().has(map.id)"
                       [attr.aria-pressed]="map.isLiked"
                       (click)="toggleLike(map)"
                     >

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -11,6 +12,9 @@ import { RegisterDto } from '../dto';
 import { JwtTokenPayload, UserMeta } from '../interfaces';
 import { jwtConfig } from '../jwt';
 import { UserStatus } from '@wm/shared/users';
+import { randomUUID } from 'node:crypto';
+import { refreshTokenDigest } from '../utils/refresh-token-hash';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -51,6 +55,7 @@ export class AuthService {
         user.id,
         user.personalAccount!.id,
         meta,
+        user.passwordHash,
       );
 
     return { user, accessToken, refreshToken };
@@ -95,6 +100,7 @@ export class AuthService {
         user.id,
         user.personalAccount.id,
         meta,
+        user.passwordHash,
       );
 
     return { user, accessToken, refreshToken };
@@ -115,20 +121,21 @@ export class AuthService {
     });
   }
 
-  async getSessions(userId: number) {
+  async getSessions(userId: number, currentSessionId?: number) {
     const sessions = await this.prisma.userSession.findMany({
-      where: { userId: userId },
-      orderBy: { createdAt: 'desc' },
+      where: { userId, expiresAt: { gt: new Date() } },
+      orderBy: { lastUsedAt: 'desc' },
     });
 
     return {
       sessions: sessions.map((s) => ({
         id: s.id,
+        isCurrent: s.id === currentSessionId,
         userAgent: s.userAgent,
         ip: s.ip,
-        createdAt: s.createdAt.toString(),
-        lastUsedAt: s.lastUsedAt.toString(),
-        expiresAt: s.expiresAt.toString(),
+        createdAt: s.createdAt.toISOString(),
+        lastUsedAt: s.lastUsedAt.toISOString(),
+        expiresAt: s.expiresAt.toISOString(),
       })),
     };
   }
@@ -137,28 +144,84 @@ export class AuthService {
     userId: number,
     accountId: number,
     meta?: UserMeta,
+    expectedPasswordHash?: string,
   ) {
-    const { accessToken, refreshToken } = await this.signTokens(
-      userId,
-      accountId,
-    );
-
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
-    const expiresAt = new Date(Date.now() + jwtConfig.refreshToken.expiresIn);
-
-    const resultMeta = meta ? meta : {};
-
-    await this.prisma.userSession.create({
-      data: {
-        userId,
-        tokenHash,
-        userAgent: resultMeta.userAgent,
-        ip: resultMeta.ip,
-        expiresAt,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      // Serialize login with password changes, so an in-flight old-password
+      // login cannot create a session after all other sessions were revoked.
+      if (expectedPasswordHash) {
+        const user = await tx.user.updateMany({
+          where: {
+            id: userId,
+            passwordHash: expectedPasswordHash,
+            status: UserStatus.active,
+          },
+          data: { passwordHash: expectedPasswordHash },
+        });
+        if (user.count !== 1)
+          throw new UnauthorizedException('Please sign in again');
+      }
+      const session = await tx.userSession.create({
+        data: {
+          userId,
+          tokenHash: '',
+          userAgent: meta?.userAgent,
+          ip: meta?.ip,
+          expiresAt: new Date(Date.now() + jwtConfig.refreshToken.expiresIn),
+        },
+      });
+      const tokens = await this.signTokens(userId, accountId, session.id);
+      await tx.userSession.update({
+        where: { id: session.id },
+        data: {
+          tokenHash: await bcrypt.hash(
+            refreshTokenDigest(tokens.refreshToken),
+            10,
+          ),
+        },
+      });
+      return tokens;
     });
+  }
 
-    return { accessToken, refreshToken };
+  async changePassword(
+    userId: number,
+    sessionId: number,
+    dto: ChangePasswordDto,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (
+      !user ||
+      !(await bcrypt.compare(dto.currentPassword, user.passwordHash))
+    )
+      throw new BadRequestException('Текущий пароль указан неверно');
+    if (await bcrypt.compare(dto.newPassword, user.passwordHash))
+      throw new BadRequestException(
+        'Новый пароль должен отличаться от текущего',
+      );
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.$transaction(async (tx) => {
+      const changed = await tx.user.updateMany({
+        where: {
+          id: userId,
+          passwordHash: user.passwordHash,
+          status: UserStatus.active,
+        },
+        data: { passwordHash },
+      });
+      if (changed.count !== 1)
+        throw new BadRequestException(
+          'Данные аккаунта изменились. Повторите попытку',
+        );
+      const session = await tx.userSession.findFirst({
+        where: { id: sessionId, userId, expiresAt: { gt: new Date() } },
+      });
+      if (!session) throw new UnauthorizedException('Session ended');
+      await tx.userSession.deleteMany({
+        where: { userId, id: { not: sessionId } },
+      });
+    });
   }
 
   async rotateSessionAndTokens(
@@ -170,16 +233,17 @@ export class AuthService {
     const { accessToken, refreshToken } = await this.signTokens(
       userId,
       accountId,
+      sessionId,
     );
 
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const tokenHash = await bcrypt.hash(refreshTokenDigest(refreshToken), 10);
     const now = Date.now();
     const expiresAt = new Date(now + jwtConfig.refreshToken.expiresIn);
 
     const resultMeta = meta ? meta : {};
 
-    await this.prisma.userSession.update({
-      where: { id: sessionId },
+    const updated = await this.prisma.userSession.updateMany({
+      where: { id: sessionId, userId, expiresAt: { gt: new Date() } },
       data: {
         tokenHash,
         userAgent: resultMeta.userAgent,
@@ -189,11 +253,12 @@ export class AuthService {
       },
     });
 
+    if (updated.count !== 1) throw new UnauthorizedException('Session ended');
     return { accessToken, refreshToken };
   }
 
-  async signTokens(userId: number, accountId: number) {
-    const payload: JwtTokenPayload = { sub: userId, accountId: accountId };
+  async signTokens(userId: number, accountId: number, sessionId?: number) {
+    const payload: JwtTokenPayload = { sub: userId, accountId, sid: sessionId };
 
     const accessToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_ACCESS_SECRET'),
@@ -202,6 +267,7 @@ export class AuthService {
 
     const refreshToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_REFRESH_SECRET'),
+      jwtid: randomUUID(),
       expiresIn: this.config.get('JWT_REFRESH_EXPIRES', '30d'),
     });
 

@@ -111,6 +111,16 @@
           >
         </li>
 
+        @if (isAuthorized()) {
+          <li class="mobile-avatar-item">
+            <a
+              routerLink="/settings"
+              class="header__nav-link"
+              (click)="closeMenu()"
+              >Настройки</a
+            >
+          </li>
+        }
         <li class="mobile-avatar-item">
           <a
             [routerLink]="['profile', 'me']"
@@ -163,7 +173,7 @@
         </button>
 
         <nav wmPopoverContent class="profile-menu" aria-label="Профиль">
-          @if (isAuthorized) {
+          @if (isAuthorized()) {
             <a
               [routerLink]="['profile', 'me']"
               (click)="closeMenu()"
@@ -171,6 +181,14 @@
               class="profile-menu__item"
             >
               Профиль
+            </a>
+            <a
+              routerLink="/settings"
+              (click)="closeMenu()"
+              role="menuitem"
+              class="profile-menu__item"
+            >
+              Настройки
             </a>
             <button
               (click)="logout()"

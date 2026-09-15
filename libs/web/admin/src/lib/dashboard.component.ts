@@ -16,7 +16,7 @@ import { AdminService } from './admin.service';
 import { AdminDashboardDto } from './admin.models';
 import { AdminSystemStatusDto } from './admin.models';
 import { AdminUserAnalyticsDto, AnalyticsInterval } from './admin.models';
-import { ThemeService } from '@wm/web/web-shared';
+import { ThemeService } from '@wm/web/shared';
 
 @Component({
   selector: 'wm-admin-dashboard',

@@ -9,6 +9,7 @@ import { jwtConfig, jwtStrategies } from '../consts';
 import { extractFromCookie } from '../../utils';
 import { JwtTokenPayload, RefreshPayload } from '../../interfaces';
 import { UserStatus } from '@wm/shared/users';
+import { refreshTokenDigest } from '../../utils/refresh-token-hash';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -39,6 +40,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
     const refreshToken = extractFromCookie(jwtConfig.refreshToken.name)(req);
 
     if (!refreshToken) throw new UnauthorizedException('Missing refresh token');
+    // Legacy hashes cannot reliably identify a device: bcrypt truncated JWTs.
+    // Accepting them could let a revoked token match another surviving session.
+    if (!Number.isInteger(payload.sid))
+      throw new UnauthorizedException('Please sign in again');
 
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
@@ -48,32 +53,26 @@ export class JwtRefreshStrategy extends PassportStrategy(
     if (!user || user.status === UserStatus.blocked)
       throw new UnauthorizedException('Account is unavailable');
 
-    const sessions = await this.prisma.userSession.findMany({
-      where: { userId: payload.sub },
+    const session = await this.prisma.userSession.findFirst({
+      where: {
+        id: payload.sid,
+        userId: payload.sub,
+        expiresAt: { gt: new Date() },
+      },
     });
 
-    if (!sessions.length)
-      throw new UnauthorizedException('No active refresh tokens');
+    if (!session) throw new UnauthorizedException('No active refresh tokens');
 
-    const checks = await Promise.all(
-      sessions.map(async (s) => ({
-        token: s,
-        ok: await bcrypt.compare(refreshToken, s.tokenHash),
-      })),
+    const valid = await bcrypt.compare(
+      refreshTokenDigest(refreshToken),
+      session.tokenHash,
     );
-
-    const match = checks.find((c) => c.ok)?.token ?? null;
-
-    if (!match) throw new UnauthorizedException('Invalid refresh token');
-
-    if (match.expiresAt < new Date()) {
-      throw new UnauthorizedException('Refresh token expired');
-    }
+    if (!valid) throw new UnauthorizedException('Invalid refresh token');
 
     return {
       userId: payload.sub,
       accountId: payload.accountId,
-      sessionId: match.id,
+      sessionId: session.id,
     };
   }
 }

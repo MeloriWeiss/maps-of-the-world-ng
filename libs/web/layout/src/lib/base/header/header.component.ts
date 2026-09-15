@@ -16,6 +16,7 @@ import { AuthService } from '@wm/web/data-access/auth';
 import { firstValueFrom } from 'rxjs';
 import { CurrentAccountStore } from '@wm/web/data-access/profile';
 import { ThemeService } from '@wm/web/shared';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   animate,
   state,
@@ -66,7 +67,9 @@ export class HeaderComponent {
 
   searchControl = new FormControl('');
 
-  isAuthorized = this.#authService.isAuthorized$.getValue();
+  readonly isAuthorized = toSignal(this.#authService.isAuthorized$, {
+    requireSync: true,
+  });
 
   isMenuOpen = signal<boolean>(false);
 

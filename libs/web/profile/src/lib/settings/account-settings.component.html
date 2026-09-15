@@ -1,0 +1,248 @@
+<div class="settings">
+  <header class="settings-header">
+    <div>
+      <h1>Настройки аккаунта</h1>
+      <p>Пароль и устройства, на которых выполнен вход.</p>
+    </div>
+    <a routerLink="/profile/me">В профиль</a>
+  </header>
+
+  <div class="settings-layout">
+    <nav class="settings-sidebar" aria-label="Разделы настроек безопасности">
+      <p class="settings-sidebar-title">Безопасность</p>
+      <div class="settings-navigation">
+        <button
+          type="button"
+          class="settings-navigation-item"
+          [class.is-active]="activeSection() === 'password'"
+          [attr.aria-pressed]="activeSection() === 'password'"
+          aria-controls="password-section"
+          (click)="activeSection.set('password')"
+        >
+          Пароль
+        </button>
+        <button
+          type="button"
+          class="settings-navigation-item"
+          [class.is-active]="activeSection() === 'sessions'"
+          [attr.aria-pressed]="activeSection() === 'sessions'"
+          aria-controls="sessions-section"
+          (click)="activeSection.set('sessions')"
+        >
+          Сессии
+        </button>
+      </div>
+    </nav>
+
+    <div class="settings-content">
+      <section
+        id="password-section"
+        aria-labelledby="password-heading"
+        class="settings-card"
+        [hidden]="activeSection() !== 'password'"
+      >
+        <h2 id="password-heading">Смена пароля</h2>
+        <p id="password-notice">
+          После смены пароля все остальные сессии будут завершены. На этом
+          устройстве вы останетесь в аккаунте.
+        </p>
+        <form
+          [formGroup]="form"
+          (ngSubmit)="savePassword()"
+          aria-describedby="password-notice"
+        >
+          <fieldset [disabled]="store.savingPassword()">
+            <div class="password-field">
+              <label for="current-password">Текущий пароль</label>
+              <input
+                id="current-password"
+                type="password"
+                autocomplete="current-password"
+                formControlName="currentPassword"
+                required
+              />
+              @if (
+                form.controls.currentPassword.touched &&
+                form.controls.currentPassword.invalid
+              ) {
+                <p class="error field-error" role="alert">
+                  Введите текущий пароль.
+                </p>
+              }
+            </div>
+            <div class="password-field">
+              <label for="new-password">Новый пароль</label>
+              <input
+                id="new-password"
+                type="password"
+                autocomplete="new-password"
+                formControlName="newPassword"
+                aria-describedby="password-rules"
+                required
+              />
+              @if (
+                form.controls.newPassword.touched &&
+                form.controls.newPassword.invalid
+              ) {
+                <p class="error field-error" role="alert">
+                  {{
+                    form.controls.newPassword.errors?.[passwordRules.errorName]
+                      ?.message
+                  }}
+                </p>
+              }
+              <p id="password-rules">
+                {{ passwordRules.minLength.message }}.
+                {{ passwordRules.maxLength.message }}.
+                {{ passwordRules.hasUppercase.message }}.
+              </p>
+            </div>
+            <div class="password-field">
+              <label for="password-confirmation">Повторите новый пароль</label>
+              <input
+                id="password-confirmation"
+                type="password"
+                autocomplete="new-password"
+                formControlName="confirmation"
+                required
+              />
+              @if (
+                form.controls.confirmation.touched &&
+                (form.errors?.['passwordMismatch'] ||
+                  form.controls.confirmation.invalid)
+              ) {
+                <p class="error field-error" role="alert">
+                  Пароли должны совпадать.
+                </p>
+              }
+            </div>
+            <button type="submit" [disabled]="store.busy()">
+              {{ store.savingPassword() ? 'Сохраняем…' : 'Изменить пароль' }}
+            </button>
+          </fieldset>
+          @if (store.passwordError()) {
+            <p class="error" role="alert">{{ store.passwordError() }}</p>
+          }
+          @if (store.passwordSuccess()) {
+            <p role="status">{{ store.passwordSuccess() }}</p>
+          }
+        </form>
+      </section>
+
+      <section
+        id="sessions-section"
+        aria-labelledby="sessions-heading"
+        class="settings-card"
+        [hidden]="activeSection() !== 'sessions'"
+        [attr.aria-busy]="store.loading()"
+      >
+        <div class="section-header">
+          <h2 id="sessions-heading">Активные сессии</h2>
+          <button
+            type="button"
+            class="secondary"
+            (click)="store.loadSessions()"
+            [disabled]="store.busy()"
+          >
+            Обновить
+          </button>
+        </div>
+        <p>
+          Если вы не узнаёте устройство, завершите его сессию и смените пароль.
+        </p>
+        <p class="hint">
+          Устройство и браузер определяются приблизительно. Последняя активность
+          — время обновления сессии.
+        </p>
+        @if (store.sessionError()) {
+          <p class="error" role="alert">{{ store.sessionError() }}</p>
+        }
+        @if (store.sessionSuccess()) {
+          <p role="status">{{ store.sessionSuccess() }}</p>
+        }
+        @if (store.loading()) {
+          <p role="status">Загружаем сессии…</p>
+        }
+        <ul class="sessions">
+          @for (session of store.sessions(); track session.id) {
+            <li class="session">
+              <div class="session-info">
+                <h3>
+                  {{ session.browser }} <span>· {{ session.device }}</span>
+                </h3>
+                @if (session.isCurrent) {
+                  <strong class="current">Текущая сессия</strong>
+                }
+                <dl>
+                  <div>
+                    <dt>Вход</dt>
+                    <dd>{{ session.createdAt | date: 'dd.MM.yyyy, HH:mm' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Последняя активность</dt>
+                    <dd>
+                      {{ session.lastUsedAt | date: 'dd.MM.yyyy, HH:mm' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>IP-адрес</dt>
+                    <dd>{{ session.ip || 'Неизвестен' }}</dd>
+                  </div>
+                </dl>
+              </div>
+              <div class="session-actions">
+                @if (store.confirmationId() === session.id) {
+                  <p>
+                    {{
+                      session.isCurrent
+                        ? 'Выйти из аккаунта на этом устройстве?'
+                        : 'Завершить сессию на этом устройстве?'
+                    }}
+                  </p>
+                  <button
+                    type="button"
+                    (click)="store.endSession(session.id)"
+                    [disabled]="store.busy()"
+                  >
+                    {{
+                      store.endingSession() === session.id
+                        ? 'Завершаем…'
+                        : 'Подтвердить'
+                    }}
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary"
+                    (click)="store.confirmationId.set(null)"
+                    [disabled]="store.busy()"
+                  >
+                    Отмена
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="secondary"
+                    (click)="store.confirmationId.set(session.id)"
+                    [disabled]="store.busy()"
+                    [attr.aria-label]="
+                      'Завершить сессию: ' +
+                      session.browser +
+                      ', ' +
+                      session.device
+                    "
+                  >
+                    {{ session.isCurrent ? 'Выйти' : 'Завершить сессию' }}
+                  </button>
+                }
+              </div>
+            </li>
+          } @empty {
+            @if (!store.loading() && !store.sessionError()) {
+              <li>Активных сессий нет.</li>
+            }
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>

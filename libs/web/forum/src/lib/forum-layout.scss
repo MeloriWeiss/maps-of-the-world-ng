@@ -55,10 +55,10 @@ select {
 }
 .panel {
   background: var(--bg-card-color);
+  color: var(--text-primary-color);
   border: 1px solid var(--border-separator-color);
   border-radius: 28px;
   min-width: 0;
-  box-shadow: 0 8px 28px rgb(from var(--shadow-color) r g b / 5%);
 }
 .forum-button {
   display: inline-flex;
@@ -114,7 +114,10 @@ textarea {
   min-height: 130px;
 }
 .badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  line-height: 1.4;
   font-size: 11px;
   padding: 4px 7px;
   background: var(--btn-secondary-bg-color);
@@ -158,6 +161,7 @@ textarea {
   margin-bottom: 24px;
   line-height: 1.6;
   overflow-wrap: anywhere;
+  color: var(--text-secondary-color);
 }
 .breadcrumbs a {
   text-decoration: underline;
