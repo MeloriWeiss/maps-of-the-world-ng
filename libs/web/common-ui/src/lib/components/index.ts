@@ -29,6 +29,7 @@ import { ToggleComponent } from './toggle/toggle.component';
 import { SelectComponent } from './select/select.component';
 import { SelectOptionComponent } from './select/select-option.component';
 import { TabsComponent } from './tabs/tabs.component';
+import { InputComponent } from './input/input.component';
 
 export {
   FormInputComponent,
@@ -62,6 +63,7 @@ export {
   SelectComponent,
   SelectOptionComponent,
   TabsComponent,
+  InputComponent,
 };
 
 export type { TabItem } from './tabs/tabs.component';

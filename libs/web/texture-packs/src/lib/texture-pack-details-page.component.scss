@@ -140,6 +140,40 @@ h1 {
   padding: fluid(28, 18);
 }
 
+.textures-section__empty {
+  color: var(--text-muted-color);
+}
+
+.texture-kind + .texture-kind {
+  margin-top: rem(32);
+  padding-top: rem(28);
+  border-top: rem(1) solid var(--border-popover-color);
+}
+
+.texture-kind__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: rem(16);
+  margin-bottom: rem(16);
+
+  h3 {
+    color: var(--text-primary-color);
+    font-size: rem(18);
+  }
+
+  p {
+    margin-top: rem(4);
+    color: var(--text-muted-color);
+    font-size: rem(13);
+  }
+
+  > span {
+    color: var(--text-muted-color);
+    font-size: rem(12);
+  }
+}
+
 .section-heading {
   display: flex;
   align-items: flex-end;
@@ -204,7 +238,7 @@ h1 {
 .texture-card__body {
   padding: rem(12);
 
-  h3 {
+  h4 {
     overflow: hidden;
     color: var(--text-primary-color);
     font-size: rem(14);
@@ -278,7 +312,8 @@ h1 {
 }
 
 @include mobile {
-  .section-heading {
+  .section-heading,
+  .texture-kind__heading {
     align-items: flex-start;
     flex-direction: column;
   }

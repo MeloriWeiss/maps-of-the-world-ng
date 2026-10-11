@@ -111,6 +111,7 @@ export async function seedTexturePacks(
           id: `2${textureSeedVersion}000000-0000-4000-8000-${String(packIndex + 1).padStart(4, '0')}${String(textureIndex + 1).padStart(8, '0')}`,
           name: `Текстура ${textureIndex + 1}: ${packNames[packIndex]}`,
           objectKey,
+          kind: textureIndex % 3 === 2 ? 'STAMP' : 'SURFACE',
           mimeType: 'image/png',
           size: asset.size,
           width: asset.width,

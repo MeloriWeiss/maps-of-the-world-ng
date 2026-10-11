@@ -6,6 +6,7 @@ import { Point } from '../../interfaces';
 import { ShapesTypes } from '../../consts';
 
 export class TextTool implements Tool {
+  static readonly displayName = 'Текст';
   #shapesService = inject(WorkshopShapesService);
   #settingsService = inject(WorkshopSettingsService);
 

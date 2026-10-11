@@ -173,6 +173,11 @@ export class WorkshopPanningService {
   }
 
   fitContent() {
+    if (this.#sceneStorage.sceneBounds) {
+      this.setWorldBounds(this.#sceneStorage.sceneBounds);
+      this.fitBounds(this.#sceneStorage.sceneBounds);
+      return true;
+    }
     const shapes = Array.from(this.#sceneStorage.shapes.values());
     if (shapes.length === 0) return false;
 

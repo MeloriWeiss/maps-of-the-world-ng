@@ -1,4 +1,7 @@
+import { TextureKind } from '@wm/shared/workshop';
+
 export interface TextureItem {
+  kind?: TextureKind;
   id: string;
   name: string;
   mimeType: string;

@@ -5,7 +5,7 @@ import {
   merge,
   Observable,
   of,
-  Subject,
+  ReplaySubject,
   timer,
 } from 'rxjs';
 import { outputToObservable } from '@angular/core/rxjs-interop';
@@ -24,10 +24,13 @@ export class ToastService {
   #container?: ViewContainerRef;
   #queue: ToastQueueItem[] = [];
   #maxShowCount = 3;
+  #maxQueueCount = 10;
   #currentShowCount = 0;
 
   registerContainer(vcr: ViewContainerRef) {
     this.#container = vcr;
+    while (this.#queue.length && this.#currentShowCount < this.#maxShowCount)
+      this.#processQueue();
   }
 
   show<T extends Record<string, unknown>>(
@@ -37,9 +40,14 @@ export class ToastService {
   ): Observable<T | undefined> {
     const config = { ...defaultToastConfig, ...params };
 
-    const result$ = new Subject<unknown>();
+    const result$ = new ReplaySubject<unknown>(1);
 
     this.#queue.push({ toastComponent, inputs, config, result$ });
+    while (this.#queue.length > this.#maxQueueCount) {
+      const dropped = this.#queue.shift();
+      dropped?.result$.next(undefined);
+      dropped?.result$.complete();
+    }
 
     this.#processQueue();
 
@@ -47,7 +55,8 @@ export class ToastService {
   }
 
   #processQueue() {
-    if (this.#currentShowCount >= this.#maxShowCount) return;
+    if (!this.#container || this.#currentShowCount >= this.#maxShowCount)
+      return;
 
     const toast = this.#queue.shift();
     if (!toast) return;

@@ -1,4 +1,5 @@
 export enum WorkshopTools {
+  STAMP = 'stamp',
   SELECT = 'select',
   PENCIL = 'pencil',
   ERASER = 'eraser',

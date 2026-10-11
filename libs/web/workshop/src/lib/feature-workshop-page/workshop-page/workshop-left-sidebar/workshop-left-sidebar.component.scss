@@ -2,6 +2,8 @@
 
 :host {
   padding-top: rem(34);
+  display: flex;
+  flex-direction: column;
   transition: width 0.2s ease;
 
   &.collapsed {
@@ -11,6 +13,18 @@
       display: none;
     }
   }
+}
+
+.tools-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+}
+.secondary-start {
+  margin-top: auto;
 }
 
 .sidebar-toggle {
@@ -29,6 +43,8 @@
 }
 
 .tool-btn {
+  width: max-content;
+  flex-shrink: 0;
   padding: rem(5) rem(18) rem(5) rem(8);
   border-radius: 0 rem(5) rem(5) 0;
   transition:
@@ -48,13 +64,15 @@
 
 .tool-context-menu {
   position: relative;
-  width: rem(202);
+  width: rem(286);
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
   padding: 0;
   background: var(--bg-popover-color);
   color: var(--text-popover-primary-color);
   border-radius: rem(6);
   border: rem(1) solid var(--border-popover-color);
-  box-shadow: 0 rem(10) rem(30) rgba(0, 0, 0, 0.35);
+  box-shadow: 0 rem(10) rem(30) rgb(from var(--shadow-color) r g b / 35%);
 
   &__title {
     display: flex;
@@ -142,7 +160,7 @@
 
 .tool-context-menu__content {
   min-height: rem(245);
-  padding: rem(5) rem(10) rem(14) rem(34);
+  padding: rem(5) rem(10) rem(14);
 }
 
 .texture-library {
@@ -229,16 +247,6 @@
   margin-top: rem(10);
   font-size: rem(11);
   color: var(--text-popover-muted-color);
-
-  select {
-    width: 100%;
-    padding: rem(6);
-    border: rem(1) solid var(--border-popover-color);
-    border-radius: rem(4);
-    background-color: var(--bg-popover-color);
-    color: var(--text-popover-primary-color);
-    outline: none;
-  }
 }
 
 .texture-preview {

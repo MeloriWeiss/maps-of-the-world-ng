@@ -31,6 +31,9 @@
 [data-theme='dark'],
 [data-theme='steampunk'],
 [data-theme='neon-sunset'] {
+  --workshop-map-bg-color: #d8d3c8;
+  --workshop-grid-ink-color: #4b453d;
+  --workshop-grid-color: rgb(from var(--workshop-grid-ink-color) r g b / 28%);
   --btn-forum-primary-bg-color: var(--page-ink-color);
   --btn-forum-primary-text-color: var(--page-paper-color);
 }

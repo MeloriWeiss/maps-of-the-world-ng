@@ -122,6 +122,7 @@ export class WorkshopWorldGeneratorService {
       width: 54_000,
       height: 34_000,
     };
+    this.#storage.sceneBounds = worldBounds;
     this.#panning.setWorldBounds(worldBounds);
     this.#panning.fitBounds(worldBounds);
     return { seed, objects: this.#storage.shapes.size };
@@ -161,7 +162,7 @@ export class WorkshopWorldGeneratorService {
     const shape = new LineShape({
       type: ShapesTypes.LINE,
       points,
-      opacity: 0.9,
+      opacity: 1,
       ...style,
     });
     this.#addShape(layer, shape, type, minZoom, maxZoom);

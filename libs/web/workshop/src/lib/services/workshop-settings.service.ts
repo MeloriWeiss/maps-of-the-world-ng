@@ -50,7 +50,27 @@ export class WorkshopSettingsService {
     strokeWidth: 12,
   };
 
+  stampStyle = {
+    textureId: null as string | null,
+    textureUrl: null as string | null,
+    width: 96,
+    aspect: 1,
+    spacing: 0.65,
+    scatter: 0.2,
+    rotation: 0,
+    rotationVariation: 0,
+    sizeVariation: 0.15,
+    mode: 'distance' as 'distance' | 'time',
+    interval: 150,
+  };
+  eraserObjectsOnly = false;
+
   readonly toolStyles: Record<WorkshopTools, WorkshopToolStyle> = {
+    [WorkshopTools.STAMP]: {
+      strokeColor: this.shapeStyle.strokeColor,
+      fillColor: this.shapeStyle.fillColor,
+      strokeWidth: 96,
+    },
     [WorkshopTools.SELECT]: {
       strokeColor: '#000000',
       fillColor: '#000000',

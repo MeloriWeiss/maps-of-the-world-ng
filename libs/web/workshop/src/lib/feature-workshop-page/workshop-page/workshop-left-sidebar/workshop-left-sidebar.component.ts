@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   HostBinding,
   inject,
@@ -15,7 +16,23 @@ import {
   WorkshopTexture,
   WorkshopTexturesService,
 } from '../../../services';
-import { PopoverComponent, SvgComponent } from '@wm/web/common-ui';
+import {
+  PopoverComponent,
+  SearchableSelectComponent,
+  SelectComponent,
+  SelectOptionComponent,
+  SvgComponent,
+  TooltipDirective,
+} from '@wm/web/common-ui';
+import {
+  EraserTool,
+  PencilTool,
+  RectangleTool,
+  SelectTool,
+  TextTool,
+  TextureTool,
+} from '../../../tools';
+import { StampTool } from '../../../tools/stamp/stamp';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -25,10 +42,12 @@ interface ToolButton {
   icon: string;
   label: string;
   configurable: boolean;
+  secondary?: boolean;
 }
 
 interface ContextMenuState {
   tool: WorkshopTools;
+  label: string;
   x: number;
   y: number;
 }
@@ -41,6 +60,10 @@ interface ContextMenuState {
     PopoverComponent,
     RouterLink,
     SvgComponent,
+    TooltipDirective,
+    SearchableSelectComponent,
+    SelectComponent,
+    SelectOptionComponent,
   ],
   templateUrl: './workshop-left-sidebar.component.html',
   styleUrl: './workshop-left-sidebar.component.scss',
@@ -57,6 +80,12 @@ export class WorkshopLeftSidebarComponent {
   textures = this.#texturesService.textures;
   texturePacks = this.#texturesService.packs;
   selectedTexturePackId = this.#texturesService.selectedPackId;
+  packOptions = computed(() =>
+    this.texturePacks().map((pack) => ({
+      value: pack.id,
+      label: `${pack.name} (${pack._count.textures})`,
+    })),
+  );
   texturesLoading = this.#texturesService.loading;
   hasMoreTextures = this.#texturesService.hasMore;
   textureError = this.#texturesService.error;
@@ -74,49 +103,63 @@ export class WorkshopLeftSidebarComponent {
     {
       name: WorkshopTools.SELECT,
       icon: 'mouse',
-      label: 'Выделение',
+      label: SelectTool.displayName,
       configurable: false,
     },
     {
-      name: WorkshopTools.PENCIL,
-      icon: 'brush',
-      label: 'Карандаш',
+      name: WorkshopTools.TEXTURE,
+      icon: 'surface',
+      label: TextureTool.displayName,
       configurable: true,
     },
     {
-      name: WorkshopTools.RECTANGLE,
-      icon: 'texture',
-      label: 'Прямоугольник',
+      name: WorkshopTools.STAMP,
+      icon: 'stamp',
+      label: StampTool.displayName,
       configurable: true,
     },
     {
       name: WorkshopTools.TEXT,
       icon: 'text',
-      label: 'Текст',
-      configurable: true,
-    },
-    {
-      name: WorkshopTools.TEXTURE,
-      icon: 'grid',
-      label: 'Текстура',
+      label: TextTool.displayName,
       configurable: true,
     },
     {
       name: WorkshopTools.ERASER,
-      icon: 'file',
-      label: 'Ластик',
+      icon: 'eraser',
+      label: EraserTool.displayName,
       configurable: true,
+    },
+    {
+      name: WorkshopTools.PENCIL,
+      icon: 'brush',
+      label: PencilTool.displayName,
+      configurable: true,
+      secondary: true,
+    },
+    {
+      name: WorkshopTools.RECTANGLE,
+      icon: 'texture',
+      label: RectangleTool.displayName,
+      configurable: true,
+      secondary: true,
     },
   ];
 
   setCurrentTool(tool: ToolButton, event: MouseEvent): void {
     this.#workshopToolsService.setCurrentTool(tool.name);
-    if (tool.name === WorkshopTools.TEXTURE) {
+    if (
+      tool.name === WorkshopTools.TEXTURE ||
+      tool.name === WorkshopTools.STAMP
+    ) {
       this.openContextMenu(event, tool);
-      this.#texturesService.load();
+      this.#texturesService.load(
+        tool.name === WorkshopTools.STAMP ? 'STAMP' : 'SURFACE',
+      );
       return;
     }
-    this.closeContextMenu();
+    if (tool.configurable) this.openContextMenu(event, tool);
+    else this.closeContextMenu();
   }
 
   toggleSidebar(event: MouseEvent) {
@@ -142,10 +185,11 @@ export class WorkshopLeftSidebarComponent {
 
     const target = event.currentTarget as HTMLElement;
     const targetRect = target.getBoundingClientRect();
-    const menuWidth = tool.name === WorkshopTools.TEXTURE ? 286 : 202;
-    const menuHeight = tool.name === WorkshopTools.TEXTURE ? 590 : 440;
+    const menuWidth = 286;
+    const menuHeight = 590;
     this.contextMenu = {
       tool: tool.name,
+      label: tool.label,
       x: Math.min(targetRect.right + 5, window.innerWidth - menuWidth - 8),
       y: Math.max(
         65,
@@ -187,14 +231,29 @@ export class WorkshopLeftSidebarComponent {
   }
 
   selectTexture(texture: WorkshopTexture): void {
-    this.workshopSettingsService.textureStyle.textureId = texture.id;
-    this.workshopSettingsService.textureStyle.textureUrl = texture.imageUrl;
+    const style =
+      this.currentToolName() === WorkshopTools.STAMP
+        ? this.workshopSettingsService.stampStyle
+        : this.workshopSettingsService.textureStyle;
+    style.textureId = texture.id;
+    style.textureUrl = texture.imageUrl;
+    if (texture.width && texture.height)
+      this.workshopSettingsService.stampStyle.aspect =
+        texture.height / texture.width;
   }
 
-  selectTexturePack(event: Event) {
-    const select = event.target;
-    if (!(select instanceof HTMLSelectElement)) return;
-    this.#texturesService.loadPack(select.value);
+  selectTexturePack(packId: string) {
+    this.#texturesService.loadPack(packId);
+  }
+
+  setEraserMode(value: string) {
+    if (value !== 'parts' && value !== 'whole') return;
+    this.workshopSettingsService.eraserObjectsOnly = value === 'whole';
+  }
+
+  setStampMode(value: string) {
+    if (value !== 'distance' && value !== 'time') return;
+    this.workshopSettingsService.stampStyle.mode = value;
   }
 
   loadMoreTextures() {

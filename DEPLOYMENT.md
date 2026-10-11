@@ -930,6 +930,20 @@ API публикуется только на `127.0.0.1:3000`. Nginx долже�
 на этот адрес:
 
 ```nginx
+location ~ ^/api/maps/[0-9]+/scene-commits/[^/]+/bundle$ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 270M;
+    client_body_timeout 1800s;
+    proxy_request_buffering off;
+    proxy_read_timeout 1800s;
+    proxy_send_timeout 1800s;
+}
+
 location /api {
     proxy_pass http://127.0.0.1:3000;
     proxy_http_version 1.1;
@@ -940,6 +954,10 @@ location /api {
     client_max_body_size 50M;
 }
 ```
+
+Правило bundle нужно для сохранения больших карт: обычный лимит API 50 МБ
+меньше максимального пакета Workshop. Если перед Nginx стоит ещё один proxy
+или CDN, его лимит тела запроса и timeout тоже должны пропускать этот маршрут.
 
 Проверьте и примените конфигурацию:
 

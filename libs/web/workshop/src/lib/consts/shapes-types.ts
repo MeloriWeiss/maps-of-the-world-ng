@@ -1,4 +1,5 @@
 export enum ShapesTypes {
+  STAMP = 'stamp',
   LINE = 'line',
   RECTANGLE = 'rectangle',
   CIRCLE = 'circle',

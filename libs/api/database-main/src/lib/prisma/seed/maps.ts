@@ -1,6 +1,7 @@
 import { SeedPrismaClient } from './client';
 import { daysAgo } from './dates';
 import { SeedAccount } from './types';
+import { seedMapScene } from './map-scene';
 
 const mapNames = [
   'Королевство семи рек',
@@ -32,14 +33,15 @@ export async function seedMaps(
   for (let index = 0; index < 36; index += 1) {
     const owner = accounts[index % (accounts.length - 1)];
     const isPublished = index < 30;
+    const scene = seedMapScene(index);
     const map = await prisma.map.create({
       data: {
         name: `${mapNames[index % mapNames.length]} ${Math.floor(index / mapNames.length) + 1}`,
-        body: JSON.stringify({
-          version: 1,
-          canvas: { width: 2800, height: 1600 },
-          shapes: [],
-        }),
+        body: scene.body,
+        sceneContainers: { create: scene.container },
+        scenePages: { create: scene.page },
+        sceneObjects: { create: scene.object },
+        sceneObjectParts: { create: scene.part },
         description:
           index % 7 === 0
             ? null

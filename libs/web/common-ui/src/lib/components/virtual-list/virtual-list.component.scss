@@ -19,6 +19,10 @@
   will-change: transform;
 }
 
+:host(.wm-scrollbar) .virtual-list__items {
+  right: var(--wm-scrollbar-content-gap, rem(4));
+}
+
 .virtual-list__item {
   overflow: hidden;
 }

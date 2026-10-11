@@ -1,9 +1,10 @@
-import { ElementRef, Injectable } from '@angular/core';
+import { ElementRef, Injectable, signal } from '@angular/core';
 import { Point } from '../interfaces/point.interface';
 import { Bounds } from '../interfaces';
 
 @Injectable()
 export class WorkshopCoordsService {
+  readonly viewportVersion = signal(0);
   cameraX = 0;
   cameraY = 0;
   #zoom = 1;
@@ -50,5 +51,6 @@ export class WorkshopCoordsService {
       width: canvasW / zoom,
       height: canvasH / zoom,
     };
+    this.viewportVersion.update((value) => value + 1);
   }
 }

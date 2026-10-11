@@ -1,4 +1,4 @@
-<form class="controls__header" [formGroup]="drawSetupForm">
+<header class="controls__header">
   <a routerLink="/" title="На главную">
     <img
       class="controls__logo"
@@ -115,8 +115,24 @@
     </wm-popover>
 
     <div class="controls__history">
-      <button type="button" aria-label="Отменить" title="Отменить">↶</button>
-      <button type="button" aria-label="Повторить" title="Повторить">↷</button>
+      <button
+        type="button"
+        aria-label="Отменить"
+        title="Отменить"
+        [disabled]="mode.isReadOnly() || !history.canUndo()"
+        (click)="undo()"
+      >
+        ↶
+      </button>
+      <button
+        type="button"
+        aria-label="Повторить"
+        title="Повторить"
+        [disabled]="mode.isReadOnly() || !history.canRedo()"
+        (click)="redo()"
+      >
+        ↷
+      </button>
     </div>
 
     <span class="controls__divider"></span>
@@ -150,39 +166,5 @@
         <span class="controls__status">{{ generationStatus() }}</span>
       }
     </div>
-
-    <label class="controls__setting">
-      <span>Размер: {{ drawSetupForm.controls.lineWidth.value }}</span>
-      <input type="range" min="1" max="20" formControlName="lineWidth" />
-      <input
-        class="controls__color"
-        type="color"
-        formControlName="strokeColor"
-        title="Цвет линии"
-      />
-    </label>
-
-    <label class="controls__setting">
-      <span>
-        Непрозрачность:
-        {{
-          (drawSetupForm.controls.opacity.value || 0) * 100 | number: '1.0-0'
-        }}
-      </span>
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        formControlName="opacity"
-      />
-      <span class="controls__drop">◒</span>
-    </label>
-
-    <input type="hidden" formControlName="fillColor" />
-    <input type="hidden" formControlName="shadowColor" />
-    <input type="hidden" formControlName="shadowBlur" />
-    <input type="hidden" formControlName="shadowOffsetX" />
-    <input type="hidden" formControlName="shadowOffsetY" />
   }
-</form>
+</header>

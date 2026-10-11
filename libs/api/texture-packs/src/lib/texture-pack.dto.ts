@@ -1,6 +1,8 @@
 import { Type } from 'class-transformer';
+import { TextureKind, textureKinds } from '@wm/shared/workshop';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -36,6 +38,10 @@ export class UpdateTexturePackDto {
 }
 
 export class TexturePageQueryDto {
+  @IsOptional()
+  @IsIn(textureKinds)
+  kind?: TextureKind;
+
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -46,6 +52,12 @@ export class TexturePageQueryDto {
   @Min(1)
   @Max(100)
   pageSize = 24;
+}
+
+export class TextureKindDto {
+  @IsOptional()
+  @IsIn(textureKinds)
+  kind: TextureKind = 'SURFACE';
 }
 
 export class TexturePackCatalogQueryDto {

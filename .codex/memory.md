@@ -1,6 +1,6 @@
 # Project memory
 
-Updated: 2026-09-14. Keep this file short; update only on explicit user request.
+Updated: 2026-10-11. Keep this file short; update only on explicit user request.
 
 ## Working agreements
 
@@ -32,12 +32,21 @@ Updated: 2026-09-14. Keep this file short; update only on explicit user request.
 - Admin area /admin is noindex. Moderation is reversible via isHidden; audit log records changes.
 - Maps and texture packs have public paginated catalogs, owned drafts, publication and likes.
 - Public responses include current-account like state; do not load favourites to annotate catalogs.
-- Map.body stores workshop snapshots; API body limit accommodates map data.
+- Workshop v4 stores a compact scene header in Map.body; pages, objects, containers and tile metadata live in separate tables. PNG preview bytes live in object storage.
 - Textures belong to packs. Do not restore standalone texture creation.
 - Image bytes belong in S3-compatible storage, never PostgreSQL; metadata/objectKey stay in DB.
 - ObjectStorage abstraction supports local-development MinIO and production MinIO/R2; no local-file fallback.
 - Avatars use the same storage. Provider switches must preserve object keys.
 - Operational scripts belong in scripts/; workspace tooling belongs in tools/.
+
+## Workshop, October 11
+
+- WORKSHOP_HANDOFF.md is the detailed status source. This worktree has broad uncommitted Workshop changes; preserve them and inspect current code before relying on older checkpoints.
+- Huge-map Save uses an IndexedDB operation journal and a debounced draft (250 ms). Completed gestures and undo/redo are queued asynchronously; Save waits for journal flush before server publication. Browser storage does not replace a completed server Save.
+- Active Save uploads one binary scene bundle. Server staging groups pages by 24 and PNG tiles by 8, with at most four concurrent object-storage writes; subsequent publications update changed tile metadata in groups of 100. Actual speedup is not yet measured.
+- Overview retrieval uses 2×2 binary tile packs to reduce HTTP requests; the user confirmed fewer requests. Geometry is fetched separately by viewport.
+- yarn start:api keeps the original Nx serve flow. yarn start:api:webpack-watch uses Webpack-managed rebuild/restart without relying on Nx daemon; it has not yet been manually verified. Both commands deploy migrations before startup.
+- Latest Workshop changes received source/diff review and git diff --check only. No build, tests, typecheck or lint were run at the user's request; runtime Save and restart still need manual confirmation.
 
 ## Forum implemented September 2026
 
@@ -89,7 +98,7 @@ Updated: 2026-09-14. Keep this file short; update only on explicit user request.
 
 ## Commands and cautions
 
-- yarn start:web; yarn start:api (applies migrations first).
+- yarn start:web; yarn start:api (original Nx serve), yarn start:api:webpack-watch (separate watcher); both API commands apply migrations first.
 - yarn build:web; yarn build:api.
 - yarn nx lint <project>; yarn nx test <project> --runInBand.
 - yarn db:main:generate; yarn db:main:deploy.

@@ -1,0 +1,47 @@
+@use 'functions' as *;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: rem(40);
+  padding: rem(8) rem(12);
+  border: rem(1) solid
+    var(
+      --input-border-color,
+      var(--select-border-color, var(--border-popover-color))
+    );
+  border-radius: var(--input-radius, rem(8));
+  outline: none;
+  background-color: var(
+    --input-bg-color,
+    var(--select-trigger-bg-color, var(--bg-input-color))
+  );
+  color: var(
+    --input-text-color,
+    var(--select-trigger-text-color, var(--text-primary-color))
+  );
+  font: inherit;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &::placeholder {
+    color: var(--input-placeholder-color, var(--text-input-placeholder-color));
+  }
+
+  &:focus-visible {
+    border-color: var(--input-focus-color, var(--btn-primary-bg-color));
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}

@@ -10,69 +10,65 @@
 </button>
 
 <div class="layers">
-  <section class="objects-pane">
-    <div class="pane-title">
-      <span>›</span>
-      <strong>Объекты</strong>
-    </div>
-    <div class="objects-pane__body">
-      <label class="objects-search">
-        <span>⌕</span>
-        <input type="search" placeholder="Поиск" />
-      </label>
-      <p>На этой карте нет Объектов.</p>
-    </div>
-  </section>
-
   <section class="layer-pane">
-    <div class="layers__header">
-      <span class="layers__title">› &nbsp; Слои</span>
-      <div class="layers__actions">
-        <button
-          type="button"
-          class="layers__add layers__add--group"
-          (click)="toggleMode()"
-          title="Добавить группу"
-        >
-          M
-        </button>
-        <button
-          type="button"
-          class="layers__add layers__add--group"
-          (click)="generateTestData()"
-          title="Сгенерировать фигуры"
-        >
-          Gen
-        </button>
-        <button
-          type="button"
-          class="layers__add"
-          (click)="addLayer()"
-          title="Добавить слой"
-        >
-          + Layer
-        </button>
-        <button
-          type="button"
-          class="layers__add layers__add--group"
-          (click)="addGroup()"
-          title="Добавить группу"
-        >
-          + Group
-        </button>
-      </div>
+    <div class="layers__header layers__mode">
+      <button
+        type="button"
+        [class.layers__mode-active]="panelMode() === 'objects'"
+        (click)="panelMode.set('objects')"
+        [attr.aria-pressed]="panelMode() === 'objects'"
+      >
+        Объекты на экране
+      </button>
+      <button
+        type="button"
+        [class.layers__mode-active]="panelMode() === 'layers'"
+        (click)="panelMode.set('layers')"
+        [attr.aria-pressed]="panelMode() === 'layers'"
+      >
+        Слои
+      </button>
     </div>
-
-    @if (activeNodesList()) {
-      <wm-workshop-nodes-panel
-        [nodesRoot]="nodesRoot()"
-      ></wm-workshop-nodes-panel>
+    @if (panelMode() === 'objects') {
+      <wm-workshop-objects-panel />
+    } @else {
+      <div class="layers__header layers__toolbar">
+        <span class="layers__title">Слои</span>
+        <div class="layers__actions">
+          <button
+            type="button"
+            class="layers__add"
+            (click)="addLayer()"
+            title="Добавить слой"
+          >
+            + Слой
+          </button>
+          <button
+            type="button"
+            class="layers__add layers__add--group"
+            (click)="addGroup()"
+            title="Добавить группу"
+          >
+            + Группа
+          </button>
+        </div>
+      </div>
+      @if (activeNodesList()) {
+        <wm-workshop-nodes-panel [nodesRoot]="nodesRoot()" />
+      }
     }
-
     @if (selectedShape(); as shape) {
-      <div class="shape-properties">
+      <div class="shape-properties wm-scrollbar">
         <div class="shape-properties__title">
-          Свойства выбранных фигур ({{ selectedShapes().length }})
+          <span>Свойства ({{ selectedShapes().length }})</span>
+          <button
+            type="button"
+            class="shape-properties__close"
+            (click)="closeProperties()"
+            aria-label="Закрыть свойства"
+          >
+            ×
+          </button>
         </div>
 
         <label class="shape-properties__field">
@@ -133,7 +129,7 @@
               min="0"
               step="1"
               [ngModel]="rectangle.width"
-              (ngModelChange)="rectangle.width = +$event; updateSelectedShape()"
+              (ngModelChange)="updateSelectedShape('width', $event)"
             />
           </label>
           <label class="shape-properties__field">
@@ -143,9 +139,7 @@
               min="0"
               step="1"
               [ngModel]="rectangle.height"
-              (ngModelChange)="
-                rectangle.height = +$event; updateSelectedShape()
-              "
+              (ngModelChange)="updateSelectedShape('height', $event)"
             />
           </label>
         }

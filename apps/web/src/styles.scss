@@ -62,6 +62,110 @@ button {
   outline: none;
 }
 
+.wm-scrollbar {
+  padding-inline-end: var(--wm-scrollbar-content-gap, rem(4));
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(
+        --wm-scrollbar-thumb-color,
+        var(--btn-primary-bg-color)
+      )
+      var(
+        --wm-scrollbar-track-color,
+        rgb(from var(--bg-surface-variant-color) r g b / 0%)
+      );
+    scrollbar-width: thin;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: rem(8);
+  height: rem(8);
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(
+    --wm-scrollbar-track-color,
+    rgb(from var(--bg-surface-variant-color) r g b / 0%)
+  );
+}
+
+*::-webkit-scrollbar-thumb {
+  min-height: rem(32);
+  background: var(--wm-scrollbar-thumb-color, var(--btn-primary-bg-color));
+  border: rem(2) solid
+    var(
+      --wm-scrollbar-track-color,
+      rgb(from var(--bg-surface-variant-color) r g b / 0%)
+    );
+  border-radius: rem(999);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.1);
+}
+
+.wm-tooltip {
+  position: relative;
+
+  &::after {
+    content: attr(data-wm-tooltip);
+    position: absolute;
+    z-index: 50;
+    top: auto;
+    bottom: calc(100% + #{rem(8)});
+    left: 50%;
+    width: max-content;
+    max-width: rem(220);
+    padding: rem(6) rem(9);
+    border: rem(1) solid var(--border-popover-color);
+    border-radius: rem(6);
+    background: var(--bg-popover-color);
+    box-shadow: 0 rem(4) rem(12) rgb(from var(--shadow-color) r g b / 20%);
+    color: var(--text-popover-primary-color);
+    font-size: rem(12);
+    line-height: 1.2;
+    text-align: left;
+    white-space: normal;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%);
+    transition:
+      opacity 0.15s ease,
+      visibility 0.15s ease;
+  }
+
+  &[data-wm-tooltip-position='right']::after {
+    top: 50%;
+    bottom: auto;
+    left: calc(100% + #{rem(8)});
+    transform: translateY(-50%);
+  }
+
+  &[data-wm-tooltip-position='left']::after {
+    top: 50%;
+    right: calc(100% + #{rem(8)});
+    bottom: auto;
+    left: auto;
+    transform: translateY(-50%);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
 .container {
   margin: 0 auto;
   width: fluid(1150, 370);

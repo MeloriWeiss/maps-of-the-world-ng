@@ -22,9 +22,10 @@ export class TexturePackPreviewSliderComponent {
   size = input<TexturePreviewSize>('regular');
 
   slides = computed(() =>
-    this.textures().map(({ fileUrl, name }) => ({
+    this.textures().map(({ fileUrl, name, kind }) => ({
       url: fileUrl,
       alt: name,
+      badge: kind === 'STAMP' ? 'Изображение' : 'Покрытие',
     })),
   );
 

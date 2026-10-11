@@ -4,8 +4,10 @@ import { WorkshopSettingsService, WorkshopShapesService } from '../../services';
 import { Line, LineShape } from '../../shapes';
 import { Point } from '../../interfaces';
 import { ShapesTypes } from '../../consts';
+import { splitStrokePoints } from '../shared/split-stroke-points';
 
 export class PencilTool implements Tool {
+  static readonly displayName = 'Кисть';
   #shapesService = inject(WorkshopShapesService);
   #settingsService = inject(WorkshopSettingsService);
 
@@ -23,6 +25,7 @@ export class PencilTool implements Tool {
     ctx: CanvasRenderingContext2D,
     startPoint: Point,
   ) {
+    this.#shapesService.beginOperation();
     const style = this.#settingsService.shapeStyle;
     const worldX = startPoint.x;
     const worldY = startPoint.y;
@@ -66,10 +69,21 @@ export class PencilTool implements Tool {
   }
 
   stopDrawing() {
-    if (!this.#currentLine || !this.enabledToCreate()) return;
-
-    this.#shapesService.createShape(this.#currentLine);
+    if (!this.#currentLine || !this.enabledToCreate()) {
+      this.#currentLine = null;
+      this.#shapesService.endOperation();
+      return;
+    }
+    const line = this.#currentLine;
+    const parts = splitStrokePoints(line.points);
+    for (const points of parts) {
+      const shape =
+        parts.length === 1 ? line : new LineShape({ ...line, points });
+      shape.objectId = line.id;
+      this.#shapesService.createShape(shape);
+    }
     this.#currentLine = null;
+    this.#shapesService.endOperation();
   }
 
   enabledToCreate() {

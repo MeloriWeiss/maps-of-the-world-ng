@@ -1,3 +1,4 @@
+import { TextureKind } from '@wm/shared/workshop';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { finalize } from 'rxjs';
@@ -39,6 +40,7 @@ interface TexturePageResponse {
 @Injectable()
 export class WorkshopTexturesService {
   #http = inject(HttpClient);
+  #kind: TextureKind = 'SURFACE';
   #page = 1;
   #pageSize = 24;
 
@@ -49,7 +51,8 @@ export class WorkshopTexturesService {
   readonly hasMore = signal(false);
   readonly error = signal('');
 
-  load() {
+  load(kind: TextureKind = 'SURFACE') {
+    this.#kind = kind;
     this.loading.set(true);
     this.error.set('');
     this.#http.get<WorkshopTexturePack[]>('/api/texture-packs/mine').subscribe({
@@ -90,11 +93,12 @@ export class WorkshopTexturesService {
     this.loading.set(true);
     this.error.set('');
     const params = new HttpParams()
+      .set('kind', this.#kind)
       .set('page', this.#page)
       .set('pageSize', this.#pageSize);
     this.#http
       .get<TexturePageResponse>(
-        `/api/texture-packs/${encodeURIComponent(packId)}/textures`,
+        `/api/texture-packs/mine/${encodeURIComponent(packId)}/textures`,
         { params },
       )
       .pipe(finalize(() => this.loading.set(false)))

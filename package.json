@@ -4,6 +4,7 @@
   "scripts": {
     "start:web": "nx run web:serve --open",
     "start:api": "yarn db:main:deploy && nx serve api",
+    "start:api:webpack-watch": "yarn db:main:deploy && nx run api:serve-webpack-watch",
     "start:api-deps:docker": "docker compose --env-file .env -f docker/docker-compose.dev.yml up",
     "build:web": "nx build web",
     "build:api": "nx build api",

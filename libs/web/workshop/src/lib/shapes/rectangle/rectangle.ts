@@ -3,6 +3,10 @@ import { Rectangle, RectangleCreateData } from './rectangle.interface';
 import { ShapesTypes } from '../../consts';
 import { SelectionRect } from '../../tools';
 import { Bounds, Point } from '../../interfaces';
+import {
+  editorShapeRenderContext,
+  ShapeRenderContext,
+} from '../../rendering/shape-render-context';
 
 export class RectangleShape extends BaseShapeShape implements Rectangle {
   type = ShapesTypes.RECTANGLE;
@@ -35,19 +39,22 @@ export class RectangleShape extends BaseShapeShape implements Rectangle {
     this.y = rect.y;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(
+    ctx: CanvasRenderingContext2D,
+    context: ShapeRenderContext = editorShapeRenderContext,
+  ) {
     ctx.lineWidth = this.strokeWidth;
-    ctx.fillStyle = this.fillColor;
-    ctx.globalAlpha = this.opacity;
-    ctx.shadowColor = this.shadowColor ?? 'transparent';
+    ctx.fillStyle = context.color(this.fillColor);
+    ctx.globalAlpha *= this.opacity;
+    ctx.shadowColor = context.color(this.shadowColor ?? 'transparent');
     ctx.shadowBlur = this.shadowBlur ?? 0;
     ctx.shadowOffsetX = this.shadowOffsetX ?? 0;
     ctx.shadowOffsetY = this.shadowOffsetY ?? 0;
 
     if (this.selected) {
-      ctx.strokeStyle = '#0199dc';
+      ctx.strokeStyle = context.color('--btn-primary-bg-color');
     } else {
-      ctx.strokeStyle = this.strokeColor;
+      ctx.strokeStyle = context.color(this.strokeColor);
     }
 
     ctx.beginPath();

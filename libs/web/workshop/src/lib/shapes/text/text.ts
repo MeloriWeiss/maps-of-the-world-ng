@@ -3,6 +3,10 @@ import { BaseShapeShape } from '../shape';
 import { ShapesTypes } from '../../consts';
 import { Bounds, Point } from '../../interfaces';
 import { SelectionRect } from '../../tools';
+import {
+  editorShapeRenderContext,
+  ShapeRenderContext,
+} from '../../rendering/shape-render-context';
 
 export class TextShape extends BaseShapeShape implements Text {
   type = ShapesTypes.TEXT;
@@ -37,12 +41,15 @@ export class TextShape extends BaseShapeShape implements Text {
     this.fillColor = data.fillColor;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(
+    ctx: CanvasRenderingContext2D,
+    context: ShapeRenderContext = editorShapeRenderContext,
+  ) {
     ctx.save();
     ctx.font = `${this.fontSize}px ${this.fontFamily}`;
-    ctx.globalAlpha = this.opacity;
-    ctx.fillStyle = this.selected ? '#0199dc' : this.fillColor;
-    ctx.shadowColor = this.shadowColor ?? 'transparent';
+    ctx.globalAlpha *= this.opacity;
+    ctx.fillStyle = context.color(this.fillColor);
+    ctx.shadowColor = context.color(this.shadowColor ?? 'transparent');
     ctx.shadowBlur = this.shadowBlur ?? 0;
     ctx.shadowOffsetX = this.shadowOffsetX ?? 0;
     ctx.shadowOffsetY = this.shadowOffsetY ?? 0;
@@ -80,16 +87,11 @@ export class TextShape extends BaseShapeShape implements Text {
     this.y += point.y;
   }
 
-  getBounds() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      return { x: this.x, y: this.y, width: 0, height: 0 };
-    }
-
-    ctx.font = `${this.fontSize}px ${this.fontFamily}`;
-    const metrics = ctx.measureText(this.text);
-    const width = metrics.width;
+  getBounds(context: ShapeRenderContext = editorShapeRenderContext) {
+    const width = context.measureText(
+      this.text,
+      `${this.fontSize}px ${this.fontFamily}`,
+    );
     const height = this.fontSize;
 
     return {

@@ -42,7 +42,11 @@
           </button>
         }
       </div>
-      <div class="searchable-select__options" role="listbox" [id]="optionsId">
+      <div
+        class="searchable-select__options wm-scrollbar"
+        role="listbox"
+        [id]="optionsId"
+      >
         @for (
           option of filteredOptions();
           track option.value;

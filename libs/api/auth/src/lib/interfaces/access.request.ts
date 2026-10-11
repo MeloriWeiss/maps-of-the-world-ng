@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import { UserRoleType } from '@wm/shared/users';
 
 export interface AccessPayload {

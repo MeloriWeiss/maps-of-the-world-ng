@@ -29,8 +29,9 @@ export class SaveMapDto {
   @MaxLength(120)
   name!: string;
 
+  @IsOptional()
   @IsString()
-  body!: string;
+  body?: string;
 
   @IsOptional()
   @IsString()

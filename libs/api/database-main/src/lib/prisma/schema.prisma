@@ -63,6 +63,15 @@ model SiteVisit {
 }
 
 model Map {
+  revision      Int     @default(0)
+  overviewKey   String? @map("overview_key")
+  chunks        MapChunk[]
+  scenePages    MapScenePage[]
+  sceneObjects  MapSceneObject[]
+  sceneObjectParts MapSceneObjectPart[]
+  sceneContainers MapSceneContainer[]
+  sceneTiles    MapSceneTile[]
+  sceneCommits  MapSceneCommit[]
   id            Int     @id @default(autoincrement())
   name          String
   body          String
@@ -82,6 +91,8 @@ model Map {
 }
 
 model Texture {
+  kind      TextureKind @default(SURFACE)
+  deletedAt DateTime? @map("deleted_at")
   id        String   @id @default(uuid())
   name      String
   objectKey String   @unique @map("object_key")
@@ -95,10 +106,201 @@ model Texture {
   owner     PersonalAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   packId    String          @map("pack_id")
   pack      TexturePack     @relation(fields: [packId], references: [id], onDelete: Cascade)
+  sceneReferences MapSceneTextureRef[]
 
   @@index([accountId, createdAt])
   @@index([packId, createdAt])
+  @@index([deletedAt])
   @@map("textures")
+}
+
+model MapChunk {
+  mapId Int @map("map_id")
+  key   String
+  body  String
+  map   Map @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@id([mapId, key])
+  @@map("map_chunks")
+}
+
+model MapScenePage {
+  mapId     Int    @map("map_id")
+  cellX     Int    @map("cell_x")
+  cellY     Int    @map("cell_y")
+  pageId    Int    @map("page_id")
+  minX      Float  @map("min_x")
+  minY      Float  @map("min_y")
+  maxX      Float  @map("max_x")
+  maxY      Float  @map("max_y")
+  body      String
+  map       Map    @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  textures  MapSceneTextureRef[]
+
+  @@id([mapId, cellX, cellY, pageId])
+  @@index([mapId, cellX, cellY])
+  @@index([mapId, minX, maxX])
+  @@index([mapId, minY, maxY])
+  @@map("map_scene_pages")
+}
+
+model MapSceneTextureRef {
+  mapId     Int    @map("map_id")
+  cellX     Int    @map("cell_x")
+  cellY     Int    @map("cell_y")
+  pageId    Int    @map("page_id")
+  textureId String @map("texture_id")
+  page      MapScenePage @relation(fields: [mapId, cellX, cellY, pageId], references: [mapId, cellX, cellY, pageId], onDelete: Cascade)
+  texture   Texture @relation(fields: [textureId], references: [id], onDelete: Restrict)
+
+  @@id([mapId, cellX, cellY, pageId, textureId])
+  @@index([textureId])
+  @@map("map_scene_texture_refs")
+}
+
+model TextureBlobCleanup {
+  objectKey String @id @map("object_key")
+  notBefore DateTime @map("not_before")
+
+  @@index([notBefore])
+  @@map("texture_blob_cleanup")
+}
+
+model MapSceneObject {
+  mapId       Int     @map("map_id")
+  objectId    String  @map("object_id")
+  nodeId      String  @map("node_id")
+  parentId    String  @map("parent_id")
+  kind        String
+  name        String
+  minX        Float   @map("min_x")
+  minY        Float   @map("min_y")
+  maxX        Float   @map("max_x")
+  maxY        Float   @map("max_y")
+  partCount   Int     @default(1) @map("part_count")
+  map         Map     @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@id([mapId, objectId])
+  @@index([mapId, minX, maxX])
+  @@index([mapId, minY, maxY])
+  @@index([mapId, kind, name])
+  @@index([mapId, parentId])
+  @@map("map_scene_objects")
+}
+
+model MapSceneObjectPart {
+  mapId     Int    @map("map_id")
+  objectId  String @map("object_id")
+  partId    String @map("part_id")
+  cellX     Int    @map("cell_x")
+  cellY     Int    @map("cell_y")
+  pageId    Int    @map("page_id")
+  minX      Float  @map("min_x")
+  minY      Float  @map("min_y")
+  maxX      Float  @map("max_x")
+  maxY      Float  @map("max_y")
+  map       Map    @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@id([mapId, partId])
+  @@index([mapId, objectId])
+  @@index([mapId, cellX, cellY, pageId])
+  @@map("map_scene_object_parts")
+}
+
+model MapSceneContainer {
+  mapId     Int     @map("map_id")
+  id        String
+  parentId  String? @map("parent_id")
+  kind      String
+  name      String
+  visible   Boolean @default(true)
+  locked    Boolean @default(false)
+  orderKey  Float   @map("order_key")
+  childIndex Int    @default(0) @map("child_index")
+  map       Map     @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@id([mapId, id])
+  @@index([mapId, parentId, orderKey])
+  @@map("map_scene_containers")
+}
+
+model MapSceneTile {
+  mapId      Int     @map("map_id")
+  level      Int
+  x          Int
+  y          Int
+  objectKey  String? @map("object_key")
+  version    Int
+  map        Map     @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@id([mapId, level, x, y])
+  @@index([mapId, level])
+  @@map("map_scene_tiles")
+}
+
+model MapSceneCommit {
+  id               String   @id @default(uuid())
+  mapId            Int      @map("map_id")
+  accountId        Int      @map("account_id")
+  expectedRevision Int      @map("expected_revision")
+  sourceMapId      Int?     @map("source_map_id")
+  sourceRevision   Int?     @map("source_revision")
+  sourceTilesReady Boolean  @default(false) @map("source_tiles_ready")
+  copyCursor       String?  @map("copy_cursor")
+  idempotencyKey   String   @map("idempotency_key")
+  status           String   @default("uploading")
+  header           String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  expiresAt        DateTime @map("expires_at")
+  pages            MapSceneCommitPage[]
+  tiles            MapSceneCommitTile[]
+  map              Map      @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, idempotencyKey])
+  @@index([accountId, expiresAt])
+  @@map("map_scene_commits")
+}
+
+model MapSceneCommitPage {
+  commitId String @map("commit_id")
+  cellX    Int    @map("cell_x")
+  cellY    Int    @map("cell_y")
+  pageId   Int    @map("page_id")
+  minX     Float  @map("min_x")
+  minY     Float  @map("min_y")
+  maxX     Float  @map("max_x")
+  maxY     Float  @map("max_y")
+  body     String
+  deleted  Boolean @default(false)
+  commit   MapSceneCommit @relation(fields: [commitId], references: [id], onDelete: Cascade)
+
+  @@id([commitId, cellX, cellY, pageId])
+  @@map("map_scene_commit_pages")
+}
+
+model MapSceneCommitTile {
+  commitId  String  @map("commit_id")
+  level     Int
+  x         Int
+  y         Int
+  objectKey String? @map("object_key")
+  commit    MapSceneCommit @relation(fields: [commitId], references: [id], onDelete: Cascade)
+
+  @@id([commitId, level, x, y])
+  @@map("map_scene_commit_tiles")
+}
+
+model MapSceneBlobCleanup {
+  objectKey String   @id @map("object_key")
+  notBefore DateTime @map("not_before")
+
+  @@index([notBefore])
+  @@map("map_scene_blob_cleanup")
+}
+
+enum TextureKind {
+  SURFACE
+  STAMP
 }
 
 model TexturePack {
@@ -107,6 +309,7 @@ model TexturePack {
   description String?
   isPublished Boolean   @default(false) @map("is_published")
   isHidden    Boolean   @default(false) @map("is_hidden")
+  deletedAt   DateTime? @map("deleted_at")
   likesCount  Int       @default(0) @map("likes_count")
   publishedAt DateTime? @map("published_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -119,6 +322,7 @@ model TexturePack {
 
   @@index([accountId, updatedAt])
   @@index([isPublished, publishedAt])
+  @@index([deletedAt])
   @@map("texture_packs")
 }
 

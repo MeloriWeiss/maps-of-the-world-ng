@@ -10,6 +10,7 @@ import { Point } from '../../interfaces/point.interface';
 import { ShapesTypes } from '../../consts';
 
 export class RectangleTool implements Tool {
+  static readonly displayName = 'Прямоугольник';
   #shapesService = inject(WorkshopShapesService);
   #canvasManagerService = inject(WorkshopCanvasManagerService);
   #settingsService = inject(WorkshopSettingsService);

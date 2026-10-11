@@ -39,23 +39,20 @@ describe('TexturesService', () => {
     expect(storage.objects.size).toBe(0);
   });
 
-  it('deletes only an owned texture from its pack and object storage', async () => {
-    const storage = new FakeObjectStorage();
-    storage.objects.set('texture-key', Buffer.from('texture'));
+  it('soft deletes only an owned texture from its pack', async () => {
     const prisma = {
       texture: {
         findFirst: jest.fn().mockResolvedValue({
           id: 'texture-id',
-          objectKey: 'texture-key',
         }),
-        delete: jest.fn().mockResolvedValue({ id: 'texture-id' }),
+        update: jest.fn().mockResolvedValue({ id: 'texture-id' }),
       },
     };
     const moduleRef = await Test.createTestingModule({
       providers: [
         TexturesService,
         { provide: PrismaMainService, useValue: prisma },
-        { provide: OBJECT_STORAGE, useValue: storage },
+        { provide: OBJECT_STORAGE, useValue: new FakeObjectStorage() },
       ],
     }).compile();
     const service = moduleRef.get(TexturesService);
@@ -64,9 +61,18 @@ describe('TexturesService', () => {
       id: 'texture-id',
     });
     expect(prisma.texture.findFirst).toHaveBeenCalledWith({
-      where: { id: 'texture-id', packId: 'pack-id', accountId: 7 },
-      select: { id: true, objectKey: true },
+      where: {
+        id: 'texture-id',
+        packId: 'pack-id',
+        accountId: 7,
+        deletedAt: null,
+        pack: { deletedAt: null },
+      },
+      select: { id: true },
     });
-    expect(storage.objects.has('texture-key')).toBe(false);
+    expect(prisma.texture.update).toHaveBeenCalledWith({
+      where: { id: 'texture-id' },
+      data: { deletedAt: expect.any(Date) },
+    });
   });
 });

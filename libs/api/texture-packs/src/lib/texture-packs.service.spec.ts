@@ -12,11 +12,11 @@ describe('TexturePacksService', () => {
       findMany: jest.fn(),
       count: jest.fn(),
       update: jest.fn(),
-      delete: jest.fn(),
     },
     texture: {
       findMany: jest.fn(),
       count: jest.fn(),
+      updateMany: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -124,7 +124,11 @@ describe('TexturePacksService', () => {
 
     expect(prisma.texturePack.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { isPublished: true, isHidden: false },
+        where: {
+          isPublished: true,
+          isHidden: false,
+          deletedAt: null,
+        },
       }),
     );
   });
@@ -147,11 +151,16 @@ describe('TexturePacksService', () => {
     });
     expect(prisma.texturePack.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'pack-id', isPublished: true, isHidden: false },
+        where: {
+          id: 'pack-id',
+          isPublished: true,
+          isHidden: false,
+          deletedAt: null,
+        },
         select: expect.objectContaining({
           _count: {
             select: {
-              textures: true,
+              textures: { where: { deletedAt: null } },
               likes: { where: { accountId: 7 } },
             },
           },
@@ -193,25 +202,28 @@ describe('TexturePacksService', () => {
     expect(textures.remove).toHaveBeenCalledWith(7, 'pack-id', 'texture-id');
   });
 
-  it('deletes only an owned pack and removes its stored files', async () => {
+  it('soft-deletes only an owned pack and its textures', async () => {
     prisma.texturePack.findFirst.mockResolvedValue({ id: 'pack-id' });
-    prisma.texture.findMany.mockResolvedValue([
-      { objectKey: 'first.png' },
-      { objectKey: 'second.webp' },
-    ]);
-    prisma.texturePack.delete.mockResolvedValue({ id: 'pack-id' });
     const service = await createService();
 
     await expect(service.removeOwned(7, 'pack-id')).resolves.toEqual({
       id: 'pack-id',
     });
-    expect(prisma.texturePack.delete).toHaveBeenCalledWith({
-      where: { id: 'pack-id' },
+    expect(prisma.texturePack.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'pack-id' },
+        data: expect.objectContaining({
+          deletedAt: expect.any(Date),
+          isPublished: false,
+          publishedAt: null,
+        }),
+      }),
+    );
+    expect(prisma.texture.updateMany).toHaveBeenCalledWith({
+      where: { packId: 'pack-id', accountId: 7, deletedAt: null },
+      data: { deletedAt: expect.any(Date) },
     });
-    expect(textures.removeFiles).toHaveBeenCalledWith([
-      'first.png',
-      'second.webp',
-    ]);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
   });
 
   it('does not delete a pack owned by another account', async () => {
@@ -221,8 +233,7 @@ describe('TexturePacksService', () => {
     await expect(service.removeOwned(7, 'foreign-pack')).rejects.toThrow(
       NotFoundException,
     );
-    expect(prisma.texturePack.delete).not.toHaveBeenCalled();
-    expect(textures.removeFiles).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   async function createService() {

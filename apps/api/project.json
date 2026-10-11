@@ -7,6 +7,7 @@
   "targets": {
     "build": {
       "dependsOn": ["api-database-main:generate"],
+      "cache": false,
       "executor": "nx:run-commands",
       "options": {
         "command": "webpack-cli build",
@@ -59,6 +60,14 @@
         "production": {
           "buildTarget": "api:build:production"
         }
+      }
+    },
+    "serve-webpack-watch": {
+      "continuous": true,
+      "dependsOn": ["api-database-main:generate"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/serve-api.cjs"
       }
     },
     "test": {

@@ -7,14 +7,16 @@
   {{ collapsed() ? '›' : '‹' }}
 </button>
 
-<div class="tools-list">
+<div class="tools-list wm-scrollbar">
   @for (tool of tools; track tool.name) {
     <button
       class="btn tool-btn"
       type="button"
+      [class.secondary-start]="tool.name === WorkshopTools.PENCIL"
       [class.selected]="currentToolName() === tool.name"
       [attr.aria-label]="tool.label"
-      [title]="tool.label"
+      [wmTooltip]="tool.label"
+      wmTooltipPosition="right"
       (click)="setCurrentTool(tool, $event)"
       (contextmenu)="openContextMenu($event, tool)"
     >
@@ -40,29 +42,57 @@
       (contextmenu)="$event.preventDefault()"
     >
       <div class="tool-context-menu__title">
-        <span>{{
-          menu.tool === WorkshopTools.TEXTURE ? 'Текстура' : 'Кисть'
-        }}</span>
+        <span>{{ menu.label }}</span>
         <button type="button" (click)="closeContextMenu()">×</button>
       </div>
 
-      <div class="tool-context-menu__tabs" aria-hidden="true">
-        <span class="active">●</span>
-        <span>▦</span>
-        <span>✳</span>
-        <span>□</span>
-        <span>○</span>
-        <span>⬠</span>
-      </div>
-
       <div class="tool-context-menu__content">
+        @if (menu.tool === WorkshopTools.ERASER) {
+          <div class="tool-context-menu__field">
+            <span>Стирание на активном слое</span>
+            <wm-select
+              ariaLabel="Режим стирания"
+              [value]="
+                workshopSettingsService.eraserObjectsOnly ? 'whole' : 'parts'
+              "
+              (valueChange)="setEraserMode($event)"
+            >
+              <wm-option
+                value="parts"
+                label="Части мазков и отдельные изображения"
+                >Части мазков и отдельные изображения</wm-option
+              >
+              <wm-option value="whole" label="Объекты целиком"
+                >Объекты целиком</wm-option
+              >
+            </wm-select>
+          </div>
+        }
+        @if (menu.tool === WorkshopTools.TEXT) {
+          <label class="tool-context-menu__field"
+            ><span>Текст</span>
+            <input
+              type="text"
+              [(ngModel)]="workshopSettingsService.textStyle.defaultText"
+            />
+          </label>
+          <label class="tool-context-menu__field"
+            ><span>Размер текста</span>
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="workshopSettingsService.textStyle.fontSize"
+            />
+          </label>
+        }
+
         <label class="tool-context-menu__field">
-          <span>Толщина линии</span>
+          <span>Размер кисти в единицах мира</span>
           <div class="tool-context-menu__range">
             <input
               type="range"
               min="1"
-              max="40"
+              max="1000"
               [ngModel]="
                 workshopSettingsService.toolStyles[menu.tool].strokeWidth
               "
@@ -111,20 +141,20 @@
           />
         </label>
 
-        @if (menu.tool === WorkshopTools.TEXTURE) {
-          <label class="texture-pack-select">
+        @if (
+          menu.tool === WorkshopTools.TEXTURE ||
+          menu.tool === WorkshopTools.STAMP
+        ) {
+          <div class="texture-pack-select">
             <span>Текстур-пак</span>
-            <select
-              [value]="selectedTexturePackId() || ''"
-              (change)="selectTexturePack($event)"
-            >
-              @for (pack of texturePacks(); track pack.id) {
-                <option [value]="pack.id">
-                  {{ pack.name }} ({{ pack._count.textures }})
-                </option>
-              }
-            </select>
-          </label>
+            <wm-searchable-select
+              ariaLabel="Текстур-пак"
+              searchPlaceholder="Поиск текстур-пака"
+              [options]="packOptions()"
+              [value]="selectedTexturePackId()"
+              (valueChange)="selectTexturePack($event)"
+            />
+          </div>
 
           <div class="texture-library">
             <a
@@ -140,7 +170,10 @@
                 class="texture-library__item"
                 type="button"
                 [class.selected]="
-                  workshopSettingsService.textureStyle.textureId === texture.id
+                  (menu.tool === WorkshopTools.STAMP
+                    ? workshopSettingsService.stampStyle.textureId
+                    : workshopSettingsService.textureStyle.textureId) ===
+                  texture.id
                 "
                 [title]="texture.name"
                 (click)="selectTexture(texture)"
@@ -173,43 +206,135 @@
             <p class="texture-library__error">{{ textureError() }}</p>
           }
 
-          @if (workshopSettingsService.textureStyle.textureUrl; as textureUrl) {
-            <div
-              class="texture-preview"
-              aria-label="Предпросмотр текстуры"
-              [style.background-image]="'url(' + textureUrl + ')'"
-            ></div>
+          @if (menu.tool === WorkshopTools.TEXTURE) {
+            @if (
+              workshopSettingsService.textureStyle.textureUrl;
+              as textureUrl
+            ) {
+              <div
+                class="texture-preview"
+                aria-label="Предпросмотр текстуры"
+                [style.background-image]="'url(' + textureUrl + ')'"
+              ></div>
+            }
+
+            <label class="tool-context-menu__field">
+              <span>
+                Масштаб текстуры:
+                {{ workshopSettingsService.textureStyle.textureScale }}
+              </span>
+              <input
+                type="range"
+                min="0.25"
+                max="4"
+                step="0.05"
+                [ngModel]="workshopSettingsService.textureStyle.textureScale"
+                (ngModelChange)="updateTextureScale($event)"
+              />
+            </label>
+
+            <label class="tool-context-menu__field">
+              <span>
+                Поворот:
+                {{ workshopSettingsService.textureStyle.textureRotation }}°
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="360"
+                step="1"
+                [ngModel]="workshopSettingsService.textureStyle.textureRotation"
+                (ngModelChange)="updateTextureRotation($event)"
+              />
+            </label>
           }
-
-          <label class="tool-context-menu__field">
-            <span>
-              Масштаб текстуры:
-              {{ workshopSettingsService.textureStyle.textureScale }}
-            </span>
-            <input
-              type="range"
-              min="0.25"
-              max="4"
-              step="0.05"
-              [ngModel]="workshopSettingsService.textureStyle.textureScale"
-              (ngModelChange)="updateTextureScale($event)"
-            />
-          </label>
-
-          <label class="tool-context-menu__field">
-            <span>
-              Поворот:
-              {{ workshopSettingsService.textureStyle.textureRotation }}°
-            </span>
-            <input
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              [ngModel]="workshopSettingsService.textureStyle.textureRotation"
-              (ngModelChange)="updateTextureRotation($event)"
-            />
-          </label>
+          @if (menu.tool === WorkshopTools.STAMP) {
+            <label class="tool-context-menu__field"
+              ><span>Ширина изображения</span>
+              <input
+                type="number"
+                min="1"
+                max="10000"
+                [(ngModel)]="workshopSettingsService.stampStyle.width"
+              />
+            </label>
+            <div class="tool-context-menu__field">
+              <span>Размещение</span>
+              <wm-select
+                ariaLabel="Режим размещения изображений"
+                [value]="workshopSettingsService.stampStyle.mode"
+                (valueChange)="setStampMode($event)"
+              >
+                <wm-option value="distance" label="По расстоянию"
+                  >По расстоянию</wm-option
+                >
+                <wm-option value="time" label="По времени"
+                  >По времени</wm-option
+                >
+              </wm-select>
+            </div>
+            <label class="tool-context-menu__field"
+              ><span>Шаг относительно ширины</span>
+              <input
+                type="number"
+                min="0.05"
+                max="10"
+                step="0.05"
+                [(ngModel)]="workshopSettingsService.stampStyle.spacing"
+              />
+            </label>
+            @if (workshopSettingsService.stampStyle.mode === 'time') {
+              <label class="tool-context-menu__field"
+                ><span>Интервал, мс</span>
+                <input
+                  type="number"
+                  min="40"
+                  max="5000"
+                  [(ngModel)]="workshopSettingsService.stampStyle.interval"
+                />
+              </label>
+            }
+            <label class="tool-context-menu__field"
+              ><span>Разброс положения</span>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                [(ngModel)]="workshopSettingsService.stampStyle.scatter"
+              />
+            </label>
+            <label class="tool-context-menu__field"
+              ><span>Разброс размера</span>
+              <input
+                type="range"
+                min="0"
+                max="0.9"
+                step="0.05"
+                [(ngModel)]="workshopSettingsService.stampStyle.sizeVariation"
+              />
+            </label>
+            <label class="tool-context-menu__field"
+              ><span>Поворот</span>
+              <input
+                type="range"
+                min="0"
+                max="360"
+                [(ngModel)]="workshopSettingsService.stampStyle.rotation"
+              />
+            </label>
+            <label class="tool-context-menu__field"
+              ><span>Разброс поворота</span>
+              <input
+                type="range"
+                min="0"
+                max="180"
+                [(ngModel)]="
+                  workshopSettingsService.stampStyle.rotationVariation
+                "
+              />
+            </label>
+          }
         }
       </div>
     </div>

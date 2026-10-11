@@ -16,12 +16,17 @@ import {
   WorkshopCanvasManagerService,
   WorkshopSceneGraphService,
   WorkshopSceneGraphStorageService,
+  WorkshopShapesService,
 } from '../../../../services';
-import { PopoverComponent, VirtualListComponent } from '@wm/web/common-ui';
+import {
+  PopoverComponent,
+  SvgComponent,
+  VirtualListComponent,
+} from '@wm/web/common-ui';
 
 @Component({
   selector: 'wm-workshop-nodes-panel',
-  imports: [PopoverComponent, VirtualListComponent],
+  imports: [PopoverComponent, SvgComponent, VirtualListComponent],
   templateUrl: './workshop-nodes-panel.component.html',
   styleUrl: './workshop-nodes-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +35,7 @@ export class WorkshopNodesPanelComponent {
   #sceneGraphService = inject(WorkshopSceneGraphService);
   #sceneGraphStorageService = inject(WorkshopSceneGraphStorageService);
   #canvasManagerService = inject(WorkshopCanvasManagerService);
+  #shapes = inject(WorkshopShapesService);
 
   nodesRoot = input.required<GraphNode>();
   activeNodeId = this.#sceneGraphService.activeNodeId;
@@ -92,7 +98,9 @@ export class WorkshopNodesPanelComponent {
   }
 
   toggleVisible(node: GraphNode) {
+    this.#shapes.beginOperation();
     this.#sceneGraphService.setNodeVisibility(node.id, !node.visible);
+    this.#shapes.endOperation();
     this.#canvasManagerService.requestRedraw();
   }
 
@@ -151,9 +159,11 @@ export class WorkshopNodesPanelComponent {
       return;
 
     const name = this.editedName().trim();
+    this.#shapes.beginOperation();
     if (name) node.shape.name = name;
     this.editingNodeId.set(null);
     this.#sceneGraphService.saveNodes();
+    this.#shapes.endOperation();
   }
 
   cancelRenaming(): void {
@@ -161,7 +171,9 @@ export class WorkshopNodesPanelComponent {
   }
 
   deleteNode(nodeId: string) {
+    this.#shapes.beginOperation();
     this.#sceneGraphService.removeNode(nodeId);
+    this.#shapes.endOperation();
     this.#canvasManagerService.requestRedraw();
     this.closeContextMenu();
   }
@@ -172,7 +184,9 @@ export class WorkshopNodesPanelComponent {
 
   dropNode(targetNodeId: string, mode: 'inside' | 'after') {
     if (!this.#draggedNodeId) return;
+    this.#shapes.beginOperation();
     this.#sceneGraphService.moveNode(this.#draggedNodeId, targetNodeId, mode);
+    this.#shapes.endOperation();
     this.#canvasManagerService.requestRedraw();
     this.#draggedNodeId = null;
   }

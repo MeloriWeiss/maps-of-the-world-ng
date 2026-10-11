@@ -3,10 +3,15 @@ import { BaseShapeShape } from '../shape';
 import { ShapesTypes } from '../../consts';
 import { Bounds, Point } from '../../interfaces';
 import { SelectionRect } from '../../tools';
+import {
+  editorShapeRenderContext,
+  ShapeRenderContext,
+} from '../../rendering/shape-render-context';
 
 export class LineShape extends BaseShapeShape implements Line {
   type = ShapesTypes.LINE;
 
+  protected override partialErase = true;
   points: Point[] = [];
 
   #selectThreshold = 4;
@@ -29,18 +34,21 @@ export class LineShape extends BaseShapeShape implements Line {
     this.points = line.points;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(
+    ctx: CanvasRenderingContext2D,
+    context: ShapeRenderContext = editorShapeRenderContext,
+  ) {
     ctx.lineWidth = this.strokeWidth;
-    ctx.globalAlpha = this.opacity;
-    ctx.shadowColor = this.shadowColor ?? 'transparent';
+    ctx.globalAlpha *= this.opacity;
+    ctx.shadowColor = context.color(this.shadowColor ?? 'transparent');
     ctx.shadowBlur = this.shadowBlur ?? 0;
     ctx.shadowOffsetX = this.shadowOffsetX ?? 0;
     ctx.shadowOffsetY = this.shadowOffsetY ?? 0;
 
     if (this.selected) {
-      ctx.strokeStyle = '#0199dc';
+      ctx.strokeStyle = context.color('--btn-primary-bg-color');
     } else {
-      ctx.strokeStyle = this.strokeColor;
+      ctx.strokeStyle = context.color(this.strokeColor);
     }
 
     ctx.beginPath();
@@ -126,6 +134,7 @@ export class LineShape extends BaseShapeShape implements Line {
   }
 
   changePosition(point: Point) {
+    this.moveErasures(point);
     for (const p of this.points) {
       p.x = p.x + point.x;
       p.y = p.y + point.y;
@@ -151,14 +160,15 @@ export class LineShape extends BaseShapeShape implements Line {
     }
 
     return {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
+      x: minX - this.strokeWidth / 2,
+      y: minY - this.strokeWidth / 2,
+      width: maxX - minX + this.strokeWidth,
+      height: maxY - minY + this.strokeWidth,
     };
   }
 
   transform(from: Bounds, to: Bounds) {
+    this.transformErasures(from, to);
     for (const point of this.points) {
       point.x =
         to.x + ((point.x - from.x) / Math.max(from.width, 0.001)) * to.width;

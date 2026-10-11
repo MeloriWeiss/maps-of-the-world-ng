@@ -8,8 +8,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { EmptyStateComponent } from '@wm/web/common-ui';
 import { SvgComponent } from '@wm/web/common-ui';
+import { TextureKind } from '@wm/shared/workshop';
 import { AuthService } from '@wm/web/data-access/auth';
 import {
   PublishedTexturePackDetails,
@@ -25,7 +25,7 @@ interface TextureDetailsCard extends TextureItemView {
 
 @Component({
   selector: 'wm-texture-pack-details-page',
-  imports: [RouterLink, EmptyStateComponent, SvgComponent],
+  imports: [RouterLink, SvgComponent],
   templateUrl: './texture-pack-details-page.component.html',
   styleUrl: './texture-pack-details-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,13 +40,46 @@ export class TexturePackDetailsPageComponent {
 
   readonly packId = this.#route.snapshot.paramMap.get('id') ?? '';
   readonly pack = signal<PublishedTexturePackDetails | null>(null);
-  readonly textures = signal<TextureDetailsCard[]>([]);
+  readonly textures = signal<Record<TextureKind, TextureDetailsCard[]>>({
+    SURFACE: [],
+    STAMP: [],
+  });
+  readonly totals = signal<Record<TextureKind, number>>({
+    SURFACE: 0,
+    STAMP: 0,
+  });
   readonly total = signal(0);
-  readonly page = signal(1);
+  readonly pages = signal<Record<TextureKind, number>>({
+    SURFACE: 1,
+    STAMP: 1,
+  });
   readonly isLoading = signal(true);
-  readonly isLoadingMore = signal(false);
+  readonly loadingMoreKind = signal<TextureKind | null>(null);
   readonly errorMessage = signal<string | null>(null);
-  readonly hasMore = computed(() => this.textures().length < this.total());
+  readonly loadedTotal = computed(
+    () => this.textures().SURFACE.length + this.textures().STAMP.length,
+  );
+  readonly sections = computed(() =>
+    [
+      {
+        kind: 'SURFACE' as const,
+        title: 'Покрытия',
+        description: 'Заполняют область карты повторяющимся узором.',
+      },
+      {
+        kind: 'STAMP' as const,
+        title: 'Изображения',
+        description: 'Ставятся на карту целиком, по одному или кистью.',
+      },
+    ].map((section) => ({
+      ...section,
+      items: this.textures()[section.kind],
+      total: this.totals()[section.kind],
+      hasMore:
+        this.textures()[section.kind].length < this.totals()[section.kind],
+      loadingMore: this.loadingMoreKind() === section.kind,
+    })),
+  );
   readonly isAuthorized = signal(false);
   readonly isLiked = signal(false);
   readonly isUpdatingLike = signal(false);
@@ -71,10 +104,17 @@ export class TexturePackDetailsPageComponent {
     this.errorMessage.set(null);
     forkJoin({
       pack: this.#texturePacksService.getPublicPack(this.packId),
-      textures: this.#texturePacksService.listPublicTextures(
+      surfaces: this.#texturePacksService.listPublicTextures(
         this.packId,
         1,
         this.#pageSize,
+        'SURFACE',
+      ),
+      stamps: this.#texturePacksService.listPublicTextures(
+        this.packId,
+        1,
+        this.#pageSize,
+        'STAMP',
       ),
     })
       .pipe(
@@ -82,7 +122,7 @@ export class TexturePackDetailsPageComponent {
         takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe({
-        next: ({ pack, textures }) => {
+        next: ({ pack, surfaces, stamps }) => {
           this.pack.set(pack);
           this.#seoService.update(
             {
@@ -97,11 +137,13 @@ export class TexturePackDetailsPageComponent {
             `/texture-packs/${pack.id}`,
           );
           this.isLiked.set(pack.isLiked);
-          this.textures.set(
-            textures.items.map((texture) => this.#toCard(texture)),
-          );
-          this.total.set(textures.total);
-          this.page.set(1);
+          this.textures.set({
+            SURFACE: surfaces.items.map((texture) => this.#toCard(texture)),
+            STAMP: stamps.items.map((texture) => this.#toCard(texture)),
+          });
+          this.totals.set({ SURFACE: surfaces.total, STAMP: stamps.total });
+          this.total.set(surfaces.total + stamps.total);
+          this.pages.set({ SURFACE: 1, STAMP: 1 });
         },
         error: () =>
           this.errorMessage.set(
@@ -110,26 +152,34 @@ export class TexturePackDetailsPageComponent {
       });
   }
 
-  loadMore() {
-    if (!this.hasMore() || this.isLoadingMore()) return;
+  loadMore(kind: TextureKind) {
+    if (
+      this.textures()[kind].length >= this.totals()[kind] ||
+      this.loadingMoreKind()
+    )
+      return;
 
-    const nextPage = this.page() + 1;
-    this.isLoadingMore.set(true);
+    const nextPage = this.pages()[kind] + 1;
+    this.loadingMoreKind.set(kind);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .listPublicTextures(this.packId, nextPage, this.#pageSize)
+      .listPublicTextures(this.packId, nextPage, this.#pageSize, kind)
       .pipe(
-        finalize(() => this.isLoadingMore.set(false)),
+        finalize(() => this.loadingMoreKind.set(null)),
         takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe({
         next: (result) => {
-          this.textures.update((textures) => [
+          this.textures.update((textures) => ({
             ...textures,
-            ...result.items.map((texture) => this.#toCard(texture)),
-          ]);
-          this.total.set(result.total);
-          this.page.set(nextPage);
+            [kind]: [
+              ...textures[kind],
+              ...result.items.map((texture) => this.#toCard(texture)),
+            ],
+          }));
+          this.totals.update((totals) => ({ ...totals, [kind]: result.total }));
+          this.total.set(this.totals().SURFACE + this.totals().STAMP);
+          this.pages.update((pages) => ({ ...pages, [kind]: nextPage }));
         },
         error: () =>
           this.errorMessage.set('Не удалось загрузить остальные текстуры.'),

@@ -1,3 +1,4 @@
+import { TextureKind } from '@wm/shared/workshop';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map } from 'rxjs';
@@ -65,11 +66,16 @@ export class TexturePacksService {
     );
   }
 
-  listPublicTextures(packId: string, page: number, pageSize = 48) {
+  listPublicTextures(
+    packId: string,
+    page: number,
+    pageSize = 48,
+    kind?: TextureKind,
+  ) {
     return this.#http
       .get<TexturePage>(
         `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures`,
-        { params: { page, pageSize } },
+        { params: { page, pageSize, ...(kind ? { kind } : {}) } },
       )
       .pipe(
         map(
@@ -101,11 +107,16 @@ export class TexturePacksService {
     );
   }
 
-  listOwnedTextures(packId: string, page: number, pageSize = 48) {
+  listOwnedTextures(
+    packId: string,
+    page: number,
+    pageSize = 48,
+    kind?: TextureKind,
+  ) {
     return this.#http
       .get<TexturePage>(
         `${this.#apiConfig.baseUrl}texture-packs/mine/${packId}/textures`,
-        { params: { page, pageSize } },
+        { params: { page, pageSize, ...(kind ? { kind } : {}) } },
       )
       .pipe(
         map(
@@ -117,13 +128,21 @@ export class TexturePacksService {
       );
   }
 
-  upload(packId: string, files: File[]) {
+  upload(packId: string, files: File[], kind: TextureKind = 'SURFACE') {
     const body = new FormData();
+    body.append('kind', kind);
     for (const file of files) body.append('files', file);
 
     return this.#http.post<TextureItem[]>(
       `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures`,
       body,
+    );
+  }
+
+  updateTextureKind(packId: string, textureId: string, kind: TextureKind) {
+    return this.#http.patch<{ id: string; kind: TextureKind }>(
+      `${this.#apiConfig.baseUrl}texture-packs/${packId}/textures/${textureId}`,
+      { kind },
     );
   }
 

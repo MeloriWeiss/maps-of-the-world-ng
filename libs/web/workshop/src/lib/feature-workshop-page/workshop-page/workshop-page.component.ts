@@ -3,9 +3,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  HostListener,
   inject,
   viewChild,
 } from '@angular/core';
+import { WorkshopChunksService } from '../../services/workshop-chunks.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   WorkshopToolsService,
@@ -45,6 +47,7 @@ import { WorkshopHeaderComponent } from './workshop-header/workshop-header.compo
   templateUrl: './workshop-page.component.html',
   styleUrl: './workshop-page.component.scss',
   providers: [
+    WorkshopChunksService,
     WorkshopDrawService,
     WorkshopSettingsService,
     WorkshopCoordsService,
@@ -75,6 +78,14 @@ export class WorkshopPageComponent implements AfterViewInit {
   isReady = this.#canvasSetupFacade.isReady;
   loadingMessage = this.#canvasSetupFacade.loadingMessage;
   isReadOnly = this.#mapPersistence.isReadOnly;
+  saving = this.#mapPersistence.saving;
+
+  @HostListener('window:beforeunload', ['$event'])
+  warnBeforeLeaving(event: BeforeUnloadEvent) {
+    if (!this.saving()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  }
 
   header = viewChild.required(WorkshopHeaderComponent, { read: ElementRef });
   leftSidebar = viewChild.required(WorkshopLeftSidebarComponent, {

@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { WorkshopCanvasService } from './workshop-canvas.service';
 import { WorkshopCoordsService } from './workshop-coords.service';
 import { fromEvent } from 'rxjs';
@@ -7,6 +7,9 @@ import { Bounds } from '../interfaces';
 import { GraphNode, LayerNode, ShapeNode } from '../nodes';
 import { NodesTypes } from '../consts';
 import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
+import { WorkshopChunksService } from './workshop-chunks.service';
+import { ChunkRenderer } from '../rendering/chunk-renderer';
+import { canvasColor } from '../rendering/palette';
 import { WorkshopModeService } from './workshop-mode.service';
 
 @Injectable()
@@ -16,6 +19,15 @@ export class WorkshopCanvasManagerService {
   #workshopSceneGraphStorageService = inject(WorkshopSceneGraphStorageService);
   #workshopCoordsService = inject(WorkshopCoordsService);
   #mode = inject(WorkshopModeService);
+  #chunks = inject(WorkshopChunksService);
+  #renderer = new ChunkRenderer();
+  constructor() {
+    this.#chunks.changed = () => this.requestRedraw();
+    effect(() => {
+      this.#workshopSceneGraphStorageService.graphVersion();
+      if (this.#workshopCanvasService.ctx) this.requestRedraw();
+    });
+  }
   #rootNode = this.#workshopSceneGraphStorageService.nodesRoot;
 
   useOffscreen = signal(false);
@@ -70,46 +82,53 @@ export class WorkshopCanvasManagerService {
   render() {
     const ctx = this.#workshopCanvasService.ctx;
     const zoom = this.#workshopCoordsService.zoom;
-    const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
     const viewport = this.#workshopCoordsService.worldViewport;
 
-    ctx.fillStyle = '#d8d3c8';
-    ctx.fillRect(viewport.x, viewport.y, viewport.width, viewport.height);
-
-    if (this.showGrid()) {
-      const gridSize = this.#gridSizeForZoom(zoom);
-      const startX = Math.floor(viewport.x / gridSize) * gridSize;
-      const endX = viewport.x + viewport.width;
-      const startY = Math.floor(viewport.y / gridSize) * gridSize;
-      const endY = viewport.y + viewport.height;
-
-      ctx.strokeStyle = 'rgba(75, 69, 61, 0.28)';
-      ctx.lineWidth = 1 / zoom;
-
-      for (let x = startX; x <= endX; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, viewport.y);
-        ctx.lineTo(x, endY);
-        ctx.stroke();
-      }
-
-      for (let y = startY; y <= endY; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(viewport.x, y);
-        ctx.lineTo(endX, y);
-        ctx.stroke();
-      }
-    }
-
-    this.#drawGraph(
+    ctx.clearRect(viewport.x, viewport.y, viewport.width, viewport.height);
+    this.#chunks.update(viewport);
+    const overview = this.#chunks.drawOverview(ctx);
+    this.#renderer.render(
       ctx,
       this.#rootNode(),
       viewport,
       zoom,
-      canvas.width,
-      canvas.height,
+      this.#workshopSceneGraphStorageService.graphVersion(),
+      (bounds) => overview && this.#chunks.hasOverviewFor(bounds),
+      (bounds) => this.#chunks.ready(bounds),
+      () => this.requestRedraw(),
     );
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    if (this.showGrid()) this.#drawGrid(ctx, viewport, zoom);
+    ctx.fillStyle = canvasColor('--workshop-map-bg-color');
+    ctx.fillRect(viewport.x, viewport.y, viewport.width, viewport.height);
+    ctx.restore();
     this.#drawSelection();
+  }
+
+  #drawGrid(ctx: CanvasRenderingContext2D, viewport: Bounds, zoom: number) {
+    const gridSize = this.#gridSizeForZoom(zoom);
+    const startX = Math.floor(viewport.x / gridSize) * gridSize;
+    const endX = viewport.x + viewport.width;
+    const startY = Math.floor(viewport.y / gridSize) * gridSize;
+    const endY = viewport.y + viewport.height;
+
+    ctx.strokeStyle = canvasColor('--workshop-grid-color');
+    ctx.lineWidth = 1 / zoom;
+
+    for (let x = startX; x <= endX; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, viewport.y);
+      ctx.lineTo(x, endY);
+      ctx.stroke();
+    }
+
+    for (let y = startY; y <= endY; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(viewport.x, y);
+      ctx.lineTo(endX, y);
+      ctx.stroke();
+    }
   }
 
   requestRedraw() {
@@ -131,6 +150,17 @@ export class WorkshopCanvasManagerService {
   listenKeyEvents() {
     return fromEvent<KeyboardEvent, void>(document.body, 'keydown', (e) => {
       if (this.#mode.isReadOnly()) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target instanceof HTMLElement && e.target.isContentEditable)
+      )
+        return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) this.#workshopShapesService.redo();
+        else this.#workshopShapesService.undo();
+      }
       if (e.key === 'Delete') {
         this.#workshopShapesService.deleteSelectedShapes();
       }
@@ -138,35 +168,35 @@ export class WorkshopCanvasManagerService {
     });
   }
 
-  #drawGraph(
-    mainCtx: CanvasRenderingContext2D,
-    rootNode: GraphNode,
-    viewport: Bounds,
-    zoom: number,
-    canvasWidth: number,
-    canvasHeight: number,
-  ) {
-    const sortedChildren = [...rootNode.children].sort(
-      (a, b) => a.zIndex - b.zIndex,
-    );
-
-    for (const node of sortedChildren) {
-      if (!node.visible) continue;
-
-      if (node.type === NodesTypes.LAYER) {
-        this.#renderLayer(
-          mainCtx,
-          node as LayerNode,
-          viewport,
-          zoom,
-          canvasWidth,
-          canvasHeight,
-        );
-      } else {
-        this.#drawNodeDirect(mainCtx, node, viewport);
-      }
-    }
-  }
+  // #drawGraph(
+  //   mainCtx: CanvasRenderingContext2D,
+  //   rootNode: GraphNode,
+  //   viewport: Bounds,
+  //   zoom: number,
+  //   canvasWidth: number,
+  //   canvasHeight: number,
+  // ) {
+  //   const sortedChildren = [...rootNode.children].sort(
+  //     (a, b) => a.zIndex - b.zIndex,
+  //   );
+  //
+  //   for (const node of sortedChildren) {
+  //     if (!node.visible) continue;
+  //
+  //     if (node.type === NodesTypes.LAYER) {
+  //       this.#renderLayer(
+  //         mainCtx,
+  //         node as LayerNode,
+  //         viewport,
+  //         zoom,
+  //         canvasWidth,
+  //         canvasHeight,
+  //       );
+  //     } else {
+  //       this.#drawNodeDirect(mainCtx, node, viewport);
+  //     }
+  //   }
+  // }
 
   // метод для использования offscreen canvas при панорамировании/зуме
   // #renderLayer(
@@ -208,194 +238,194 @@ export class WorkshopCanvasManagerService {
   // }
 
   // метод для НЕ использования offscreen canvas при панорамировании/зуме
-  #renderLayer(
-    mainCtx: CanvasRenderingContext2D,
-    layer: LayerNode,
-    viewport: Bounds,
-    zoom: number,
-    canvasWidth: number,
-    canvasHeight: number,
-  ) {
-    if (this.useOffscreen()) {
-      const key = `${canvasWidth}:${canvasHeight}`; // без камеры/zoom
-      const offscreen = this.#ensureLayerOffscreen(
-        layer,
-        canvasWidth,
-        canvasHeight,
-      );
-      const offscreenCtx = layer.offscreenCtx;
-      if (!offscreenCtx) return;
+  // #renderLayer(
+  //   mainCtx: CanvasRenderingContext2D,
+  //   layer: LayerNode,
+  //   viewport: Bounds,
+  //   zoom: number,
+  //   canvasWidth: number,
+  //   canvasHeight: number,
+  // ) {
+  //   if (this.useOffscreen()) {
+  //     const key = `${canvasWidth}:${canvasHeight}`; // без камеры/zoom
+  //     const offscreen = this.#ensureLayerOffscreen(
+  //       layer,
+  //       canvasWidth,
+  //       canvasHeight,
+  //     );
+  //     const offscreenCtx = layer.offscreenCtx;
+  //     if (!offscreenCtx) return;
+  //
+  //     if (layer.isDirty || layer.offscreenKey !== key) {
+  //       offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
+  //       offscreenCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+  //
+  //       // ВАЖНО: здесь НЕ применяем camera/zoom
+  //       const sortedChildren = [...layer.children].sort(
+  //         (a, b) => a.zIndex - b.zIndex,
+  //       );
+  //       for (const child of sortedChildren) {
+  //         if (!child.visible) continue;
+  //         // Куллинг по world-viewport
+  //         this.#drawNodeDirect(offscreenCtx, child, viewport);
+  //       }
+  //
+  //       layer.isDirty = false;
+  //       layer.offscreenKey = key;
+  //     }
+  //
+  //     // Применяем камеру/zoom при копировании
+  //     mainCtx.save();
+  //     mainCtx.setTransform(1, 0, 0, 1, 0, 0);
+  //     mainCtx.translate(
+  //       -this.#workshopCoordsService.cameraX,
+  //       -this.#workshopCoordsService.cameraY,
+  //     );
+  //     mainCtx.scale(zoom, zoom);
+  //     mainCtx.drawImage(offscreen as CanvasImageSource, 0, 0);
+  //     mainCtx.restore();
+  //     return;
+  //   }
+  //
+  //   // ключ для использования offscreen canvas при панорамировании/зуме
+  //   // const key = `${viewport.x}:${viewport.y}:${viewport.width}:${viewport.height}:${zoom}:${canvasWidth}:${canvasHeight}`;
+  //   // метод для НЕ использования offscreen canvas при панорамировании/зуме
+  //   const key = `${viewport.x}:${viewport.y}:${viewport.width}:${viewport.height}:${zoom}:${canvasWidth}:${canvasHeight}`;
+  //   const offscreen = this.#ensureLayerOffscreen(
+  //     layer,
+  //     canvasWidth,
+  //     canvasHeight,
+  //   );
+  //   const offscreenCtx = layer.offscreenCtx;
+  //
+  //   if (!offscreenCtx) return;
+  //
+  //   if (layer.isDirty || layer.offscreenKey !== key) {
+  //     offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
+  //     offscreenCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+  //     offscreenCtx.translate(
+  //       -this.#workshopCoordsService.cameraX,
+  //       -this.#workshopCoordsService.cameraY,
+  //     );
+  //     offscreenCtx.scale(zoom, zoom);
+  //
+  //     const sortedChildren = [...layer.children].sort(
+  //       (a, b) => a.zIndex - b.zIndex,
+  //     );
+  //     for (const child of sortedChildren) {
+  //       if (!child.visible) continue;
+  //       this.#drawNodeDirect(offscreenCtx, child, viewport);
+  //     }
+  //
+  //     layer.isDirty = false;
+  //     layer.offscreenKey = key;
+  //   }
+  //
+  //   // Offscreen already contains camera/zoom transformed pixels.
+  //   // Draw it in screen space to avoid double transform on pan/zoom.
+  //   mainCtx.save();
+  //   mainCtx.setTransform(1, 0, 0, 1, 0, 0);
+  //   mainCtx.drawImage(offscreen as CanvasImageSource, 0, 0);
+  //   mainCtx.restore();
+  // }
 
-      if (layer.isDirty || layer.offscreenKey !== key) {
-        offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-        offscreenCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-        // ВАЖНО: здесь НЕ применяем camera/zoom
-        const sortedChildren = [...layer.children].sort(
-          (a, b) => a.zIndex - b.zIndex,
-        );
-        for (const child of sortedChildren) {
-          if (!child.visible) continue;
-          // Куллинг по world-viewport
-          this.#drawNodeDirect(offscreenCtx, child, viewport);
-        }
-
-        layer.isDirty = false;
-        layer.offscreenKey = key;
-      }
-
-      // Применяем камеру/zoom при копировании
-      mainCtx.save();
-      mainCtx.setTransform(1, 0, 0, 1, 0, 0);
-      mainCtx.translate(
-        -this.#workshopCoordsService.cameraX,
-        -this.#workshopCoordsService.cameraY,
-      );
-      mainCtx.scale(zoom, zoom);
-      mainCtx.drawImage(offscreen as CanvasImageSource, 0, 0);
-      mainCtx.restore();
-      return;
-    }
-
-    // ключ для использования offscreen canvas при панорамировании/зуме
-    // const key = `${viewport.x}:${viewport.y}:${viewport.width}:${viewport.height}:${zoom}:${canvasWidth}:${canvasHeight}`;
-    // метод для НЕ использования offscreen canvas при панорамировании/зуме
-    const key = `${viewport.x}:${viewport.y}:${viewport.width}:${viewport.height}:${zoom}:${canvasWidth}:${canvasHeight}`;
-    const offscreen = this.#ensureLayerOffscreen(
-      layer,
-      canvasWidth,
-      canvasHeight,
-    );
-    const offscreenCtx = layer.offscreenCtx;
-
-    if (!offscreenCtx) return;
-
-    if (layer.isDirty || layer.offscreenKey !== key) {
-      offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-      offscreenCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-      offscreenCtx.translate(
-        -this.#workshopCoordsService.cameraX,
-        -this.#workshopCoordsService.cameraY,
-      );
-      offscreenCtx.scale(zoom, zoom);
-
-      const sortedChildren = [...layer.children].sort(
-        (a, b) => a.zIndex - b.zIndex,
-      );
-      for (const child of sortedChildren) {
-        if (!child.visible) continue;
-        this.#drawNodeDirect(offscreenCtx, child, viewport);
-      }
-
-      layer.isDirty = false;
-      layer.offscreenKey = key;
-    }
-
-    // Offscreen already contains camera/zoom transformed pixels.
-    // Draw it in screen space to avoid double transform on pan/zoom.
-    mainCtx.save();
-    mainCtx.setTransform(1, 0, 0, 1, 0, 0);
-    mainCtx.drawImage(offscreen as CanvasImageSource, 0, 0);
-    mainCtx.restore();
-  }
-
-  #ensureLayerOffscreen(layer: LayerNode, width: number, height: number) {
-    if (layer.offscreen && layer.offscreenCtx) {
-      if (layer.offscreen instanceof HTMLCanvasElement) {
-        if (
-          layer.offscreen.width !== width ||
-          layer.offscreen.height !== height
-        ) {
-          layer.offscreen.width = width;
-          layer.offscreen.height = height;
-          layer.isDirty = true;
-        }
-      } else if (
-        layer.offscreen.width !== width ||
-        layer.offscreen.height !== height
-      ) {
-        layer.offscreen = new OffscreenCanvas(width, height);
-        layer.offscreenCtx = layer.offscreen.getContext('2d');
-        layer.isDirty = true;
-      }
-
-      return layer.offscreen;
-    }
-
-    if (typeof OffscreenCanvas !== 'undefined') {
-      layer.offscreen = new OffscreenCanvas(width, height);
-      layer.offscreenCtx = layer.offscreen.getContext('2d');
-      return layer.offscreen;
-    }
-
-    const fallbackCanvas = document.createElement('canvas');
-    fallbackCanvas.width = width;
-    fallbackCanvas.height = height;
-    layer.offscreen = fallbackCanvas;
-    layer.offscreenCtx = fallbackCanvas.getContext('2d');
-    return layer.offscreen;
-  }
+  // #ensureLayerOffscreen(layer: LayerNode, width: number, height: number) {
+  //   if (layer.offscreen && layer.offscreenCtx) {
+  //     if (layer.offscreen instanceof HTMLCanvasElement) {
+  //       if (
+  //         layer.offscreen.width !== width ||
+  //         layer.offscreen.height !== height
+  //       ) {
+  //         layer.offscreen.width = width;
+  //         layer.offscreen.height = height;
+  //         layer.isDirty = true;
+  //       }
+  //     } else if (
+  //       layer.offscreen.width !== width ||
+  //       layer.offscreen.height !== height
+  //     ) {
+  //       layer.offscreen = new OffscreenCanvas(width, height);
+  //       layer.offscreenCtx = layer.offscreen.getContext('2d');
+  //       layer.isDirty = true;
+  //     }
+  //
+  //     return layer.offscreen;
+  //   }
+  //
+  //   if (typeof OffscreenCanvas !== 'undefined') {
+  //     layer.offscreen = new OffscreenCanvas(width, height);
+  //     layer.offscreenCtx = layer.offscreen.getContext('2d');
+  //     return layer.offscreen;
+  //   }
+  //
+  //   const fallbackCanvas = document.createElement('canvas');
+  //   fallbackCanvas.width = width;
+  //   fallbackCanvas.height = height;
+  //   layer.offscreen = fallbackCanvas;
+  //   layer.offscreenCtx = fallbackCanvas.getContext('2d');
+  //   return layer.offscreen;
+  // }
 
   // метод для НЕ использования offscreen canvas при панорамировании/зуме
   // добавляет куллинг
-  #drawNodeDirect(
-    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-    node: GraphNode,
-    viewport: Bounds,
-  ) {
-    if (node.type === NodesTypes.SHAPE) {
-      const shape = (node as ShapeNode).shape;
-      if (
-        this.#workshopCoordsService.zoom < (shape.minZoom ?? 0) ||
-        this.#workshopCoordsService.zoom >
-          (shape.maxZoom ?? Number.POSITIVE_INFINITY)
-      ) {
-        this.stats_culledNodesLastFrame++;
-        return;
-      }
-    }
-
-    if (this.useOffscreen()) {
-      if (!node.visible) return;
-
-      if (node.type === NodesTypes.SHAPE) {
-        const shapeNode = node as ShapeNode;
-        // БЕЗ куллинга: всегда рисуем
-        shapeNode.shape.draw(ctx as CanvasRenderingContext2D);
-        return;
-      }
-
-      const sortedChildren = [...node.children].sort(
-        (a, b) => a.zIndex - b.zIndex,
-      );
-      for (const child of sortedChildren) {
-        this.#drawNodeDirect(ctx, child, viewport);
-      }
-      return;
-    }
-
-    this.stats_totalNodesLastFrame++;
-
-    if (!node.visible) return;
-
-    if (node.type === NodesTypes.SHAPE) {
-      const shapeNode = node as ShapeNode;
-      if (this.#intersects(shapeNode.shape.getBounds(), viewport)) {
-        this.stats_renderedNodesLastFrame++;
-        shapeNode.shape.draw(ctx as CanvasRenderingContext2D);
-      } else {
-        this.stats_culledNodesLastFrame++;
-      }
-      return;
-    }
-
-    const sortedChildren = [...node.children].sort(
-      (a, b) => a.zIndex - b.zIndex,
-    );
-    for (const child of sortedChildren) {
-      this.#drawNodeDirect(ctx, child, viewport);
-    }
-  }
+  // #drawNodeDirect(
+  //   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  //   node: GraphNode,
+  //   viewport: Bounds,
+  // ) {
+  //   if (node.type === NodesTypes.SHAPE) {
+  //     const shape = (node as ShapeNode).shape;
+  //     if (
+  //       this.#workshopCoordsService.zoom < (shape.minZoom ?? 0) ||
+  //       this.#workshopCoordsService.zoom >
+  //         (shape.maxZoom ?? Number.POSITIVE_INFINITY)
+  //     ) {
+  //       this.stats_culledNodesLastFrame++;
+  //       return;
+  //     }
+  //   }
+  //
+  //   if (this.useOffscreen()) {
+  //     if (!node.visible) return;
+  //
+  //     if (node.type === NodesTypes.SHAPE) {
+  //       const shapeNode = node as ShapeNode;
+  //       // БЕЗ куллинга: всегда рисуем
+  //       shapeNode.shape.render(ctx as CanvasRenderingContext2D);
+  //       return;
+  //     }
+  //
+  //     const sortedChildren = [...node.children].sort(
+  //       (a, b) => a.zIndex - b.zIndex,
+  //     );
+  //     for (const child of sortedChildren) {
+  //       this.#drawNodeDirect(ctx, child, viewport);
+  //     }
+  //     return;
+  //   }
+  //
+  //   this.stats_totalNodesLastFrame++;
+  //
+  //   if (!node.visible) return;
+  //
+  //   if (node.type === NodesTypes.SHAPE) {
+  //     const shapeNode = node as ShapeNode;
+  //     if (this.#intersects(shapeNode.shape.getBounds(), viewport)) {
+  //       this.stats_renderedNodesLastFrame++;
+  //       shapeNode.shape.render(ctx as CanvasRenderingContext2D);
+  //     } else {
+  //       this.stats_culledNodesLastFrame++;
+  //     }
+  //     return;
+  //   }
+  //
+  //   const sortedChildren = [...node.children].sort(
+  //     (a, b) => a.zIndex - b.zIndex,
+  //   );
+  //   for (const child of sortedChildren) {
+  //     this.#drawNodeDirect(ctx, child, viewport);
+  //   }
+  // }
 
   // метод для использования offscreen canvas при панорамировании/зуме
   // убирает куллинг
@@ -409,7 +439,7 @@ export class WorkshopCanvasManagerService {
   //   if (node.type === NodesTypes.SHAPE) {
   //     const shapeNode = node as ShapeNode;
   //     // БЕЗ куллинга: всегда рисуем
-  //     shapeNode.shape.draw(ctx as CanvasRenderingContext2D);
+  //     shapeNode.shape.render(ctx as CanvasRenderingContext2D);
   //     return;
   //   }
   //
@@ -419,14 +449,14 @@ export class WorkshopCanvasManagerService {
   //   }
   // }
 
-  #intersects(a: Bounds, b: Bounds): boolean {
-    return !(
-      a.x + a.width < b.x ||
-      a.x > b.x + b.width ||
-      a.y + a.height < b.y ||
-      a.y > b.y + b.height
-    );
-  }
+  // #intersects(a: Bounds, b: Bounds): boolean {
+  //   return !(
+  //     a.x + a.width < b.x ||
+  //     a.x > b.x + b.width ||
+  //     a.y + a.height < b.y ||
+  //     a.y > b.y + b.height
+  //   );
+  // }
 
   #gridSizeForZoom(zoom: number) {
     if (zoom < 0.2) return 2000;

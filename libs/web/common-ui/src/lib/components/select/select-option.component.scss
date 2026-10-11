@@ -4,14 +4,31 @@
   display: block;
   padding: rem(10) rem(12);
   border-radius: rem(8);
-  color: var(--text-primary-color);
+  background-color: var(--select-option-bg-color, transparent);
+  color: var(--select-option-text-color, var(--text-primary-color));
   cursor: pointer;
 }
 
-:host(:hover),
-:host(.wm-option--selected) {
-  background-color: rgb(from var(--bg-surface-variant-color) r g b / 70%);
-  color: var(--text-light-color);
+:host(:hover) {
+  background-color: var(
+    --select-option-hover-bg-color,
+    var(
+      --select-option-active-bg-color,
+      rgb(from var(--bg-surface-variant-color) r g b / 70%)
+    )
+  );
+  color: var(
+    --select-option-hover-text-color,
+    var(--select-option-active-text-color, var(--text-light-color))
+  );
+}
+
+:host(.wm-option--selected):not(:hover) {
+  background-color: var(
+    --select-option-active-bg-color,
+    rgb(from var(--bg-surface-variant-color) r g b / 70%)
+  );
+  color: var(--select-option-active-text-color, var(--text-light-color));
 }
 
 :host(.wm-option--selected) {

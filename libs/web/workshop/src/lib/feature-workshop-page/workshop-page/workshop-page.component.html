@@ -38,3 +38,29 @@
     </div>
   </div>
 }
+
+@if (saving()) {
+  <div
+    class="workshop-loader workshop-loader--saving"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="workshop-save-title"
+    aria-describedby="workshop-save-description"
+  >
+    <div class="workshop-loader__map" aria-hidden="true">
+      <span class="workshop-loader__orbit"></span>
+      <span class="workshop-loader__orbit workshop-loader__orbit--inner"></span>
+      <span class="workshop-loader__marker"></span>
+      <span class="workshop-loader__pulse"></span>
+    </div>
+    <h2 class="workshop-loader__title" id="workshop-save-title">
+      Сохраняем карту
+    </h2>
+    <p class="workshop-loader__status" id="workshop-save-description">
+      Дождитесь завершения сохранения. Не закрывайте страницу.
+    </p>
+    <div class="workshop-loader__progress" aria-hidden="true">
+      <span></span>
+    </div>
+  </div>
+}

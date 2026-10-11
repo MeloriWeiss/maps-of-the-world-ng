@@ -59,43 +59,61 @@
             <p class="eyebrow">Содержимое набора</p>
             <h2 id="textures-title">Все текстуры</h2>
           </div>
-          <span>Показано {{ textures().length }} из {{ total() }}</span>
+          <span>Показано {{ loadedTotal() }} из {{ total() }}</span>
         </div>
 
-        @if (textures().length === 0) {
-          <wm-empty-state
-            title="В паке нет текстур"
-            description="Автор пока не добавил изображения в этот набор."
-          ></wm-empty-state>
-        } @else {
-          <div class="texture-grid">
-            @for (texture of textures(); track texture.id) {
-              <article class="texture-card">
-                <div class="texture-card__preview">
-                  <img [src]="texture.fileUrl" [alt]="texture.name" />
-                </div>
-                <div class="texture-card__body">
-                  <h3 [title]="texture.name">{{ texture.name }}</h3>
-                  <p>
-                    {{ texture.displaySize }}
-                    @if (texture.width && texture.height) {
-                      · {{ texture.width }}×{{ texture.height }}
-                    }
-                  </p>
-                </div>
-              </article>
-            }
-          </div>
-
-          @if (hasMore()) {
-            <button
-              class="load-more-button"
-              type="button"
-              [disabled]="isLoadingMore()"
-              (click)="loadMore()"
+        @if (total() === 0) {
+          <p class="textures-section__empty">
+            Автор пока не добавил текстуры в этот набор.
+          </p>
+        }
+        @for (section of sections(); track section.kind) {
+          @if (section.total > 0) {
+            <section
+              class="texture-kind"
+              [attr.aria-labelledby]="'texture-kind-' + section.kind"
             >
-              {{ isLoadingMore() ? 'Загружаем…' : 'Показать ещё' }}
-            </button>
+              <div class="texture-kind__heading">
+                <div>
+                  <h3 [id]="'texture-kind-' + section.kind">
+                    {{ section.title }}
+                  </h3>
+                  <p>{{ section.description }}</p>
+                </div>
+                <span
+                  >Показано {{ section.items.length }} из
+                  {{ section.total }}</span
+                >
+              </div>
+              <div class="texture-grid">
+                @for (texture of section.items; track texture.id) {
+                  <article class="texture-card">
+                    <div class="texture-card__preview">
+                      <img [src]="texture.fileUrl" [alt]="texture.name" />
+                    </div>
+                    <div class="texture-card__body">
+                      <h4 [title]="texture.name">{{ texture.name }}</h4>
+                      <p>
+                        {{ texture.displaySize }}
+                        @if (texture.width && texture.height) {
+                          · {{ texture.width }}×{{ texture.height }}
+                        }
+                      </p>
+                    </div>
+                  </article>
+                }
+              </div>
+              @if (section.hasMore) {
+                <button
+                  class="load-more-button"
+                  type="button"
+                  [disabled]="loadingMoreKind() !== null"
+                  (click)="loadMore(section.kind)"
+                >
+                  {{ section.loadingMore ? 'Загружаем…' : 'Показать ещё' }}
+                </button>
+              }
+            </section>
           }
         }
       </section>

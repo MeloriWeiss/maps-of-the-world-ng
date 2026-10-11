@@ -16,7 +16,6 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ConfirmationModalComponent,
-  EmptyStateComponent,
   ModalService,
   SuccessToastComponent,
   SvgComponent,
@@ -29,13 +28,15 @@ import {
 } from '@wm/web/data-access/texture-packs';
 import { finalize, firstValueFrom, forkJoin } from 'rxjs';
 
+import { TextureKind } from '@wm/shared/workshop';
+
 interface TextureCard extends TextureItemView {
   displaySize: string;
 }
 
 @Component({
   selector: 'wm-texture-pack-edit-page',
-  imports: [ReactiveFormsModule, RouterLink, EmptyStateComponent, SvgComponent],
+  imports: [ReactiveFormsModule, RouterLink, SvgComponent],
   templateUrl: './texture-pack-edit-page.component.html',
   styleUrl: './texture-pack-edit-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,20 +50,58 @@ export class TexturePackEditPageComponent {
   #destroyRef = inject(DestroyRef);
   #pageSize = 48;
 
+  readonly updatingKinds = signal<ReadonlySet<string>>(new Set());
+
   readonly packId = this.#route.snapshot.paramMap.get('id') ?? '';
   readonly pack = signal<TexturePackDetails | null>(null);
-  readonly textures = signal<TextureCard[]>([]);
+  readonly textures = signal<Record<TextureKind, TextureCard[]>>({
+    SURFACE: [],
+    STAMP: [],
+  });
+  readonly totals = signal<Record<TextureKind, number>>({
+    SURFACE: 0,
+    STAMP: 0,
+  });
   readonly total = signal(0);
-  readonly page = signal(1);
+  readonly pages = signal<Record<TextureKind, number>>({
+    SURFACE: 1,
+    STAMP: 1,
+  });
   readonly isLoading = signal(true);
-  readonly isLoadingMore = signal(false);
+  readonly loadingMoreKind = signal<TextureKind | null>(null);
   readonly isSaving = signal(false);
   readonly isUploading = signal(false);
+  readonly uploadingKind = signal<TextureKind | null>(null);
   readonly deletingTextureId = signal<string | null>(null);
   readonly isDeletingPack = signal(false);
   readonly isPublishing = signal(false);
   readonly errorMessage = signal<string | null>(null);
-  readonly hasMore = computed(() => this.textures().length < this.total());
+  readonly loadedTotal = computed(
+    () => this.textures().SURFACE.length + this.textures().STAMP.length,
+  );
+  readonly sections = computed(() =>
+    [
+      {
+        kind: 'SURFACE' as const,
+        title: 'Покрытия',
+        description: 'Заполняют область карты повторяющимся узором.',
+        moveLabel: 'Переместить в изображения',
+      },
+      {
+        kind: 'STAMP' as const,
+        title: 'Изображения',
+        description: 'Ставятся на карту целиком, по одному или кистью.',
+        moveLabel: 'Переместить в покрытия',
+      },
+    ].map((section) => ({
+      ...section,
+      items: this.textures()[section.kind],
+      total: this.totals()[section.kind],
+      hasMore:
+        this.textures()[section.kind].length < this.totals()[section.kind],
+      loadingMore: this.loadingMoreKind() === section.kind,
+    })),
+  );
 
   readonly form = new FormGroup({
     name: new FormControl('', {
@@ -90,10 +129,17 @@ export class TexturePackEditPageComponent {
     this.errorMessage.set(null);
     forkJoin({
       pack: this.#texturePacksService.getOwned(this.packId),
-      textures: this.#texturePacksService.listOwnedTextures(
+      surfaces: this.#texturePacksService.listOwnedTextures(
         this.packId,
         1,
         this.#pageSize,
+        'SURFACE',
+      ),
+      stamps: this.#texturePacksService.listOwnedTextures(
+        this.packId,
+        1,
+        this.#pageSize,
+        'STAMP',
       ),
     })
       .pipe(
@@ -101,13 +147,17 @@ export class TexturePackEditPageComponent {
         takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe({
-        next: ({ pack, textures }) => {
+        next: ({ pack, surfaces, stamps }) => {
           this.pack.set(pack);
-          this.textures.set(
-            textures.items.map((texture) => this.#toTextureCard(texture)),
-          );
-          this.total.set(textures.total);
-          this.page.set(1);
+          this.textures.set({
+            SURFACE: surfaces.items.map((texture) =>
+              this.#toTextureCard(texture),
+            ),
+            STAMP: stamps.items.map((texture) => this.#toTextureCard(texture)),
+          });
+          this.totals.set({ SURFACE: surfaces.total, STAMP: stamps.total });
+          this.total.set(surfaces.total + stamps.total);
+          this.pages.set({ SURFACE: 1, STAMP: 1 });
           this.form.setValue({
             name: pack.name,
             description: pack.description ?? '',
@@ -151,7 +201,29 @@ export class TexturePackEditPageComponent {
       });
   }
 
-  uploadTextures(event: Event) {
+  async updateKind(texture: TextureCard, kind: TextureKind) {
+    if (this.updatingKinds().has(texture.id)) return;
+    this.updatingKinds.update((ids) => new Set([...ids, texture.id]));
+    try {
+      await firstValueFrom(
+        this.#texturePacksService.updateTextureKind(
+          this.packId,
+          texture.id,
+          kind,
+        ),
+      );
+      this.#reloadTextures();
+    } catch {
+      this.errorMessage.set('Не удалось изменить тип текстуры.');
+      this.#reloadTextures();
+    } finally {
+      this.updatingKinds.update(
+        (ids) => new Set([...ids].filter((id) => id !== texture.id)),
+      );
+    }
+  }
+
+  uploadTextures(event: Event, kind: TextureKind) {
     const input = event.target;
     if (!(input instanceof HTMLInputElement) || !input.files?.length) return;
 
@@ -163,11 +235,15 @@ export class TexturePackEditPageComponent {
     }
 
     this.isUploading.set(true);
+    this.uploadingKind.set(kind);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .upload(this.packId, files)
+      .upload(this.packId, files, kind)
       .pipe(
-        finalize(() => this.isUploading.set(false)),
+        finalize(() => {
+          this.isUploading.set(false);
+          this.uploadingKind.set(null);
+        }),
         takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe({
@@ -184,26 +260,34 @@ export class TexturePackEditPageComponent {
       });
   }
 
-  loadMore() {
-    if (!this.hasMore() || this.isLoadingMore()) return;
+  loadMore(kind: TextureKind) {
+    if (
+      this.textures()[kind].length >= this.totals()[kind] ||
+      this.loadingMoreKind()
+    )
+      return;
 
-    const nextPage = this.page() + 1;
-    this.isLoadingMore.set(true);
+    const nextPage = this.pages()[kind] + 1;
+    this.loadingMoreKind.set(kind);
     this.errorMessage.set(null);
     this.#texturePacksService
-      .listOwnedTextures(this.packId, nextPage, this.#pageSize)
+      .listOwnedTextures(this.packId, nextPage, this.#pageSize, kind)
       .pipe(
-        finalize(() => this.isLoadingMore.set(false)),
+        finalize(() => this.loadingMoreKind.set(null)),
         takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe({
         next: (result) => {
-          this.textures.update((textures) => [
+          this.textures.update((textures) => ({
             ...textures,
-            ...result.items.map((texture) => this.#toTextureCard(texture)),
-          ]);
-          this.total.set(result.total);
-          this.page.set(nextPage);
+            [kind]: [
+              ...textures[kind],
+              ...result.items.map((texture) => this.#toTextureCard(texture)),
+            ],
+          }));
+          this.totals.update((totals) => ({ ...totals, [kind]: result.total }));
+          this.total.set(this.totals().SURFACE + this.totals().STAMP);
+          this.pages.update((pages) => ({ ...pages, [kind]: nextPage }));
         },
         error: () =>
           this.errorMessage.set('Не удалось загрузить следующую страницу.'),
@@ -215,7 +299,7 @@ export class TexturePackEditPageComponent {
       this.#modalService.show<boolean>(ConfirmationModalComponent, {
         title: `Удалить текстуру «${texture.name}»?`,
         subtitle:
-          'Файл будет удалён из пака и хранилища без возможности восстановления.',
+          'Текстура исчезнет из пака. На уже созданных картах она сохранится; файл удалится автоматически, когда ссылок на него не останется.',
         agreeBtnText: 'Удалить',
         rejectBtnText: 'Отмена',
       }),
@@ -274,7 +358,7 @@ export class TexturePackEditPageComponent {
       this.#modalService.show<boolean>(ConfirmationModalComponent, {
         title: `Удалить текстур-пак «${pack.name}»?`,
         subtitle:
-          'Все текстуры внутри пака также будут удалены без возможности восстановления.',
+          'Пак и его текстуры исчезнут из каталога. На уже созданных картах изображения сохранятся до удаления последних ссылок.',
         agreeBtnText: 'Удалить пак',
         rejectBtnText: 'Отмена',
       }),
@@ -301,24 +385,41 @@ export class TexturePackEditPageComponent {
   }
 
   #reloadTextures() {
-    this.#texturePacksService
-      .listOwnedTextures(this.packId, 1, this.#pageSize)
+    forkJoin({
+      surfaces: this.#texturePacksService.listOwnedTextures(
+        this.packId,
+        1,
+        this.#pageSize,
+        'SURFACE',
+      ),
+      stamps: this.#texturePacksService.listOwnedTextures(
+        this.packId,
+        1,
+        this.#pageSize,
+        'STAMP',
+      ),
+    })
       .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
-        next: (result) => {
-          this.textures.set(
-            result.items.map((texture) => this.#toTextureCard(texture)),
-          );
-          this.total.set(result.total);
-          this.page.set(1);
+        next: ({ surfaces, stamps }) => {
+          this.textures.set({
+            SURFACE: surfaces.items.map((texture) =>
+              this.#toTextureCard(texture),
+            ),
+            STAMP: stamps.items.map((texture) => this.#toTextureCard(texture)),
+          });
+          this.totals.set({ SURFACE: surfaces.total, STAMP: stamps.total });
+          const total = surfaces.total + stamps.total;
+          this.total.set(total);
+          this.pages.set({ SURFACE: 1, STAMP: 1 });
           this.pack.update((pack) =>
             pack
               ? {
                   ...pack,
-                  ...(result.total === 0
+                  ...(total === 0
                     ? { isPublished: false, publishedAt: null }
                     : {}),
-                  _count: { textures: result.total },
+                  _count: { textures: total },
                 }
               : pack,
           );

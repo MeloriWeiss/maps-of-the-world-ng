@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaMainService } from '@wm/api/database-main';
+import { queueSceneBlobCleanup } from './scene-blob-cleanup.service';
 import { MapCatalogQueryDto, SaveMapDto } from './maps.dto';
+import { createEmptyMapSceneHeader } from '@wm/shared/workshop';
 
 @Injectable()
 export class MapsService {
@@ -59,6 +65,7 @@ export class MapsService {
         name: true,
         description: true,
         body: true,
+        revision: true,
         isPublished: true,
         likesCount: true,
         commentsCount: true,
@@ -130,8 +137,26 @@ export class MapsService {
   }
 
   create(accountId: number, dto: SaveMapDto) {
+    if (dto.body)
+      throw new BadRequestException('Map scene is saved separately');
     return this.prisma.map.create({
-      data: { ...dto, accountId },
+      data: {
+        name: dto.name,
+        description: dto.description,
+        body: JSON.stringify(createEmptyMapSceneHeader()),
+        accountId,
+        sceneContainers: {
+          create: {
+            id: 'map-root',
+            parentId: null,
+            kind: 'layer',
+            name: 'Карта',
+            visible: true,
+            locked: false,
+            orderKey: 0,
+          },
+        },
+      },
       select: {
         id: true,
         name: true,
@@ -144,9 +169,11 @@ export class MapsService {
   }
 
   async update(id: number, accountId: number, dto: SaveMapDto) {
+    if (dto.body)
+      throw new BadRequestException('Map scene is saved separately');
     const result = await this.prisma.map.updateMany({
       where: { id, accountId },
-      data: dto,
+      data: { name: dto.name, description: dto.description },
     });
     if (result.count === 0) throw new NotFoundException('Map not found');
     return this.prisma.map.findUniqueOrThrow({
@@ -170,6 +197,7 @@ export class MapsService {
         name: true,
         description: true,
         body: true,
+        revision: true,
         isPublished: true,
         likesCount: true,
         commentsCount: true,
@@ -234,14 +262,23 @@ export class MapsService {
   async removeOwned(id: number, accountId: number) {
     const map = await this.prisma.map.findFirst({
       where: { id, accountId },
-      select: { id: true },
+      select: { id: true, overviewKey: true },
     });
     if (!map) throw new NotFoundException('Map not found');
 
-    await this.prisma.$transaction([
-      this.prisma.mapComment.deleteMany({ where: { mapId: id } }),
-      this.prisma.map.delete({ where: { id } }),
-    ]);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        INSERT INTO "map_scene_blob_cleanup" ("object_key", "not_before")
+        SELECT "object_key", NOW() + INTERVAL '5 minutes' FROM "map_scene_tiles"
+        WHERE "map_id" = ${id} AND "object_key" IS NOT NULL
+        UNION SELECT t."object_key", NOW() + INTERVAL '5 minutes'
+        FROM "map_scene_commit_tiles" t JOIN "map_scene_commits" c ON c."id" = t."commit_id"
+        WHERE c."map_id" = ${id} AND t."object_key" IS NOT NULL
+        ON CONFLICT ("object_key") DO NOTHING`;
+      if (map.overviewKey) await queueSceneBlobCleanup(tx, [map.overviewKey]);
+      await tx.mapComment.deleteMany({ where: { mapId: id } });
+      await tx.map.delete({ where: { id } });
+    });
     return { id };
   }
 

@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { WorkshopObjectsPanelComponent } from './workshop-objects-panel.component';
 import { ShapesTypes } from '../../../consts';
 import { Rectangle, Shape } from '../../../shapes';
 import { WorkshopNodesPanelComponent } from './workshop-nodes-panel/workshop-nodes-panel.component';
@@ -19,7 +20,11 @@ import {
 } from '../../../services';
 @Component({
   selector: 'wm-workshop-right-sidebar',
-  imports: [WorkshopNodesPanelComponent, FormsModule],
+  imports: [
+    WorkshopObjectsPanelComponent,
+    WorkshopNodesPanelComponent,
+    FormsModule,
+  ],
   templateUrl: './workshop-right-sidebar.component.html',
   styleUrl: './workshop-right-sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +44,7 @@ export class WorkshopRightSidebarComponent {
   ShapesTypes = ShapesTypes;
 
   activeNodesList = signal(true);
+  panelMode = signal<'objects' | 'layers'>('objects');
   collapsed = signal(false);
 
   @HostBinding('class.collapsed')
@@ -53,7 +59,10 @@ export class WorkshopRightSidebarComponent {
   }
 
   addLayer() {
+    this.#shapesService.beginOperation();
     this.#sceneGraphService.addLayerNode({});
+    this.#shapesService.endOperation();
+    this.panelMode.set('layers');
   }
 
   toggleSidebar() {
@@ -67,15 +76,27 @@ export class WorkshopRightSidebarComponent {
   }
 
   addGroup() {
+    this.#shapesService.beginOperation();
     this.#sceneGraphService.addGroupNode();
+    this.#shapesService.endOperation();
+    this.panelMode.set('layers');
   }
 
-  updateSelectedShape() {
-    const shape = this.selectedShape();
-    if (!shape) return;
+  closeProperties() {
+    this.#shapesService.clearSelection();
+  }
 
+  updateSelectedShape(key: 'width' | 'height', value: string | number) {
+    const shape = this.selectedRectangle;
+    if (!shape) return;
+    const number = Number(value);
+    if (!Number.isFinite(number)) return;
+
+    this.#shapesService.beginOperation();
+    shape[key] = number;
     this.#shapesService.markShapeDirty(shape);
     this.#shapesService.saveChanges();
+    this.#shapesService.endOperation();
     this.#canvasManager.requestRedraw();
   }
 
@@ -96,15 +117,18 @@ export class WorkshopRightSidebarComponent {
         : Number(value);
     if (typeof parsedValue === 'number' && Number.isNaN(parsedValue)) return;
 
+    this.#shapesService.beginOperation();
     for (const shape of this.selectedShapes()) {
       Object.assign(shape, { [key]: parsedValue });
       this.#shapesService.markShapeDirty(shape);
     }
     this.#shapesService.saveChanges();
+    this.#shapesService.endOperation();
     this.#canvasManager.requestRedraw();
   }
 
   updateSelectedShapesFill(value: string) {
+    this.#shapesService.beginOperation();
     for (const shape of this.selectedShapes()) {
       if ('fillColor' in shape) {
         Object.assign(shape, { fillColor: value });
@@ -115,6 +139,7 @@ export class WorkshopRightSidebarComponent {
       this.#shapesService.markShapeDirty(shape);
     }
     this.#shapesService.saveChanges();
+    this.#shapesService.endOperation();
     this.#canvasManager.requestRedraw();
   }
 
@@ -122,19 +147,11 @@ export class WorkshopRightSidebarComponent {
     const parsedValue = Number(value);
     if (Number.isNaN(parsedValue)) return;
 
+    this.#shapesService.beginOperation();
     this.#shapesService.updateShape(shape, {
       [key]: parsedValue,
     } as Partial<Shape>);
+    this.#shapesService.endOperation();
     this.#canvasManager.requestRedraw();
-  }
-
-  generateTestData() {
-    this.activeNodesList.set(false);
-    this.#sceneGraphStorageService.generateRandomShapesInMemory(50000);
-  }
-
-  toggleMode() {
-    const on = this.#canvasManager.useOffscreen();
-    this.#canvasManager.useOffscreen.set(!on);
   }
 }

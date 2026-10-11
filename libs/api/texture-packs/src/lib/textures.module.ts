@@ -6,10 +6,11 @@ import { TexturesController } from './textures.controller';
 import { TexturesService } from './textures.service';
 import { TexturePacksController } from './texture-packs.controller';
 import { TexturePacksService } from './texture-packs.service';
+import { TextureBlobCleanupService } from './texture-blob-cleanup.service';
 
 @Module({
   imports: [DatabaseMainModule, ApiAuthModule, ObjectStorageModule],
   controllers: [TexturesController, TexturePacksController],
-  providers: [TexturesService, TexturePacksService],
+  providers: [TexturesService, TexturePacksService, TextureBlobCleanupService],
 })
 export class TexturesModule {}

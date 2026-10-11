@@ -2,6 +2,9 @@
   @for (slide of slides(); track slide.url) {
     <ng-template carouselSlide>
       <img [src]="slide.url" [alt]="slide.alt || 'Превью изображения'" />
+      @if (slide.badge) {
+        <span class="slider-item__badge">{{ slide.badge }}</span>
+      }
     </ng-template>
   }
 </owl-carousel-o>

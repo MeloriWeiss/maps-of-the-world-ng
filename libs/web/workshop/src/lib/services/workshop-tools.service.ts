@@ -14,6 +14,7 @@ import {
   TextureTool,
   Tool,
 } from '../tools';
+import { StampTool } from '../tools/stamp/stamp';
 import { WorkshopTools } from '../consts';
 import { WorkshopSettingsService } from './workshop-settings.service';
 
@@ -23,6 +24,7 @@ export class WorkshopToolsService {
   #settingsService = inject(WorkshopSettingsService);
 
   #toolsFactories: Record<WorkshopTools, () => Tool> = {
+    [WorkshopTools.STAMP]: () => new StampTool(),
     [WorkshopTools.PENCIL]: () => new PencilTool(),
     [WorkshopTools.SELECT]: () => new SelectTool(),
     [WorkshopTools.ERASER]: () => new EraserTool(),
@@ -31,8 +33,8 @@ export class WorkshopToolsService {
     [WorkshopTools.TEXTURE]: () => new TextureTool(),
   };
 
-  currentTool: Tool = this.#toolsFactories[WorkshopTools.RECTANGLE]();
-  currentToolName = signal(WorkshopTools.RECTANGLE);
+  currentTool: Tool = this.#toolsFactories[WorkshopTools.SELECT]();
+  currentToolName = signal(WorkshopTools.SELECT);
 
   setCurrentTool(newTool: WorkshopTools) {
     this.currentTool.dispose?.();

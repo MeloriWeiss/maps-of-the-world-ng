@@ -11,9 +11,11 @@ import {
   UpdateTexturePackDto,
 } from './texture-pack.dto';
 import { UploadedTextureFile } from './texture-file.interface';
+import { TextureKind } from '@wm/shared/workshop';
 import { TexturesService } from './textures.service';
 
 const textureSelect = {
+  kind: true,
   id: true,
   name: true,
   mimeType: true,
@@ -41,11 +43,12 @@ const publicTexturePackSelect = (accountId?: number) =>
     },
     _count: {
       select: {
-        textures: true,
+        textures: { where: { deletedAt: null } },
         likes: { where: { accountId: accountId ?? -1 } },
       },
     },
     textures: {
+      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
       take: 8,
       select: textureSelect,
@@ -65,7 +68,7 @@ export class TexturePacksService {
 
   async listMine(accountId: number) {
     const packs = await this.prisma.texturePack.findMany({
-      where: { accountId },
+      where: { accountId, deletedAt: null },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
@@ -76,8 +79,9 @@ export class TexturePacksService {
         createdAt: true,
         updatedAt: true,
         likesCount: true,
-        _count: { select: { textures: true } },
+        _count: { select: { textures: { where: { deletedAt: null } } } },
         textures: {
+          where: { deletedAt: null },
           orderBy: { createdAt: 'desc' },
           take: 8,
           select: textureSelect,
@@ -94,7 +98,7 @@ export class TexturePacksService {
     query: TexturePackCatalogQueryDto,
     accountId?: number,
   ) {
-    const where = { isPublished: true, isHidden: false };
+    const where = { isPublished: true, isHidden: false, deletedAt: null };
     const [packs, total] = await this.prisma.$transaction([
       this.#findPublic(where, accountId, {
         skip: (query.page - 1) * query.pageSize,
@@ -122,6 +126,7 @@ export class TexturePacksService {
       {
         isPublished: true,
         isHidden: false,
+        deletedAt: null,
         ...(authorUserId === undefined
           ? {}
           : { owner: { userId: authorUserId } }),
@@ -159,7 +164,7 @@ export class TexturePacksService {
 
   async getOwned(accountId: number, id: string) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id, accountId },
+      where: { id, accountId, deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -169,7 +174,7 @@ export class TexturePacksService {
         createdAt: true,
         updatedAt: true,
         likesCount: true,
-        _count: { select: { textures: true } },
+        _count: { select: { textures: { where: { deletedAt: null } } } },
       },
     });
     if (!pack) throw new NotFoundException('Texture pack not found');
@@ -178,7 +183,7 @@ export class TexturePacksService {
 
   async getPublicPack(id: string, accountId?: number) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id, isPublished: true, isHidden: false },
+      where: { id, isPublished: true, isHidden: false, deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -190,7 +195,7 @@ export class TexturePacksService {
         likesCount: true,
         _count: {
           select: {
-            textures: true,
+            textures: { where: { deletedAt: null } },
             likes: { where: { accountId: accountId ?? -1 } },
           },
         },
@@ -281,7 +286,7 @@ export class TexturePacksService {
         createdAt: true,
         updatedAt: true,
         likesCount: true,
-        _count: { select: { textures: true } },
+        _count: { select: { textures: { where: { deletedAt: null } } } },
       },
     });
   }
@@ -295,13 +300,15 @@ export class TexturePacksService {
     const skip = (query.page - 1) * query.pageSize;
     const [items, total] = await this.prisma.$transaction([
       this.prisma.texture.findMany({
-        where: { packId, accountId },
+        where: { packId, accountId, kind: query.kind, deletedAt: null },
         orderBy: { createdAt: 'desc' },
         skip,
         take: query.pageSize,
         select: textureSelect,
       }),
-      this.prisma.texture.count({ where: { packId, accountId } }),
+      this.prisma.texture.count({
+        where: { packId, accountId, kind: query.kind, deletedAt: null },
+      }),
     ]);
     return {
       items,
@@ -313,7 +320,12 @@ export class TexturePacksService {
 
   async listPublicTextures(packId: string, query: TexturePageQueryDto) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id: packId, isPublished: true, isHidden: false },
+      where: {
+        id: packId,
+        isPublished: true,
+        isHidden: false,
+        deletedAt: null,
+      },
       select: { id: true },
     });
     if (!pack) throw new NotFoundException('Published texture pack not found');
@@ -321,13 +333,15 @@ export class TexturePacksService {
     const skip = (query.page - 1) * query.pageSize;
     const [items, total] = await this.prisma.$transaction([
       this.prisma.texture.findMany({
-        where: { packId },
+        where: { packId, kind: query.kind, deletedAt: null },
         orderBy: { createdAt: 'desc' },
         skip,
         take: query.pageSize,
         select: textureSelect,
       }),
-      this.prisma.texture.count({ where: { packId } }),
+      this.prisma.texture.count({
+        where: { packId, kind: query.kind, deletedAt: null },
+      }),
     ]);
     return {
       items,
@@ -365,10 +379,10 @@ export class TexturePacksService {
     isPublished: boolean,
   ) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id: packId, accountId },
+      where: { id: packId, accountId, deletedAt: null },
       select: {
         id: true,
-        _count: { select: { textures: true } },
+        _count: { select: { textures: { where: { deletedAt: null } } } },
       },
     });
     if (!pack) throw new NotFoundException('Texture pack not found');
@@ -395,6 +409,7 @@ export class TexturePacksService {
     accountId: number,
     packId: string,
     files: UploadedTextureFile[],
+    kind: TextureKind = 'SURFACE',
   ) {
     if (files.length === 0) {
       throw new BadRequestException('At least one texture file is required');
@@ -410,10 +425,20 @@ export class TexturePacksService {
           this.#nameFromFile(file.originalname),
           file,
           packId,
+          kind,
         ),
       );
     }
     return uploaded;
+  }
+
+  updateTextureKind(
+    accountId: number,
+    packId: string,
+    id: string,
+    kind: TextureKind,
+  ) {
+    return this.textures.updateKind(accountId, packId, id, kind);
   }
 
   async removeOwnedTexture(
@@ -423,7 +448,7 @@ export class TexturePacksService {
   ) {
     const result = await this.textures.remove(accountId, packId, textureId);
     const texturesCount = await this.prisma.texture.count({
-      where: { packId, accountId },
+      where: { packId, accountId, deletedAt: null },
     });
     if (texturesCount === 0) {
       await this.prisma.texturePack.update({
@@ -436,19 +461,27 @@ export class TexturePacksService {
 
   async removeOwned(accountId: number, packId: string) {
     await this.#assertOwner(accountId, packId);
-    const textures = await this.prisma.texture.findMany({
-      where: { packId, accountId },
-      select: { objectKey: true },
-    });
-
-    await this.prisma.texturePack.delete({ where: { id: packId } });
-    await this.textures.removeFiles(textures.map(({ objectKey }) => objectKey));
+    const deletedAt = new Date();
+    await this.prisma.$transaction([
+      this.prisma.texturePack.update({
+        where: { id: packId },
+        data: {
+          deletedAt,
+          isPublished: false,
+          publishedAt: null,
+        },
+      }),
+      this.prisma.texture.updateMany({
+        where: { packId, accountId, deletedAt: null },
+        data: { deletedAt },
+      }),
+    ]);
     return { id: packId };
   }
 
   async #assertOwner(accountId: number, packId: string) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id: packId, accountId },
+      where: { id: packId, accountId, deletedAt: null },
       select: { id: true },
     });
     if (!pack) throw new NotFoundException('Texture pack not found');
@@ -456,7 +489,12 @@ export class TexturePacksService {
 
   async #assertPublished(packId: string) {
     const pack = await this.prisma.texturePack.findFirst({
-      where: { id: packId, isPublished: true, isHidden: false },
+      where: {
+        id: packId,
+        isPublished: true,
+        isHidden: false,
+        deletedAt: null,
+      },
       select: { id: true },
     });
     if (!pack) throw new NotFoundException('Published texture pack not found');

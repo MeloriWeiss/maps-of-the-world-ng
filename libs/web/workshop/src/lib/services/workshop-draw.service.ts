@@ -4,6 +4,8 @@ import { fromEvent, merge, switchMap, takeUntil } from 'rxjs';
 import { WorkshopCoordsService } from './workshop-coords.service';
 import { WorkshopToolsService } from './workshop-tools.service';
 import { WorkshopCanvasService } from './workshop-canvas.service';
+import { WorkshopShapesService } from './workshop-shapes.service';
+import { WorkshopChunksService } from './workshop-chunks.service';
 import { WorkshopModeService } from './workshop-mode.service';
 
 @Injectable()
@@ -12,6 +14,8 @@ export class WorkshopDrawService {
   #workshopCoordsService = inject(WorkshopCoordsService);
   #workshopToolsService = inject(WorkshopToolsService);
   #workshopCanvasService = inject(WorkshopCanvasService);
+  #shapes = inject(WorkshopShapesService);
+  #chunks = inject(WorkshopChunksService);
   #mode = inject(WorkshopModeService);
 
   canvasRef = this.#workshopCanvasService.canvasRef;
@@ -54,9 +58,11 @@ export class WorkshopDrawService {
   }
 
   startDrawing(e: MouseEvent) {
+    if (!this.#chunks.canEditViewport()) return;
     if (this.#mode.isReadOnly()) return;
     if (e.button !== this.#workshopSettingsService.drawMouseButton) return;
 
+    this.#shapes.beginOperation();
     this.isDrawing = true;
 
     const worldCoords = this.#workshopCoordsService.getWorldCoords(
@@ -98,5 +104,6 @@ export class WorkshopDrawService {
     );
 
     this.#workshopToolsService.currentTool.stopDrawing(worldCoords);
+    this.#shapes.endOperation();
   }
 }

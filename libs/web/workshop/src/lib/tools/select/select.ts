@@ -12,6 +12,7 @@ import { Shape } from '../../shapes';
 type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
 export class SelectTool implements Tool {
+  static readonly displayName = 'Выделение';
   #workshopShapesService = inject(WorkshopShapesService);
   #workshopCanvasManagerService = inject(WorkshopCanvasManagerService);
   #workshopCoordsService = inject(WorkshopCoordsService);
@@ -34,6 +35,7 @@ export class SelectTool implements Tool {
 
     const resizeHandle = this.#pickResizeHandle(startPoint);
     if (resizeHandle) {
+      this.#workshopShapesService.beginOperation();
       this.#resizeHandle = resizeHandle;
       this.#resizeBounds = this.#workshopShapesService.getSelectionBounds(
         Array.from(this.#selectedShapes),
@@ -67,6 +69,7 @@ export class SelectTool implements Tool {
       }
 
       this.#isMovingSelection = true;
+      this.#workshopShapesService.beginOperation();
       this.#workshopShapesService.setSelectedShapes(
         Array.from(this.#selectedShapes),
       );
@@ -139,6 +142,8 @@ export class SelectTool implements Tool {
 
   stopDrawing() {
     this.#workshopShapesService.saveChanges();
+    if (this.#isMovingSelection || this.#resizeHandle)
+      this.#workshopShapesService.endOperation();
     this.#isSelecting = false;
     this.#isMovingSelection = false;
     this.#resizeHandle = null;

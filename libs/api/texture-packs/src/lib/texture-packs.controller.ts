@@ -22,6 +22,7 @@ import {
 } from '@wm/api/auth';
 import {
   CreateTexturePackDto,
+  TextureKindDto,
   TexturePackCatalogQueryDto,
   TexturePageQueryDto,
   UpdateTexturePackDto,
@@ -162,6 +163,11 @@ export class TexturePacksController {
       type: 'object',
       required: ['files'],
       properties: {
+        kind: {
+          type: 'string',
+          enum: ['SURFACE', 'STAMP'],
+          default: 'SURFACE',
+        },
         files: {
           type: 'array',
           maxItems: 50,
@@ -174,9 +180,35 @@ export class TexturePacksController {
   upload(
     @Req() request: AccessRequest,
     @Param('id') id: string,
+    @Body() dto: TextureKindDto,
     @UploadedFiles() files?: UploadedTextureFile[],
   ) {
-    return this.texturePacks.upload(request.user.profileId, id, files ?? []);
+    return this.texturePacks.upload(
+      request.user.profileId,
+      id,
+      files ?? [],
+      dto.kind,
+    );
+  }
+
+  @Patch(':id/textures/:textureId')
+  @UseGuards(JwtAccessGuard)
+  @ApiOperation({
+    summary:
+      'Change the kind of an owned texture; existing map instances remain unchanged',
+  })
+  updateTextureKind(
+    @Req() request: AccessRequest,
+    @Param('id') id: string,
+    @Param('textureId') textureId: string,
+    @Body() dto: TextureKindDto,
+  ) {
+    return this.texturePacks.updateTextureKind(
+      request.user.profileId,
+      id,
+      textureId,
+      dto.kind,
+    );
   }
 
   @Delete(':id/textures/:textureId')

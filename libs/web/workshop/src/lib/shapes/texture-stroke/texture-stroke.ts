@@ -5,6 +5,10 @@ import {
 import { BaseShapeShape } from '../shape';
 import { ShapesTypes } from '../../consts';
 import { Bounds, Point } from '../../interfaces';
+import {
+  editorShapeRenderContext,
+  ShapeRenderContext,
+} from '../../rendering/shape-render-context';
 import { SelectionRect } from '../../tools';
 
 export class TextureStrokeShape
@@ -13,6 +17,7 @@ export class TextureStrokeShape
 {
   type = ShapesTypes.TEXTURE;
 
+  protected override partialErase = true;
   points: Point[] = [];
   textureId: string | null;
   textureUrl: string | null;
@@ -21,9 +26,6 @@ export class TextureStrokeShape
   textureColor: string;
 
   #selectThreshold = 6;
-  #textureImage: HTMLImageElement | null = null;
-  #textureReady: Promise<void>;
-
   constructor(data: TextureStrokeCreateData) {
     super(
       {
@@ -45,27 +47,35 @@ export class TextureStrokeShape
     this.textureScale = data.textureScale;
     this.textureRotation = data.textureRotation;
     this.textureColor = data.textureColor;
-    this.#textureReady = this.#loadTexture();
   }
 
-  override whenReady(): Promise<void> {
-    return this.#textureReady;
+  override prepareRender(
+    context: ShapeRenderContext = editorShapeRenderContext,
+  ): Promise<() => void> {
+    if (!this.textureUrl) return Promise.resolve(() => undefined);
+    return context.images.acquire({
+      textureId: this.textureId,
+      url: this.textureUrl,
+    });
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    if (this.points.length < 2) return;
+  draw(
+    ctx: CanvasRenderingContext2D,
+    context: ShapeRenderContext = editorShapeRenderContext,
+  ) {
+    if (!this.points.length) return;
 
     ctx.save();
-    ctx.globalAlpha = this.opacity;
+    ctx.globalAlpha *= this.opacity;
     ctx.lineWidth = this.strokeWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    const pattern = this.#createPattern(ctx);
-    ctx.strokeStyle = pattern ?? this.textureColor;
+    const pattern = this.#createPattern(ctx, context);
+    ctx.strokeStyle = pattern ?? context.color(this.textureColor);
 
     if (this.selected) {
-      ctx.strokeStyle = '#0199dc';
+      ctx.strokeStyle = context.color('--btn-primary-bg-color');
     }
 
     ctx.beginPath();
@@ -73,7 +83,17 @@ export class TextureStrokeShape
     for (let i = 1; i < this.points.length; i++) {
       ctx.lineTo(this.points[i].x, this.points[i].y);
     }
-    ctx.stroke();
+    if (this.points.length === 1) {
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.arc(
+        this.points[0].x,
+        this.points[0].y,
+        this.strokeWidth / 2,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    } else ctx.stroke();
     ctx.restore();
   }
 
@@ -113,6 +133,7 @@ export class TextureStrokeShape
   }
 
   changePosition(point: Point) {
+    this.moveErasures(point);
     for (const p of this.points) {
       p.x += point.x;
       p.y += point.y;
@@ -137,10 +158,16 @@ export class TextureStrokeShape
       if (p.y > maxY) maxY = p.y;
     }
 
-    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    return {
+      x: minX - this.strokeWidth / 2,
+      y: minY - this.strokeWidth / 2,
+      width: maxX - minX + this.strokeWidth,
+      height: maxY - minY + this.strokeWidth,
+    };
   }
 
   transform(from: Bounds, to: Bounds) {
+    this.transformErasures(from, to);
     for (const point of this.points) {
       point.x =
         to.x + ((point.x - from.x) / Math.max(from.width, 0.001)) * to.width;
@@ -156,12 +183,14 @@ export class TextureStrokeShape
     );
   }
 
-  #createPattern(ctx: CanvasRenderingContext2D) {
-    if (!this.#textureImage?.complete || !this.#textureImage.naturalWidth) {
-      return null;
-    }
-
-    const pattern = ctx.createPattern(this.#textureImage, 'repeat');
+  #createPattern(ctx: CanvasRenderingContext2D, context: ShapeRenderContext) {
+    if (!this.textureUrl) return null;
+    const source = context.images.source(
+      { textureId: this.textureId, url: this.textureUrl },
+      Infinity,
+    );
+    if (!source) return null;
+    const pattern = ctx.createPattern(source, 'repeat');
     if (pattern) {
       pattern.setTransform(
         new DOMMatrix()
@@ -170,19 +199,6 @@ export class TextureStrokeShape
       );
     }
     return pattern;
-  }
-
-  #loadTexture(): Promise<void> {
-    if (!this.textureUrl) return Promise.resolve();
-
-    const image = new Image();
-    this.#textureImage = image;
-
-    return new Promise((resolve) => {
-      image.addEventListener('load', () => resolve(), { once: true });
-      image.addEventListener('error', () => resolve(), { once: true });
-      image.src = this.textureUrl ?? '';
-    });
   }
 
   #distanceToSegment(

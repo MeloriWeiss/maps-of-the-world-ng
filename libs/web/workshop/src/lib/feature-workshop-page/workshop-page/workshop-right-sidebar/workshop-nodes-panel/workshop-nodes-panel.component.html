@@ -3,7 +3,7 @@
     <div class="nodes-panel__empty">Нет слоев и групп</div>
   } @else {
     <wm-virtual-list
-      class="nodes-panel__virtual-list"
+      class="nodes-panel__virtual-list wm-scrollbar"
       [items]="flattenedNodes()"
       [itemHeight]="32"
     >
@@ -11,7 +11,8 @@
         <button
           class="node-item"
           [class.node-item--active]="isSelected(item.node)"
-          [style.padding-left.px]="item.depth * 18 + 8"
+          [style.margin-left.px]="item.depth * 24"
+          [style.width]="'calc(100% - ' + item.depth * 24 + 'px)'"
           (click)="onNodeClick(item.node)"
           (contextmenu)="onNodeContextMenu($event, item.node)"
           [draggable]="editingNodeId() !== item.node.id"
@@ -69,10 +70,15 @@
           <button
             type="button"
             class="node-item__icon-btn"
+            [class.node-item__icon-btn--hidden]="!item.node.visible"
             (click)="toggleVisible(item.node); $event.stopPropagation()"
             [title]="item.node.visible ? 'Скрыть' : 'Показать'"
           >
-            {{ item.node.visible ? '👁' : '🙈' }}
+            <svg
+              [icon]="item.node.visible ? 'eye' : 'eye-off'"
+              class="svg16"
+              aria-hidden="true"
+            ></svg>
           </button>
         </button>
       </ng-template>
@@ -81,7 +87,7 @@
 </div>
 
 <wm-popover
-  appearance="bare"
+  appearance="default"
   ariaLabel="Меню узла"
   [position]="contextMenuPosition()"
   (openedChange)="onPopoverOpenChange($event)"

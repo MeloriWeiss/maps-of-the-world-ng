@@ -112,14 +112,37 @@
   }
 }
 
+.workshop-loader--saving {
+  z-index: 101;
+
+  .workshop-loader__status {
+    max-width: rem(360);
+    line-height: 1.5;
+  }
+}
+
 .workshop__body {
+  --select-trigger-bg-color: var(--bg-surface-variant-color);
+  --select-trigger-text-color: var(--text-light-color);
+  --select-border-color: var(--border-input-color);
+  --select-menu-bg-color: var(--bg-surface-tertiary-color);
+  --select-option-bg-color: var(--bg-surface-variant-color);
+  --select-option-text-color: var(--text-light-color);
+  --select-option-hover-bg-color: var(--cyan-color);
+  --select-option-hover-text-color: var(--text-light-color);
+  --select-option-active-bg-color: var(--dark-cyan-color);
+  --select-option-active-text-color: var(--text-light-color);
+  --select-muted-text-color: var(--text-light-color);
+  --input-text-color: var(--text-light-color);
+  --input-placeholder-color: var(--text-light-color);
+
   display: grid;
-  grid-template-columns: rem(56) minmax(0, 1fr) minmax(rem(330), 31.25vw);
+  grid-template-columns: rem(56) minmax(0, 1fr) minmax(rem(220), 20vw);
   height: calc(100dvh - rem(58));
   transition: grid-template-columns 0.2s ease;
 
   &:has(> wm-workshop-left-sidebar.collapsed) {
-    grid-template-columns: rem(28) minmax(0, 1fr) minmax(rem(330), 31.25vw);
+    grid-template-columns: rem(28) minmax(0, 1fr) minmax(rem(220), 20vw);
   }
 
   &:has(> wm-workshop-right-sidebar.collapsed) {

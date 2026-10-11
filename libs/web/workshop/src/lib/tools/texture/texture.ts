@@ -8,8 +8,10 @@ import {
 import { TextureStroke, TextureStrokeShape } from '../../shapes';
 import { Point } from '../../interfaces';
 import { ShapesTypes } from '../../consts';
+import { splitStrokePoints } from '../shared/split-stroke-points';
 
 export class TextureTool implements Tool {
+  static readonly displayName = 'Покрытие';
   #shapesService = inject(WorkshopShapesService);
   #settingsService = inject(WorkshopSettingsService);
   #canvasManagerService = inject(WorkshopCanvasManagerService);
@@ -23,6 +25,7 @@ export class TextureTool implements Tool {
     ctx: CanvasRenderingContext2D,
     startPoint: Point,
   ) {
+    this.#shapesService.beginOperation();
     const texture = this.#settingsService.textureStyle;
     const shapeStyle = this.#settingsService.shapeStyle;
 
@@ -45,6 +48,7 @@ export class TextureTool implements Tool {
       shadowOffsetX: shapeStyle.shadowOffsetX,
       shadowOffsetY: shapeStyle.shadowOffsetY,
     });
+    this.#currentStroke.draw(ctx);
   }
 
   draw(ctx: CanvasRenderingContext2D, newPoint: Point) {
@@ -59,27 +63,26 @@ export class TextureTool implements Tool {
   stopDrawing() {
     if (!this.#currentStroke || !this.enabledToCreate()) {
       this.#currentStroke = null;
+      this.#shapesService.endOperation();
       return;
     }
 
-    this.#shapesService.createShape(this.#currentStroke);
+    const stroke = this.#currentStroke;
+    const parts = splitStrokePoints(stroke.points);
+    for (const points of parts) {
+      const shape =
+        parts.length === 1
+          ? stroke
+          : new TextureStrokeShape({ ...stroke, points });
+      shape.objectId = stroke.id;
+      this.#shapesService.createShape(shape);
+    }
     this.#currentStroke = null;
+    this.#shapesService.endOperation();
     this.#canvasManagerService.requestRedraw();
   }
 
   enabledToCreate() {
-    if (!this.#currentStroke || this.#currentStroke.points.length < 2) {
-      return false;
-    }
-
-    let length = 0;
-    const points = this.#currentStroke.points;
-    for (let i = 1; i < points.length; i++) {
-      length += Math.hypot(
-        points[i].x - points[i - 1].x,
-        points[i].y - points[i - 1].y,
-      );
-    }
-    return length > (this.minRequiredParams.length as number);
+    return Boolean(this.#currentStroke?.points.length);
   }
 }

@@ -1,8 +1,11 @@
 import { ShapesTypes } from '../../consts';
 import { SelectionRect } from '../../tools';
 import { Point, Bounds } from '../../interfaces';
+import type { ShapeRenderContext } from '../../rendering/shape-render-context';
 
 export interface BaseShape {
+  objectId?: string;
+  erasures?: { x: number; y: number; radius: number }[];
   id: string;
   name?: string;
   strokeColor: string;
@@ -22,13 +25,20 @@ export interface BaseShape {
 export type CreateBaseShape = Omit<BaseShape, 'id'>;
 
 export interface ShapeActions {
-  draw: (ctx: CanvasRenderingContext2D) => void;
+  render: (ctx: CanvasRenderingContext2D, context?: ShapeRenderContext) => void;
+  erase: (
+    point: Point,
+    radius: number,
+    objectsOnly?: boolean,
+  ) => 'none' | 'changed' | 'remove';
+  draw: (ctx: CanvasRenderingContext2D, context?: ShapeRenderContext) => void;
+  prepareRender: (context?: ShapeRenderContext) => Promise<() => void>;
   whenReady: () => Promise<void>;
   clickOn: (point: Point) => boolean;
   selectByClick: (point: Point) => boolean;
   selectByDraw: (selectionRect: SelectionRect) => boolean;
   changePosition: (point: Point) => void;
-  getBounds: () => Bounds;
+  getBounds: (context?: ShapeRenderContext) => Bounds;
   transform: (from: Bounds, to: Bounds) => void;
 }
 

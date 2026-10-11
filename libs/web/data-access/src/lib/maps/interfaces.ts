@@ -24,6 +24,7 @@ export interface PublishedMapPage {
 }
 
 export interface StoredMap extends MapSummary {
+  revision?: number;
   body: string;
 }
 
@@ -38,7 +39,7 @@ export interface PublishedStoredMap extends StoredMap {
 export interface SaveMap {
   name: string;
   description?: string;
-  body: string;
+  body?: string;
 }
 
 export interface LikeState {

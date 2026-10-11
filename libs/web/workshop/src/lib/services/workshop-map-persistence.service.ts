@@ -1,3 +1,5 @@
+import { WorkshopChunksService } from './workshop-chunks.service';
+import { WorkshopShapesService } from './workshop-shapes.service';
 import { HttpContext, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,8 +15,26 @@ import { WorkshopModeService } from './workshop-mode.service';
 import { AuthService } from '@wm/web/data-access/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+function saveFailure(error: unknown) {
+  const response =
+    error instanceof HttpErrorResponse
+      ? (error.error as { message?: unknown } | null)
+      : null;
+  const details =
+    response && typeof response.message === 'string'
+      ? response.message
+      : error instanceof Error
+        ? error.message
+        : '';
+  return details
+    ? `Не удалось сохранить карту: ${details.slice(0, 180)}`
+    : 'Не удалось сохранить карту';
+}
+
 @Injectable()
 export class WorkshopMapPersistenceService {
+  #chunks = inject(WorkshopChunksService);
+  #shapes = inject(WorkshopShapesService);
   #mapsService = inject(MapsService);
   #storage = inject(WorkshopSceneGraphStorageService);
   #panning = inject(WorkshopPanningService);
@@ -35,6 +55,7 @@ export class WorkshopMapPersistenceService {
   readonly canSaveCopy = signal(false);
   readonly status = this.#statusMessage.value;
   readonly busy = signal(false);
+  readonly saving = signal(false);
   readonly publishedMapId = signal<number | null>(null);
   readonly publishedMapLikesCount = signal(0);
   readonly isPublishedMapLiked = signal(false);
@@ -44,7 +65,7 @@ export class WorkshopMapPersistenceService {
   });
 
   async initializeFromRoute() {
-    await this.refreshMaps();
+    const mapsLoaded = await this.refreshMaps();
 
     const publicMapId = Number(
       this.#route.snapshot.queryParamMap.get('viewMapId'),
@@ -61,27 +82,49 @@ export class WorkshopMapPersistenceService {
 
     const routeMapId = Number(this.#route.snapshot.queryParamMap.get('mapId'));
     if (Number.isInteger(routeMapId) && routeMapId > 0) {
+      if (mapsLoaded && !this.maps().some((map) => map.id === routeMapId)) {
+        this.newMap();
+        return;
+      }
       await this.load(routeMapId);
+      return;
     }
+    const rememberedMapId = this.mapId();
+    if (rememberedMapId !== null) {
+      if (
+        mapsLoaded &&
+        !this.maps().some((map) => map.id === rememberedMapId)
+      ) {
+        this.newMap();
+        return;
+      }
+      await this.load(rememberedMapId);
+      if (this.mapId() !== null) return;
+    }
+    this.#chunks.beginLocalDraft();
   }
 
   async refreshMaps() {
     try {
       this.maps.set(await firstValueFrom(this.#mapsService.listMine()));
+      return true;
     } catch {
       this.maps.set([]);
+      return false;
     }
   }
 
   async save() {
-    if (this.isReadOnly()) return;
+    if (this.isReadOnly() || this.busy()) return;
+
+    this.#shapes.endOperation();
 
     this.busy.set(true);
+    this.saving.set(true);
     this.#statusMessage.show('Сохранение…', 0);
     const payload: SaveMap = {
       name: this.mapName().trim() || 'Новая карта',
       description: this.mapDescription().trim() || undefined,
-      body: this.#storage.exportSnapshot(),
     };
 
     try {
@@ -104,12 +147,13 @@ export class WorkshopMapPersistenceService {
       }
 
       this.#rememberMap(map);
-      await this.refreshMaps();
       await this.#setRoute(map.id);
+      await this.#chunks.save(map.id, !this.#chunks.hasSceneFor(map.id));
       this.#statusMessage.show(`Карта «${map.name}» сохранена`);
-    } catch {
-      this.#statusMessage.show('Не удалось сохранить карту');
+    } catch (error) {
+      this.#statusMessage.show(saveFailure(error));
     } finally {
+      this.saving.set(false);
       this.busy.set(false);
     }
   }
@@ -117,13 +161,15 @@ export class WorkshopMapPersistenceService {
   async saveCopy() {
     if (!this.isReadOnly() || !this.canSaveCopy() || this.busy()) return;
 
+    this.#shapes.endOperation();
+
     this.busy.set(true);
+    this.saving.set(true);
     this.#statusMessage.show('Сохраняем копию…', 0);
     const copyName = `${this.mapName()} — копия`.slice(0, 120);
     const payload: SaveMap = {
       name: copyName,
       description: 'Копия карты из публичной библиотеки',
-      body: this.#storage.exportSnapshot(),
     };
 
     try {
@@ -131,15 +177,16 @@ export class WorkshopMapPersistenceService {
       this.isReadOnly.set(false);
       this.#resetPublishedMapState();
       this.#rememberMap(map);
-      await this.refreshMaps();
       await this.#setRoute(map.id);
+      await this.#chunks.save(map.id, true);
       await this.#resizeAndFitContent();
       this.#statusMessage.show(
         `Карта «${map.name}» сохранена в ваши черновики`,
       );
-    } catch {
-      this.#statusMessage.show('Не удалось сохранить копию карты');
+    } catch (error) {
+      this.#statusMessage.show(saveFailure(error));
     } finally {
+      this.saving.set(false);
       this.busy.set(false);
     }
   }
@@ -154,7 +201,8 @@ export class WorkshopMapPersistenceService {
       const map = await firstValueFrom(
         this.#mapsService.getPublicMap(mapId, this.#silentErrors()),
       );
-      this.#storage.importSnapshot(map.body);
+      await this.#chunks.open(map.id, map.body, map.revision ?? 0);
+      this.#shapes.resetHistory();
       this.mapId.set(null);
       this.publishedMapId.set(map.id);
       this.mapName.set(map.name);
@@ -183,7 +231,8 @@ export class WorkshopMapPersistenceService {
       const map = await firstValueFrom(
         this.#mapsService.getOwned(mapId, this.#silentErrors()),
       );
-      this.#storage.importSnapshot(map.body);
+      await this.#chunks.open(map.id, map.body, map.revision ?? 0);
+      this.#shapes.resetHistory();
       this.#resetPublishedMapState();
       this.#rememberMap(map);
       this.#panning.fitContent();
@@ -207,6 +256,8 @@ export class WorkshopMapPersistenceService {
   }
 
   newMap() {
+    this.#chunks.reset();
+    this.#shapes.resetHistory();
     this.isReadOnly.set(false);
     this.canSaveCopy.set(false);
     this.#forgetMapId();
@@ -214,6 +265,7 @@ export class WorkshopMapPersistenceService {
     this.mapDescription.set('');
     this.#resetPublishedMapState();
     this.#storage.clearStorage();
+    this.#chunks.beginLocalDraft();
     this.#panning.fitContent();
     this.#canvasManager.redraw();
     void this.#router.navigate([], {
@@ -246,6 +298,10 @@ export class WorkshopMapPersistenceService {
   }
 
   #rememberMap(map: MapSummary) {
+    this.maps.update((items) => [
+      map,
+      ...items.filter((item) => item.id !== map.id),
+    ]);
     this.mapId.set(map.id);
     this.mapName.set(map.name);
     this.mapDescription.set(map.description ?? '');

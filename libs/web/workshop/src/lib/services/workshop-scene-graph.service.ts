@@ -11,6 +11,7 @@ import { WorkshopCoordsService } from './workshop-coords.service';
 export class WorkshopSceneGraphService {
   #shapesStorageService = inject(WorkshopSceneGraphStorageService);
   #coords = inject(WorkshopCoordsService);
+  #nextShapeOrder = Date.now();
 
   root = this.#shapesStorageService.nodesRoot;
 
@@ -30,6 +31,7 @@ export class WorkshopSceneGraphService {
 
   createShapeNode(shape: Shape, nodeToId?: string) {
     const shapeNode = new ShapeNode(shape);
+    shapeNode.zIndex = ++this.#nextShapeOrder;
     const targetNode = this.#resolveParentNode(nodeToId);
     targetNode.addChild(shapeNode);
     this.registerNode(shapeNode);
@@ -266,6 +268,7 @@ export class WorkshopSceneGraphService {
 
     if (node.type === NodesTypes.SHAPE) {
       const shapeNode = node as ShapeNode;
+      this.#shapesStorageService.deletedShapeIds.add(shapeNode.shape.id);
       this.#shapesStorageService.shapes.delete(shapeNode.shape.id);
     }
 

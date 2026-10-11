@@ -8,6 +8,7 @@ export abstract class GraphNode {
   parent: GraphNode | null = null;
   children: GraphNode[] = [];
   visible = true;
+  locked = false;
   isDirty = true;
   zIndex = 0;
 
