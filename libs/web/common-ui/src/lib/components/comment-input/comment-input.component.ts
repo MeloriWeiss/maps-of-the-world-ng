@@ -9,6 +9,7 @@ import {
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SvgComponent } from '../svg/svg.component';
 
+/** Предоставляет поле отправки комментария или ответа. */
 @Component({
   selector: 'wm-comment-input',
   imports: [ReactiveFormsModule, SvgComponent],

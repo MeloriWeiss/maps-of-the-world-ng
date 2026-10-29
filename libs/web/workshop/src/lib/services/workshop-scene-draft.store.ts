@@ -1,28 +1,17 @@
-import { SerializedChunkShape } from './workshop-scene-graph-storage.service';
-import {
-  PreparedSceneCommit,
-  SceneContainerChange,
-} from './scene-commit.types';
-import { MapSceneHeaderV4 } from '@wm/shared/workshop';
+import type { WorkshopSceneDraft } from '../interfaces/workshop-scene-draft';
+
+import { PreparedSceneCommit } from './scene-commit.types';
+
 import { openWorkshopSceneDatabase } from './workshop-scene-local-db';
 
-export interface WorkshopSceneDraft {
-  version: 1;
-  accountId: number;
-  mapId: number;
-  baseRevision: number;
-  rootId?: string;
-  sourceMapId?: number;
-  sourceRevision?: number;
-  sourceHeader?: MapSceneHeaderV4;
-  changedPages: string[];
-  removedIds: string[];
-  records: SerializedChunkShape[];
-  containers: SceneContainerChange[];
-}
-
-/** IndexedDB stores only unsaved scene mutations; missing objects remain on the server. */
+/**
+ * Хранит локальные черновики и подготовленные коммиты Workshop в IndexedDB.
+ *
+ * Полные данные объектов остаются на сервере, а в браузере сохраняются только
+ * изменения, необходимые для восстановления работы пользователя.
+ */
 export class WorkshopSceneDraftStore {
+  /** Читает черновик карты пользователя из локального хранилища. */
   async read(
     accountId: number,
     mapId: number,
@@ -39,6 +28,7 @@ export class WorkshopSceneDraftStore {
     });
   }
 
+  /** Сохраняет черновик карты в IndexedDB. */
   async write(draft: WorkshopSceneDraft): Promise<void> {
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
@@ -51,6 +41,7 @@ export class WorkshopSceneDraftStore {
     });
   }
 
+  /** Удаляет черновик после успешного сохранения или сброса. */
   async remove(accountId: number, mapId: number): Promise<void> {
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
@@ -61,6 +52,7 @@ export class WorkshopSceneDraftStore {
     });
   }
 
+  /** Читает подготовленный к отправке коммит сцены. */
   async readCommit(
     accountId: number,
     mapId: number,
@@ -77,6 +69,7 @@ export class WorkshopSceneDraftStore {
     });
   }
 
+  /** Сохраняет подготовленный коммит для повтора незавершённой отправки. */
   async writeCommit(commit: PreparedSceneCommit) {
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
@@ -90,6 +83,7 @@ export class WorkshopSceneDraftStore {
     });
   }
 
+  /** Удаляет сохранённый коммит после подтверждения публикации. */
   async removeCommit(accountId: number, mapId: number) {
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
@@ -101,6 +95,7 @@ export class WorkshopSceneDraftStore {
     });
   }
 
+  /** Формирует составной ключ черновика пользователя и карты. */
   #key(accountId: number, mapId: number) {
     return `${accountId}:${mapId}`;
   }

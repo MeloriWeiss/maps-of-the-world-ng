@@ -8,7 +8,7 @@ interface CoverageRow {
   maxY: number | null;
 }
 
-/** Bounds of all indexed objects in a container subtree, including unloaded pages. */
+/** Находит границы всех проиндексированных объектов дерева контейнеров, включая незагруженные страницы. */
 export async function sceneContainerCoverage(
   tx: Prisma.TransactionClient,
   mapId: number,

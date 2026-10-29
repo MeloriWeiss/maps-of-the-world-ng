@@ -18,6 +18,7 @@ import { UserDto } from '../dto';
 import { AccessRequest, JwtAccessGuard } from '@wm/api/auth';
 
 @ApiTags('Users')
+/** Обрабатывает HTTP-запросы к ресурсам пользователей. */
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

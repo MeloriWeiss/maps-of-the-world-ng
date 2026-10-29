@@ -3,6 +3,7 @@ import { outputToObservable } from '@angular/core/rxjs-interop';
 import { Observable, of } from 'rxjs';
 import { BaseObject, ModalClose } from '@wm/web/data-access/shared';
 
+/** Открывает модальные окна и возвращает результат взаимодействия с ними. */
 @Injectable({
   providedIn: 'root',
 })

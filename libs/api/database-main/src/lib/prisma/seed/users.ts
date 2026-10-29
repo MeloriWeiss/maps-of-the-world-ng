@@ -3,6 +3,7 @@ import { SeedPrismaClient } from './client';
 import { daysAgo } from './dates';
 import { SeedAccount } from './types';
 
+/** Пароль, назначаемый тестовым аккаунтам в seed-сценарии. */
 export const SEED_PASSWORD = 'Admin123';
 
 const users = [
@@ -72,6 +73,7 @@ const users = [
   },
 ] as const;
 
+/** Создаёт тестовые аккаунты и связанные профили. */
 export async function seedUsers(prisma: SeedPrismaClient) {
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
   const result: SeedAccount[] = [];

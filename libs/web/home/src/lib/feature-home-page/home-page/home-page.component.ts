@@ -12,6 +12,7 @@ const EMPTY_MAP_PAGE: PublishedMapPage = {
   pageSize: 3,
 };
 
+/** Главная страница с представлением основных разделов проекта. */
 @Component({
   selector: 'wm-home-page',
   imports: [AsyncPipe, RouterLink, SvgComponent],

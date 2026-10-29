@@ -1,5 +1,6 @@
 import { Directive, input } from '@angular/core';
 
+/** Добавляет элементу подсказку и управляет её отображением. */
 @Directive({
   selector: '[wmTooltip]',
   standalone: true,

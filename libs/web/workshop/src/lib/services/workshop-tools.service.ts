@@ -18,6 +18,7 @@ import { StampTool } from '../tools/stamp/stamp';
 import { WorkshopTools } from '../consts';
 import { WorkshopSettingsService } from './workshop-settings.service';
 
+/** Выбирает инструмент и передаёт ему события рисования. */
 @Injectable()
 export class WorkshopToolsService {
   #injector = inject(Injector);
@@ -36,6 +37,13 @@ export class WorkshopToolsService {
   currentTool: Tool = this.#toolsFactories[WorkshopTools.SELECT]();
   currentToolName = signal(WorkshopTools.SELECT);
 
+  /**
+   * Завершает текущий инструмент и активирует выбранный.
+   *
+   * Перед созданием нового инструмента применяет к нему сохранённые настройки.
+   *
+   * @param newTool Идентификатор инструмента для активации.
+   */
   setCurrentTool(newTool: WorkshopTools) {
     this.currentTool.dispose?.();
     this.#settingsService.applyToolStyle(newTool);
@@ -43,6 +51,7 @@ export class WorkshopToolsService {
     runInInjectionContext(this.#injector, () => {
       this.currentTool = this.#toolsFactories[newTool]();
     });
+
     this.currentToolName.set(newTool);
   }
 }

@@ -13,6 +13,7 @@ const encoder = new TextEncoder();
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BUNDLE_BYTES = 128 * 1024 * 1024;
 
+/** Идентификаторы документа и коммита для локального файла пакета. */
 export interface SceneSpoolIdentity {
   accountId: number;
   localDocumentId: string;
@@ -20,6 +21,7 @@ export interface SceneSpoolIdentity {
   documentKey: string;
 }
 
+/** Проверяет идентификаторы и строит имя файла локального пакета. */
 function fileName(identity: SceneSpoolIdentity, bundleId: string) {
   if (
     !Number.isSafeInteger(identity.accountId) ||
@@ -33,7 +35,12 @@ function fileName(identity: SceneSpoolIdentity, bundleId: string) {
   return `${identity.accountId}-${identity.localDocumentId}-${identity.localCommitId}-${bundleId}.bundle`;
 }
 
-/** OPFS is only a derived copy; immutable parts in IndexedDB remain the recovery source. */
+/**
+ * Собирает бинарный пакет сцены в Origin Private File System.
+ *
+ * Файл является временной производной копией; источником восстановления служат
+ * неизменяемые части коммита в IndexedDB.
+ */
 export class SceneBundleSpool {
   readonly #parts: SceneCommitStore;
 
@@ -41,18 +48,28 @@ export class SceneBundleSpool {
     this.#parts = parts;
   }
 
+  /**
+   * Собирает пакет из подготовленных частей и сохраняет его локально.
+   *
+   * @param token Токен эксклюзивной записи документа.
+   * @param identity Идентификаторы пользователя, документа и коммита.
+   * @returns Идентификатор пакета и готовый файл для отправки.
+   */
   async build(
     token: SceneWriterToken,
     identity: SceneSpoolIdentity,
   ): Promise<{ bundleId: string; file: File }> {
     if (token.documentKey !== identity.documentKey)
       throw new Error('Bundle belongs to another document');
+
     if (!navigator.storage.getDirectory)
       throw new Error(
         'Браузер не поддерживает локальную подготовку больших карт',
       );
+
     const projectedBytes = await this.#projectedBytes(identity);
     const estimate = await navigator.storage.estimate();
+
     if (
       estimate.quota !== undefined &&
       estimate.usage !== undefined &&
@@ -60,6 +77,7 @@ export class SceneBundleSpool {
     ) {
       throw new Error('Недостаточно свободного места для подготовки карты');
     }
+
     const bundleId = crypto.randomUUID();
     const root = await navigator.storage.getDirectory();
     const folder = await root.getDirectoryHandle('workshop-scene-bundles', {
@@ -74,11 +92,14 @@ export class SceneBundleSpool {
     let ordinal = 0;
     let payloadBytes = 0;
     let hash = await SceneBundleCodec.initialHash();
+
     try {
       await writer.write(SceneBundleCodec.magic);
       offset += SceneBundleCodec.magic.byteLength;
+
       for (const kind of ['page', 'container', 'tile'] as const) {
         let afterOrdinal = -1;
+
         while (true) {
           const page = await this.#parts.listDescriptors(
             identity.documentKey,
@@ -86,6 +107,7 @@ export class SceneBundleSpool {
             kind,
             afterOrdinal,
           );
+
           for (const descriptor of page.items) {
             const part = await this.#parts.readPart(
               identity.documentKey,
@@ -102,11 +124,13 @@ export class SceneBundleSpool {
                 'Prepared map part changed during bundle creation',
               );
             }
+
             const payload = part.deleted
               ? new Uint8Array()
               : part.png
                 ? new Uint8Array(await part.png.arrayBuffer())
                 : encoder.encode(part.body ?? '');
+
             const frame = await SceneBundleCodec.data(
               {
                 kind: part.deleted ? 'empty' : kind,
@@ -131,10 +155,12 @@ export class SceneBundleSpool {
               payload,
               hash,
             );
+
             if (frame.metadata.digest !== part.digest)
               throw new Error('Prepared map part digest is invalid');
             if (offset + frame.bytes.byteLength > MAX_BUNDLE_BYTES)
               throw new Error('Пакет карты превышает лимит');
+
             await writer.write(frame.bytes);
             await this.#recordFrame(token, {
               documentKey: identity.documentKey,
@@ -147,21 +173,25 @@ export class SceneBundleSpool {
               kind,
               partKey: descriptor.partKey,
             });
+
             offset += frame.bytes.byteLength;
             payloadBytes += payload.byteLength;
             hash = frame.hash;
             ordinal++;
           }
+
           if (page.nextKey === undefined) break;
           afterOrdinal = Number(page.nextKey);
         }
       }
+
       const terminal = SceneBundleCodec.terminal(ordinal, payloadBytes, hash);
       if (offset + terminal.byteLength > MAX_BUNDLE_BYTES)
         throw new Error('Пакет карты превышает лимит');
       await writer.write(terminal);
       await writer.close();
       closed = true;
+
       const file = await handle.getFile();
       await this.#markReady(
         token,
@@ -177,12 +207,14 @@ export class SceneBundleSpool {
     }
   }
 
+  /** Открывает ранее созданный пакет сцены в локальном файловом хранилище. */
   async open(identity: SceneSpoolIdentity, bundleId: string): Promise<File> {
     const root = await navigator.storage.getDirectory();
     const folder = await root.getDirectoryHandle('workshop-scene-bundles');
     return (await folder.getFileHandle(fileName(identity, bundleId))).getFile();
   }
 
+  /** Оценивает полный размер пакета до создания файла в локальном хранилище. */
   async #projectedBytes(identity: SceneSpoolIdentity): Promise<number> {
     let bytes = SceneBundleCodec.magic.byteLength + 4096;
     let frames = 0;
@@ -208,6 +240,7 @@ export class SceneBundleSpool {
     return bytes;
   }
 
+  /** Возвращает контрольную запись кадра из локальной базы данных. */
   async readFrame(
     documentKey: string,
     localCommitId: string,
@@ -226,11 +259,13 @@ export class SceneBundleSpool {
     });
   }
 
+  /** Атомарно сохраняет контрольную запись кадра под текущим токеном записи. */
   async #recordFrame(
     token: SceneWriterToken,
     frame: SceneBundleFrame,
   ): Promise<void> {
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(['documents', 'bundleFrames'], 'readwrite');
       const request = tx.objectStore('documents').get(token.documentKey);
@@ -254,6 +289,7 @@ export class SceneBundleSpool {
     });
   }
 
+  /** Записывает манифест готового файла после успешной сборки и закрытия потока. */
   async #markReady(
     token: SceneWriterToken,
     localCommitId: string,
@@ -276,14 +312,17 @@ export class SceneBundleSpool {
           tx.abort();
           return;
         }
+
         const commits = tx.objectStore('localCommits');
         const commitRequest = commits.get([token.documentKey, localCommitId]);
         commitRequest.onsuccess = () => {
           const commit = commitRequest.result as SceneLocalCommit | undefined;
+
           if (!commit || commit.state !== 'ready' || commit.bundleReady) {
             tx.abort();
             return;
           }
+
           commits.put({
             ...commit,
             bundleId,

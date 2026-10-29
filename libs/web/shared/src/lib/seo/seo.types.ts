@@ -1,5 +1,7 @@
+/** Тип страницы, используемый в метаданных Open Graph. */
 export type SeoPageType = 'website' | 'article';
 
+/** Метаданные страницы для заголовка, индексации и предпросмотра ссылки. */
 export interface SeoMetadata {
   title: string;
   description: string;
@@ -10,6 +12,7 @@ export interface SeoMetadata {
   structuredData?: Record<string, unknown>;
 }
 
+/** Базовые параметры сайта для формирования SEO-метаданных. */
 export interface SeoConfig {
   siteName: string;
   siteUrl: string;

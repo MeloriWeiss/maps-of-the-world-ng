@@ -16,6 +16,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SvgComponent } from '../svg/svg.component';
 
+/** Связывает поле ввода с подписью, сообщением и состоянием формы. */
 @Component({
   selector: 'wm-form-input',
   imports: [ReactiveFormsModule, SvgComponent],

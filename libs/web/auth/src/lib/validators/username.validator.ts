@@ -3,6 +3,7 @@ import { authConfig } from '@wm/shared/auth';
 
 const usernameConfig = authConfig.username;
 
+/** Проверяет имя пользователя по правилам формы. */
 export const validateUsername: ValidatorFn = (control: AbstractControl) => {
   if (!control.value) {
     return {

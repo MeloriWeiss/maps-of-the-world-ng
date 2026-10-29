@@ -35,4 +35,4 @@ export {
 };
 
 export * from './facades';
-export type { WorkshopTexture } from './workshop-textures.service';
+export type { WorkshopTexture } from '../interfaces/workshop-textures';

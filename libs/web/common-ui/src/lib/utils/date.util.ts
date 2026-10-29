@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 
 type dateFormats = 'sql' | 'iso';
 
+/** Форматирует даты и выбирает грамматические формы единиц времени. */
 export class DateUtil {
   static #baseHours = 'час';
   static #baseMinutes = 'минут';

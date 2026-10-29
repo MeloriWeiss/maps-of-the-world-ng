@@ -1,0 +1,32 @@
+<article class="texture-card">
+  <div class="texture-card__preview">
+    <img [src]="texture().fileUrl" [alt]="texture().name" />
+    <button
+      class="texture-card__delete"
+      type="button"
+      [disabled]="deletingDisabled()"
+      (click)="removed.emit(texture())"
+      [attr.aria-label]="'Удалить текстуру «' + texture().name + '»'"
+      title="Удалить текстуру"
+    >
+      <svg icon="trash" class="svg20" aria-hidden="true"></svg>
+    </button>
+  </div>
+  <div class="texture-card__body">
+    <h4 [title]="texture().name">{{ texture().name }}</h4>
+    <p>
+      {{ texture().displaySize }}
+      @if (texture().width && texture().height) {
+        · {{ texture().width }}×{{ texture().height }}
+      }
+    </p>
+    <button
+      type="button"
+      class="texture-card__move"
+      [disabled]="moving()"
+      (click)="moved.emit(texture())"
+    >
+      {{ moveLabel() }}
+    </button>
+  </div>
+</article>

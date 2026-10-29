@@ -3,6 +3,7 @@ import { SelectionRect } from '../../tools';
 import { Point, Bounds } from '../../interfaces';
 import type { ShapeRenderContext } from '../../rendering/shape-render-context';
 
+/** Общие сериализуемые свойства фигуры и её визуальных эффектов. */
 export interface BaseShape {
   objectId?: string;
   erasures?: { x: number; y: number; radius: number }[];
@@ -22,8 +23,10 @@ export interface BaseShape {
   mapObjectType?: string;
 }
 
+/** Свойства для создания фигуры до назначения ей идентификатора. */
 export type CreateBaseShape = Omit<BaseShape, 'id'>;
 
+/** Операции отрисовки, выбора, стирания и преобразования фигуры. */
 export interface ShapeActions {
   render: (ctx: CanvasRenderingContext2D, context?: ShapeRenderContext) => void;
   erase: (
@@ -42,6 +45,7 @@ export interface ShapeActions {
   transform: (from: Bounds, to: Bounds) => void;
 }
 
+/** Полный контракт фигуры с данными и операциями редактора. */
 export interface Shape extends BaseShape, ShapeActions {
   type: ShapesTypes;
 }

@@ -31,6 +31,7 @@ import {
 import { ProfileSummaryDto } from '@wm/shared/accounts';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, finalize, firstValueFrom, map } from 'rxjs';
+import { formatProfileMemberSince } from '../../utils/profile-member-since';
 
 const emptySummary: ProfileSummaryDto = {
   nickname: 'Профиль',
@@ -42,6 +43,7 @@ const emptySummary: ProfileSummaryDto = {
   publishedTexturePacksCount: 0,
 };
 
+/** Оболочка собственного или публичного профиля с навигацией и управлением аватаром. */
 @Component({
   selector: 'wm-profile-page-layout',
   imports: [
@@ -91,33 +93,16 @@ export class ProfilePageLayoutComponent {
       : this.#publicSummary(),
   );
   readonly isAvatarUpdating = signal(false);
-  readonly memberSince = computed(() => {
-    const createdAt = this.summary().createdAt;
-    if (!createdAt) return '';
-
-    const date = new Date(createdAt);
-    const months = [
-      'января',
-      'февраля',
-      'марта',
-      'апреля',
-      'мая',
-      'июня',
-      'июля',
-      'августа',
-      'сентября',
-      'октября',
-      'ноября',
-      'декабря',
-    ];
-    return `${months[date.getMonth()]} ${date.getFullYear()}`;
-  });
+  readonly memberSince = computed(() =>
+    formatProfileMemberSince(this.summary().createdAt),
+  );
 
   constructor() {
     if (this.isOwnProfile) {
       if (!this.#currentAccountStore.profile()) {
         this.#currentAccountStore.reloadProfile();
       }
+
       return;
     }
 
@@ -130,6 +115,7 @@ export class ProfilePageLayoutComponent {
   selectAvatar(event: Event) {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
+
     const file = input.files?.[0];
     input.value = '';
     if (!file || this.isAvatarUpdating()) return;
@@ -162,6 +148,7 @@ export class ProfilePageLayoutComponent {
 
   async removeAvatar() {
     if (!this.summary().avatarUrl || this.isAvatarUpdating()) return;
+
     const confirmed = await firstValueFrom(
       this.#modalService.show<boolean>(ConfirmationModalComponent, {
         title: 'Удалить аватар?',

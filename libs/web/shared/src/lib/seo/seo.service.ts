@@ -9,6 +9,7 @@ import {
 import { SEO_CONFIG } from './seo.token';
 import { SeoMetadata } from './seo.types';
 
+/** Формирует заголовок и метатеги страницы на основе данных маршрута. */
 @Injectable()
 export class SeoService extends TitleStrategy {
   readonly #title = inject(Title);

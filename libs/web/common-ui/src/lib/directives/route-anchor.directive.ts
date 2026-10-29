@@ -2,7 +2,7 @@ import { ViewportScroller } from '@angular/common';
 import { afterNextRender, Directive, inject, input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-/** Resolves a route fragment when its asynchronously loaded target appears. */
+/** Переходит к фрагменту маршрута после появления цели, загружаемой асинхронно. */
 @Directive({
   selector: '[wmRouteAnchor]',
   standalone: true,

@@ -17,6 +17,7 @@ import {
 } from './toast.interface';
 import { defaultToastConfig } from './default-toast.config';
 
+/** Показывает временные уведомления и управляет временем их отображения. */
 @Injectable({
   providedIn: 'root',
 })

@@ -1,3 +1,4 @@
+import type { ChangePasswordData } from '../interfaces';
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
@@ -9,6 +10,7 @@ import { Router } from '@angular/router';
 import { API_CONFIG, BYPASS_GLOBAL_ERROR } from '../../shared';
 import { CurrentAccountStore } from '../../profile';
 
+/** Выполняет операции авторизации, управления аккаунтом и сеансами. */
 @Injectable({
   providedIn: 'root',
 })
@@ -20,6 +22,7 @@ export class AuthService {
 
   isAuthorized$ = new BehaviorSubject(false);
 
+  /** Создаёт аккаунт и сохраняет пользователя в общем состоянии авторизации. */
   register(data: RegisterData) {
     return this.#http
       .post<UserResponseDto>(`${this.#apiConfig.baseUrl}auth/register`, data)
@@ -31,6 +34,7 @@ export class AuthService {
       );
   }
 
+  /** Авторизует пользователя и сохраняет полученные данные аккаунта. */
   login(data: LoginData) {
     return this.#http
       .post<UserResponseDto>(`${this.#apiConfig.baseUrl}auth/login`, data)
@@ -42,6 +46,7 @@ export class AuthService {
       );
   }
 
+  /** Обновляет серверный сеанс по действующей refresh-cookie. */
   refresh() {
     return this.#http
       .post<DefaultResponseDto>(
@@ -52,6 +57,7 @@ export class AuthService {
       .pipe(tap(() => this.isAuthorized$.next(true)));
   }
 
+  /** Завершает текущий сеанс и очищает состояние пользователя. */
   logout() {
     return this.#http
       .post<DefaultResponseDto>(
@@ -68,6 +74,7 @@ export class AuthService {
       );
   }
 
+  /** Завершает все сеансы аккаунта и очищает состояние пользователя. */
   logoutAll() {
     return this.#http
       .post<DefaultResponseDto>(`${this.#apiConfig.baseUrl}auth/logout-all`, {})
@@ -80,6 +87,7 @@ export class AuthService {
       );
   }
 
+  /** Загружает список сеансов, доступный текущему аккаунту. */
   getSessions() {
     return this.#http.get<GetSessionsDto>(
       `${this.#apiConfig.baseUrl}auth/sessions`,
@@ -89,7 +97,8 @@ export class AuthService {
     );
   }
 
-  changePassword(data: { currentPassword: string; newPassword: string }) {
+  /** Отправляет текущий и новый пароль на сервер. */
+  changePassword(data: ChangePasswordData) {
     return this.#http.put<DefaultResponseDto>(
       `${this.#apiConfig.baseUrl}auth/password`,
       data,
@@ -99,6 +108,7 @@ export class AuthService {
     );
   }
 
+  /** Завершает выбранный сеанс и при необходимости очищает текущий. */
   endSession(id: number, isCurrent: boolean) {
     return this.#http
       .delete<DefaultResponseDto>(
@@ -114,12 +124,14 @@ export class AuthService {
       );
   }
 
+  /** Сбрасывает локальную авторизацию и переводит пользователя на вход. */
   clearSession() {
     this.isAuthorized$.next(false);
     this.#currentAccountStore.clear();
     this.#router.navigate(['/login']).then();
   }
 
+  /** Восстанавливает пользователя по сохранённому серверному сеансу. */
   restoreSession() {
     return this.#http
       .get<UserResponseDto>(`${this.#apiConfig.baseUrl}users/me`)

@@ -5,6 +5,7 @@ import { ObjectStorageModule } from '@wm/api/shared';
 import { AccountsController } from './controllers';
 import { AccountsService, AvatarsService } from './service';
 
+/** Подключает API профилей и файлов аватаров. */
 @Module({
   imports: [DatabaseMainModule, ApiAuthModule, ObjectStorageModule],
   controllers: [AccountsController],

@@ -1,16 +1,19 @@
 import { workshopImages } from './image-cache';
 import { canvasColor, resolveCanvasColor } from './palette';
 
+/** Идентификатор текстуры и адрес изображения, используемые при отрисовке. */
 export interface ShapeImageRef {
   textureId: string | null;
   url: string;
 }
 
+/** Контракт получения и временного закрепления изображений фигур. */
 export interface ShapeImageSource {
   acquire(ref: ShapeImageRef): Promise<() => void>;
   source(ref: ShapeImageRef, screenWidth: number): CanvasImageSource | null;
 }
 
+/** Зависимости для отрисовки фигуры, измерения текста и разрешения цветов. */
 export interface ShapeRenderContext {
   readonly images: ShapeImageSource;
   color(value: string): string;
@@ -32,6 +35,7 @@ const editorImages: ShapeImageSource = {
   source: (ref, screenWidth) => workshopImages.source(ref.url, screenWidth),
 };
 
+/** Контекст отрисовки фигур в редакторе с общей палитрой и кэшем изображений. */
 export const editorShapeRenderContext: ShapeRenderContext = {
   images: editorImages,
   color: (value) =>
@@ -39,7 +43,7 @@ export const editorShapeRenderContext: ShapeRenderContext = {
   measureText,
 };
 
-/** A save supplies a strict image source backed only by verified dependencies. */
+/** Создаёт контекст сохранения, который читает изображения только из проверенных зависимостей. */
 export function createFrozenShapeRenderContext(
   palette: Readonly<Record<string, string>>,
   images: ShapeImageSource,

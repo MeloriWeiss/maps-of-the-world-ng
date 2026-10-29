@@ -33,6 +33,7 @@ import { MapSceneV4Service } from './map-scene-v4.service';
 import { MapSceneCommitService } from './map-scene-commit.service';
 
 @Controller('maps/:id')
+/** Обрабатывает HTTP-запросы к новой версии API сцены карты. */
 @ApiTags('maps')
 export class MapSceneV4Controller {
   constructor(

@@ -34,6 +34,7 @@ import { ForumService } from './forum.service';
 import { UserRole } from '@wm/shared/users';
 
 @Controller()
+/** Обрабатывает HTTP-запросы к темам и комментариям форума. */
 @ApiTags('forum')
 export class ForumController {
   constructor(private readonly forumService: ForumService) {}

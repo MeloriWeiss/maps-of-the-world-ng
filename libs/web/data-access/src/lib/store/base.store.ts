@@ -1,5 +1,6 @@
 import { Signal, signal, WritableSignal } from '@angular/core';
 
+/** Базовая реализация сигнал-хранилища с атомарным обновлением состояния. */
 export abstract class BaseStore<State extends object> {
   readonly #initialState: State;
   readonly #writableState: WritableSignal<State>;

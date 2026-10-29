@@ -3,6 +3,7 @@ import { authConfig } from '@wm/shared/auth';
 
 const emailConfig = authConfig.email;
 
+/** Проверяет введённый адрес электронной почты. */
 export const validateEmail: ValidatorFn = (control: AbstractControl) => {
   if (!control.value) {
     return {

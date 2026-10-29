@@ -3,6 +3,7 @@ import { isProd } from '@wm/api/shared';
 import { AuthTokens } from '@wm/shared/common';
 import { jwtConfig } from '../jwt';
 
+/** Устанавливает cookie с токенами доступа и обновления. */
 export const setAuthCookies = (res: Response, tokens: AuthTokens) => {
   res.cookie(jwtConfig.accessToken.name, tokens.accessToken, {
     httpOnly: true,
@@ -21,6 +22,7 @@ export const setAuthCookies = (res: Response, tokens: AuthTokens) => {
   });
 };
 
+/** Удаляет cookie авторизационных токенов. */
 export const clearAuthCookies = (res: Response) => {
   res.clearCookie(jwtConfig.accessToken.name, {
     path: jwtConfig.accessToken.path,

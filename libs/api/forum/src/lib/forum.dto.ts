@@ -15,6 +15,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 const trimText = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim() : value;
 
+/** Параметры сортировки, фильтрации и пагинации списка тем форума. */
 export class ListForumDiscussionsDto {
   @ApiPropertyOptional({ enum: ['active', 'new', 'unanswered'] })
   @IsOptional()
@@ -25,6 +26,7 @@ export class ListForumDiscussionsDto {
   @IsOptional()
   @IsIn(['mine'])
   scope?: 'mine';
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -49,6 +51,7 @@ export class ListForumDiscussionsDto {
   category?: string;
 }
 
+/** Проверенные поля новой темы форума. */
 export class CreateForumDiscussionDto {
   @Transform(trimText)
   @IsString()
@@ -69,6 +72,7 @@ export class CreateForumDiscussionDto {
   category!: string;
 }
 
+/** Проверенные поля нового комментария и его необязательной родительской записи. */
 export class CreateForumCommentDto {
   @Transform(trimText)
   @IsString()
@@ -82,18 +86,19 @@ export class CreateForumCommentDto {
   parentId?: number;
 }
 
+/** Параметры выборки комментариев, включая режим дерева и поиск ветки. */
 export class ForumCommentsQueryDto {
   @ApiPropertyOptional({
     enum: ['flat', 'tree'],
     description:
-      'Tree mode paginates siblings; omit parentId for root comments',
+      'В режиме дерева выполняется пагинация соседних комментариев; для корневых комментариев parentId не указывается',
   })
   @IsOptional()
   @IsIn(['flat', 'tree'])
   view?: 'flat' | 'tree';
 
   @ApiPropertyOptional({
-    description: 'Load direct replies to this comment in tree mode',
+    description: 'Загрузить прямые ответы на этот комментарий в режиме дерева',
   })
   @IsOptional()
   @Type(() => Number)
@@ -114,7 +119,9 @@ export class ForumCommentsQueryDto {
   @Max(50)
   pageSize = 20;
 
-  @ApiPropertyOptional({ description: 'Find the page containing this comment' })
+  @ApiPropertyOptional({
+    description: 'Найти страницу, содержащую комментарий',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -122,12 +129,14 @@ export class ForumCommentsQueryDto {
   commentId?: number;
 }
 
+/** Параметры загрузки подробностей темы форума. */
 export class ForumDetailsQueryDto {
   @IsOptional()
   @IsIn(['false', 'true'])
   includeComments?: string;
 }
 
+/** Проверенный текст изменяемого комментария. */
 export class EditForumCommentDto {
   @Transform(trimText)
   @IsString()
@@ -136,6 +145,7 @@ export class EditForumCommentDto {
   comment!: string;
 }
 
+/** Изменения закрепления и закрытия темы модератором. */
 export class ModerateForumDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -148,6 +158,7 @@ export class ModerateForumDto {
   isClosed?: boolean;
 }
 
+/** Новое состояние видимости комментария для модерации. */
 export class ForumCommentVisibilityDto {
   @IsBoolean()
   isHidden!: boolean;

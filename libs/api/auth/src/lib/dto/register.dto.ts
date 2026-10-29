@@ -8,6 +8,7 @@ import {
 import { authConfig } from '@wm/shared/auth';
 import { ApiProperty } from '@nestjs/swagger';
 
+/** Проверяет данные нового аккаунта. */
 export class RegisterDto {
   @ApiProperty()
   @IsDefined({ message: authConfig.email.required.message })

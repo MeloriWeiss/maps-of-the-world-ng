@@ -21,6 +21,7 @@ import {
 
 const lastWorldCell = mapWorldHalfSize / mapChunkSize - 1;
 
+/** Параметры загрузки сцены в пределах видимой области карты. */
 export class SceneViewportQueryDto {
   @Type(() => Number) @IsNumber() x!: number;
   @Type(() => Number) @IsNumber() y!: number;
@@ -32,6 +33,7 @@ export class SceneViewportQueryDto {
   @IsOptional() @IsIn(['true']) includeBody?: 'true';
 }
 
+/** Координаты тайла превью и версия сцены для проверки актуальности. */
 export class SceneTileBlockQueryDto {
   @Type(() => Number) @IsInt() @Min(0) @Max(mapPreviewMaxLevel) level!: number;
   @Type(() => Number)
@@ -47,6 +49,7 @@ export class SceneTileBlockQueryDto {
   @Type(() => Number) @IsInt() @Min(0) revision!: number;
 }
 
+/** Параметры поиска объектов сцены с фильтрами по имени и типу. */
 export class SceneObjectsQueryDto extends SceneViewportQueryDto {
   @IsOptional() @IsString() @MaxLength(100) query?: string;
   @IsOptional()
@@ -55,6 +58,7 @@ export class SceneObjectsQueryDto extends SceneViewportQueryDto {
   @IsOptional() @IsIn(['viewport', 'map']) scope?: 'viewport' | 'map';
 }
 
+/** Параметры постраничной загрузки контейнеров выбранного родителя. */
 export class SceneContainersQueryDto {
   @IsOptional() @IsString() @MaxLength(100) parentId?: string;
   @IsOptional() @IsString() @MaxLength(256) cursor?: string;
@@ -62,6 +66,7 @@ export class SceneContainersQueryDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 64;
 }
 
+/** Данные для начала коммита с проверкой ревизии и идемпотентности. */
 export class StartSceneCommitDto {
   @IsUUID() idempotencyKey!: string;
   @IsInt() @Min(0) expectedRevision!: number;
@@ -69,6 +74,7 @@ export class StartSceneCommitDto {
   @IsOptional() @IsInt() @Min(0) sourceRevision?: number;
 }
 
+/** Метаданные и сериализованное содержимое страницы объектов сцены. */
 export class ScenePagePartDto {
   @IsIn(['page']) kind!: 'page';
   @IsInt() @Min(-lastWorldCell - 1) @Max(lastWorldCell) cellX!: number;
@@ -82,6 +88,7 @@ export class ScenePagePartDto {
   @IsOptional() @IsBoolean() deleted?: boolean;
 }
 
+/** Изменение контейнера графа, передаваемое при сохранении сцены. */
 export class SceneContainerChangeDto {
   @IsString() @MaxLength(100) id!: string;
   @IsOptional() @IsString() @MaxLength(100) parentId?: string;
@@ -94,6 +101,7 @@ export class SceneContainerChangeDto {
   @IsOptional() @IsBoolean() deleted?: boolean;
 }
 
+/** Данные публикации подготовленного коммита сцены. */
 export class PublishSceneCommitDto {
   @IsString() @MaxLength(8_000) header!: string;
   @IsArray()

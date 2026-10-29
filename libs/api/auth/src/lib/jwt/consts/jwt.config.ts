@@ -1,6 +1,7 @@
 import { parseDurationToMs } from '../../utils';
 import { getFromEnv } from '@wm/api/shared';
 
+/** Параметры подписи и срока действия JWT-токенов. */
 export const jwtConfig = {
   accessToken: {
     name: 'access_token',

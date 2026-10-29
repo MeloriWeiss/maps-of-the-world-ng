@@ -10,6 +10,7 @@ import { ModalService } from '../base-modal/modal.service';
 import { BaseModalComponent } from '../base-modal/base-modal.component';
 import { ModalClose } from '@wm/web/data-access/shared';
 
+/** Запрашивает подтверждение перед выполнением действия. */
 @Component({
   selector: 'wm-confirmation-modal',
   imports: [BaseModalComponent],

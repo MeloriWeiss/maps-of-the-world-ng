@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { SvgComponent } from '../svg/svg.component';
 
+/** Показывает карту и доступные пользователю действия с ней. */
 @Component({
   selector: 'wm-map-card',
   imports: [SvgComponent],

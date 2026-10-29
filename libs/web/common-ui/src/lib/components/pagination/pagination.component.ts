@@ -7,6 +7,7 @@ import {
 import { SvgComponent } from '../svg/svg.component';
 import { PaginationService } from './pagination.service';
 
+/** Предоставляет элементы управления переходом между страницами списка. */
 @Component({
   selector: 'wm-pagination',
   imports: [SvgComponent],

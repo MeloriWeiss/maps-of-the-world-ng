@@ -1,20 +1,24 @@
+import type { GeneratedWorldSummary } from '../interfaces/workshop-world-generator';
 import { inject, Injectable } from '@angular/core';
 import { ShapesTypes } from '../consts';
 import { LayerNode, ShapeNode } from '../nodes';
 import { LineShape, RectangleShape, Shape } from '../shapes';
 import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
 import { WorkshopPanningService } from './workshop-panning.service';
+import { hashSeed, mulberry32, between, pick } from './utils/seeded-random';
 
-export interface GeneratedWorldSummary {
-  seed: string;
-  objects: number;
-}
-
+/** Создаёт стартовый мир карты из параметров и текстур Workshop. */
 @Injectable()
 export class WorkshopWorldGeneratorService {
   #storage = inject(WorkshopSceneGraphStorageService);
   #panning = inject(WorkshopPanningService);
 
+  /**
+   * Создаёт набор стартовых фигур и размещает камеру над результатом.
+   *
+   * @param seed Исходная строка генератора; одинаковые значения дают одинаковый мир.
+   * @returns Сводка созданного мира.
+   */
   generate(seed = crypto.randomUUID().slice(0, 8)): GeneratedWorldSummary {
     const random = mulberry32(hashSeed(seed));
     const root = new LayerNode({ name: 'Сгенерированный мир' });
@@ -128,6 +132,7 @@ export class WorkshopWorldGeneratorService {
     return { seed, objects: this.#storage.shapes.size };
   }
 
+  /** Создаёт прямоугольную фигуру и добавляет её в указанный слой. */
   #addRectangle(
     layer: LayerNode,
     type: string,
@@ -151,6 +156,7 @@ export class WorkshopWorldGeneratorService {
     this.#addShape(layer, shape, type, minZoom, maxZoom);
   }
 
+  /** Создаёт линейную фигуру с заданным стилем и добавляет её в слой. */
   #addLine(
     layer: LayerNode,
     points: { x: number; y: number }[],
@@ -168,6 +174,7 @@ export class WorkshopWorldGeneratorService {
     this.#addShape(layer, shape, type, minZoom, maxZoom);
   }
 
+  /** Регистрирует фигуру и её узел в рабочем графе сцены. */
   #addShape(
     layer: LayerNode,
     shape: Shape,
@@ -187,6 +194,7 @@ export class WorkshopWorldGeneratorService {
   }
 }
 
+/** Возвращает подпись типа фигуры, используемую сгенерированным миром. */
 function generatedShapeName(type: string): string {
   const names: Record<string, string> = {
     continent: 'Континент',
@@ -199,30 +207,4 @@ function generatedShapeName(type: string): string {
     chair: 'Стул',
   };
   return names[type] ?? 'Фигура';
-}
-
-function hashSeed(seed: string) {
-  let hash = 2166136261;
-  for (const char of seed) {
-    hash ^= char.charCodeAt(0);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-function mulberry32(seed: number) {
-  return () => {
-    let value = (seed += 0x6d2b79f5);
-    value = Math.imul(value ^ (value >>> 15), value | 1);
-    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function between(random: () => number, min: number, max: number) {
-  return min + random() * (max - min);
-}
-
-function pick<T>(random: () => number, values: readonly T[]) {
-  return values[Math.floor(random() * values.length)];
 }

@@ -8,7 +8,7 @@ import {
   withComponentInputBinding,
   withInMemoryScrolling,
 } from '@angular/router';
-import { routes } from './app.routes';
+import { routes } from './consts/app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import {
   HttpInterceptorFn,
@@ -23,11 +23,13 @@ import { SEO_CONFIG, SeoService } from '@wm/web/shared';
 import { TitleStrategy } from '@angular/router';
 import { environment } from '../environments/environment';
 
+/** Перечень HTTP-перехватчиков, подключаемых в приложении. */
 export const appHttpInterceptors: HttpInterceptorFn[] = [
   globalHttpErrorInterceptor,
   authInterceptor,
 ];
 
+/** Корневая конфигурация standalone-приложения. */
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -35,7 +37,7 @@ export const appConfig: ApplicationConfig = {
       routes,
       withComponentInputBinding(),
       withInMemoryScrolling({
-        // RouterScrollService applies the route-specific scroll policy.
+        // Общую политику прокрутки применяет RouterScrollService.
         scrollPositionRestoration: 'disabled',
         anchorScrolling: 'disabled',
       }),

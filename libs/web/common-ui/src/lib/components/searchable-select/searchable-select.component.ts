@@ -1,3 +1,4 @@
+import type { SearchableSelectOption } from './searchable-select.component.types';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,12 +11,7 @@ import { ClickOutsideDirective } from '../../directives';
 
 let searchableSelectId = 0;
 
-export interface SearchableSelectOption<T> {
-  value: T;
-  label: string;
-  description?: string;
-}
-
+/** Позволяет выбрать вариант и отфильтровать список по строке поиска. */
 @Component({
   selector: 'wm-searchable-select',
   imports: [ClickOutsideDirective],

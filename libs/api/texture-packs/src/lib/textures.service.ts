@@ -10,6 +10,7 @@ import {
 import { UploadedTextureFile } from './texture-file.interface';
 import { TextureKind } from '@wm/shared/workshop';
 
+/** Проверяет и сохраняет файлы текстур, а также предоставляет их содержимое. */
 @Injectable()
 export class TexturesService {
   constructor(

@@ -1,3 +1,4 @@
+/** Поля профиля, разрешённые для обновления. */
 export interface UpdateAccountRequestDto {
   nickname?: string;
   firstName?: string | null;

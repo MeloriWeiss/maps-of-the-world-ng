@@ -24,6 +24,7 @@ import { CopySceneDto, SaveSceneDto } from './map-scene.dto';
 import { MapSceneService } from './map-scene.service';
 
 @Controller('maps/:id')
+/** Обрабатывает HTTP-запросы к сценам карт. */
 @ApiTags('maps')
 export class MapSceneController {
   constructor(private readonly scenes: MapSceneService) {}

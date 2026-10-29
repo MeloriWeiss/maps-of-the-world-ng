@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
+/** Подготавливает состояние и границы страниц для списка. */
 @Injectable()
 export class PaginationService {
   #activatedRoute = inject(ActivatedRoute);

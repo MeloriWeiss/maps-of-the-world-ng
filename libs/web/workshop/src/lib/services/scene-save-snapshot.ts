@@ -1,14 +1,20 @@
-import type { SerializedChunkShape } from './workshop-scene-graph-storage.service';
+import type { SerializedChunkShape } from '../interfaces/workshop-scene-graph-storage';
 import { SceneDependencyStore } from './scene-dependency.store';
 import { SceneDraftRepository } from './scene-draft.repository';
 import { SceneLocalMutation } from './workshop-scene-local.types';
 
+/** Первое и последнее состояние объекта в зафиксированном изменении. */
 export interface FrozenSceneChange {
   first: SceneLocalMutation;
   latest: SceneLocalMutation;
 }
 
-/** A fixed cut of a document. It never reads the mutable editor graph or viewport loaders. */
+/**
+ * Предоставляет неизменяемое представление документа для сохранения сцены.
+ *
+ * Данные читаются из зафиксированного локального документа, а не из графа,
+ * который продолжает изменяться во время редактирования.
+ */
 export class SceneSaveSnapshot {
   readonly #drafts: SceneDraftRepository;
   readonly #dependencies: SceneDependencyStore;
@@ -32,6 +38,7 @@ export class SceneSaveSnapshot {
     this.#dependencies = dependencies;
   }
 
+  /** Возвращает поток изменений документа в пределах снимка. */
   changes(): AsyncGenerator<FrozenSceneChange> {
     return this.#drafts.iterateChangedEntities(
       this.documentKey,
@@ -40,6 +47,13 @@ export class SceneSaveSnapshot {
     );
   }
 
+  /**
+   * Читает состояние фигуры на момент снимка с учётом локальных изменений.
+   *
+   * @param partId Идентификатор фигуры.
+   * @param baseCell Ячейка базовой сцены, в которой ищется фигура.
+   * @returns Сериализованная фигура или `null`, если она удалена либо отсутствует.
+   */
   async readPart(
     partId: string,
     baseCell: string,
@@ -50,6 +64,7 @@ export class SceneSaveSnapshot {
       partId,
       this.cutSeq,
     );
+
     if (local && local.seq > this.fromSeq) {
       if (local.deleted) return null;
       if (!local.body) throw new Error('Part postimage is missing');
@@ -75,6 +90,7 @@ export class SceneSaveSnapshot {
     }
   }
 
+  /** Читает состояние контейнера на момент зафиксированного снимка. */
   async readContainer(containerId: string): Promise<string | null> {
     const local = await this.#drafts.readEntityAt(
       this.documentKey,
@@ -82,8 +98,10 @@ export class SceneSaveSnapshot {
       containerId,
       this.cutSeq,
     );
+
     if (local && local.seq > this.fromSeq)
       return local.deleted ? null : (local.body ?? null);
+
     const base = await this.#dependencies.read(
       this.documentKey,
       this.localCommitId,

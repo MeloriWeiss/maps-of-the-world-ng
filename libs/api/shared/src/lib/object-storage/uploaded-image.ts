@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
+/** Загруженное изображение до проверки и сохранения. */
 export interface UploadedImageFile {
   originalname: string;
   mimetype: string;
@@ -9,6 +10,7 @@ export interface UploadedImageFile {
 
 const ALLOWED_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 
+/** Проверяет формат, размер и содержимое загружаемого изображения. */
 export function validateUploadedImage(file: UploadedImageFile) {
   if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
     throw new BadRequestException('Only PNG, JPEG and WebP are supported');
@@ -18,12 +20,14 @@ export function validateUploadedImage(file: UploadedImageFile) {
   }
 }
 
+/** Определяет расширение файла для поддерживаемого MIME-типа. */
 export function imageExtension(mimeType: string): string {
   if (mimeType === 'image/jpeg') return 'jpg';
   if (mimeType === 'image/webp') return 'webp';
   return 'png';
 }
 
+/** Определяет MIME-тип изображения по ключу файла. */
 export function imageMimeTypeFromKey(objectKey: string): string {
   if (objectKey.endsWith('.jpg')) return 'image/jpeg';
   if (objectKey.endsWith('.webp')) return 'image/webp';

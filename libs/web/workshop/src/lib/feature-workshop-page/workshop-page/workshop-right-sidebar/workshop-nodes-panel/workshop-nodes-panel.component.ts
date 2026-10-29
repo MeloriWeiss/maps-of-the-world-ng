@@ -24,6 +24,7 @@ import {
   VirtualListComponent,
 } from '@wm/web/common-ui';
 
+/** Панель структуры слоёв и групп сцены. */
 @Component({
   selector: 'wm-workshop-nodes-panel',
   imports: [PopoverComponent, SvgComponent, VirtualListComponent],

@@ -8,6 +8,7 @@ import { WorkshopShapesService } from './workshop-shapes.service';
 import { WorkshopChunksService } from './workshop-chunks.service';
 import { WorkshopModeService } from './workshop-mode.service';
 
+/** Организует перерисовку холста и отображение текущего состояния сцены. */
 @Injectable()
 export class WorkshopDrawService {
   #workshopSettingsService = inject(WorkshopSettingsService);
@@ -27,6 +28,7 @@ export class WorkshopDrawService {
 
   isDrawing = false;
 
+  /** Создаёт поток событий рисования для текущего холста. */
   listenDrawEvents() {
     this.canvasRef = this.#workshopCanvasService.canvasRef;
     this.ctx = this.#workshopCanvasService.ctx;
@@ -57,6 +59,7 @@ export class WorkshopDrawService {
     );
   }
 
+  /** Начинает операцию рисования, если режим и кнопка мыши это разрешают. */
   startDrawing(e: MouseEvent) {
     if (!this.#chunks.canEditViewport()) return;
     if (this.#mode.isReadOnly()) return;
@@ -77,6 +80,7 @@ export class WorkshopDrawService {
     );
   }
 
+  /** Передаёт текущую позицию указателя активному инструменту. */
   draw(e: MouseEvent) {
     if (this.#mode.isReadOnly()) return;
     if (!this.isDrawing) return;
@@ -89,6 +93,7 @@ export class WorkshopDrawService {
     this.#workshopToolsService.currentTool.draw(this.ctx, worldCoords);
   }
 
+  /** Завершает рисование и фиксирует выполненную операцию в истории. */
   stopDrawing(e: MouseEvent) {
     if (this.#mode.isReadOnly()) {
       this.isDrawing = false;

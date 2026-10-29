@@ -5,6 +5,7 @@ import { TextShape } from '../../shapes';
 import { Point } from '../../interfaces';
 import { ShapesTypes } from '../../consts';
 
+/** Инструмент создания текстовых фигур на холсте. */
 export class TextTool implements Tool {
   static readonly displayName = 'Текст';
   #shapesService = inject(WorkshopShapesService);

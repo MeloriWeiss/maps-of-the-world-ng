@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
+/** Оборачивает поле формы подписью и дополнительным сообщением. */
 @Component({
   selector: 'wm-labeled-form-field-wrapper',
   imports: [],

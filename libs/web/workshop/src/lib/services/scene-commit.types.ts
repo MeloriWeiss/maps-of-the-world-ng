@@ -1,6 +1,7 @@
 import { MapSceneHeaderV4 } from '@wm/shared/workshop';
-import { SerializedChunkShape } from './workshop-scene-graph-storage.service';
+import type { SerializedChunkShape } from '../interfaces/workshop-scene-graph-storage';
 
+/** Данные страницы сцены, подготовленные для отправки на сервер. */
 export interface ScenePageUpload {
   kind: 'page';
   cellX: number;
@@ -14,6 +15,7 @@ export interface ScenePageUpload {
   deleted?: boolean;
 }
 
+/** Изменение слоя или группы в структуре контейнеров сцены. */
 export interface SceneContainerChange {
   id: string;
   parentId?: string;
@@ -26,6 +28,7 @@ export interface SceneContainerChange {
   deleted?: boolean;
 }
 
+/** Изображение тайла превью и его координаты в пирамиде карты. */
 export interface SceneTileUpload {
   kind: 'tile';
   level: number;
@@ -34,7 +37,7 @@ export interface SceneTileUpload {
   png: Blob;
 }
 
-/** Immutable, recoverable request: retries never incorporate later edits. */
+/** Неизменяемый запрос, пригодный для восстановления: повторная отправка не включает последующие правки. */
 export interface PreparedSceneCommit {
   version: 1;
   accountId: number;

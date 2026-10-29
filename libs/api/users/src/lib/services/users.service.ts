@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaMainService } from '@wm/api/database-main';
 import { UserResponseDto } from '@wm/shared/users';
 
+/** Выполняет операции с данными пользователей. */
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaMainService) {}

@@ -5,7 +5,7 @@ import type {
   SerializedChunkShape,
   SerializedNode,
   SerializedShape,
-} from './workshop-scene-graph-storage.service';
+} from '../interfaces/workshop-scene-graph-storage';
 import type { SceneMutation } from './scene-history';
 import type { NewSceneMutation } from './scene-draft.repository';
 
@@ -15,14 +15,17 @@ type FlatRecord = {
   index: number;
 };
 
+/** Сбрасывает временное состояние выделения перед фиксацией изменения. */
 function normalizedShape(shape: SerializedShape): SerializedShape {
   return { ...shape, selected: false };
 }
 
+/** Убирает временные поля узла фигуры из сохраняемого представления. */
 function normalizedNode(node: Extract<SerializedNode, { type: 'shape' }>) {
   return { ...node, isDirty: false, children: [] };
 }
 
+/** Преобразует границы объекта в формат, используемый журналом изменений. */
 function area(bounds: Bounds): readonly [number, number, number, number] {
   return [
     bounds.x,
@@ -32,10 +35,12 @@ function area(bounds: Bounds): readonly [number, number, number, number] {
   ];
 }
 
+/** Возвращает ключ ячейки, содержащей указанные границы. */
 function cell(bounds: Bounds): string {
   return `${mapCellOf(bounds.x)}:${mapCellOf(bounds.y)}`;
 }
 
+/** Собирает сериализованную запись фигуры с её положением в графе. */
 function partBody(
   shape: SerializedShape,
   record: FlatRecord,
@@ -57,6 +62,7 @@ function partBody(
   return JSON.stringify(part);
 }
 
+/** Находит единственный изменённый экземпляр штампа, если он есть. */
 function changedInstanceId(
   before: SerializedShape | null,
   after: SerializedShape | null,
@@ -64,18 +70,21 @@ function changedInstanceId(
   const previous = before?.type === ShapesTypes.STAMP ? before.instances : [];
   const current = after?.type === ShapesTypes.STAMP ? after.instances : [];
   if (!previous.length && !current.length) return undefined;
+
   const oldById = new Map(
     previous.filter((item) => item.id).map((item) => [item.id, item]),
   );
   const newById = new Map(
     current.filter((item) => item.id).map((item) => [item.id, item]),
   );
+
   const changed = [...new Set([...oldById.keys(), ...newById.keys()])].filter(
     (id) => JSON.stringify(oldById.get(id)) !== JSON.stringify(newById.get(id)),
   );
   return changed.length === 1 ? changed[0] : undefined;
 }
 
+/** Сериализует контейнер сцены для записи в локальный журнал. */
 function containerBody(record: FlatRecord): string {
   const node = record.node;
   if (node.type === 'shape')
@@ -100,7 +109,7 @@ function containerBody(record: FlatRecord): string {
   });
 }
 
-/** Copy postimages while the completed gesture still owns the current graph state. */
+/** Копирует итоговые состояния объектов, пока завершённое действие ещё соответствует текущему графу. */
 export function captureSceneOperation(
   mutation: SceneMutation,
   direction: 'undo' | 'redo',
@@ -112,6 +121,7 @@ export function captureSceneOperation(
     { before: FlatRecord | null; after: FlatRecord | null }
   >();
   const result: NewSceneMutation[] = [];
+
   for (const change of mutation.nodes) {
     const old = change[oldSide];
     const current = change[newSide];
@@ -130,6 +140,7 @@ export function captureSceneOperation(
       ...(body !== null ? { body } : {}),
     });
   }
+
   for (const change of mutation.shapes) {
     const oldShape = change[oldSide];
     const shape = change[newSide];
@@ -146,6 +157,7 @@ export function captureSceneOperation(
     ) {
       throw new Error('Incomplete shape record in completed operation');
     }
+
     const oldBody =
       oldShape && oldNode && oldBounds
         ? partBody(oldShape, oldNode, oldBounds)

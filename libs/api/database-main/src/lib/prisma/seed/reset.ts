@@ -1,5 +1,6 @@
 import { SeedPrismaClient } from './client';
 
+/** Очищает данные, предназначенные для повторного заполнения seed-сценарием. */
 export const resetDatabase = (prisma: SeedPrismaClient) =>
   prisma.$executeRawUnsafe(`
     TRUNCATE TABLE

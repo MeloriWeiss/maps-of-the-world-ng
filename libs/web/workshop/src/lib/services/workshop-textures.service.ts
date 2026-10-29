@@ -1,42 +1,15 @@
+import type {
+  WorkshopTexture,
+  WorkshopTexturePack,
+  TexturePageResponse,
+} from '../interfaces/workshop-textures';
 import { TextureKind } from '@wm/shared/workshop';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { finalize } from 'rxjs';
+import { toWorkshopTexture } from './utils/workshop-texture.mapper';
 
-export interface WorkshopTexture {
-  id: string;
-  name: string;
-  mimeType: string;
-  size: number;
-  width: number | null;
-  height: number | null;
-  imageUrl: string;
-}
-
-export interface WorkshopTexturePack {
-  id: string;
-  name: string;
-  _count: {
-    textures: number;
-  };
-}
-
-interface TextureResponse {
-  id: string;
-  name: string;
-  mimeType: string;
-  size: number;
-  width: number | null;
-  height: number | null;
-}
-
-interface TexturePageResponse {
-  items: TextureResponse[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
+/** Загружает наборы и текстуры, доступные в редакторе Workshop. */
 @Injectable()
 export class WorkshopTexturesService {
   #http = inject(HttpClient);
@@ -51,10 +24,16 @@ export class WorkshopTexturesService {
   readonly hasMore = signal(false);
   readonly error = signal('');
 
+  /**
+   * Загружает доступные наборы текстур и выбирает набор для указанного типа.
+   *
+   * @param kind Тип текстур, которые нужно показать.
+   */
   load(kind: TextureKind = 'SURFACE') {
     this.#kind = kind;
     this.loading.set(true);
     this.error.set('');
+
     this.#http.get<WorkshopTexturePack[]>('/api/texture-packs/mine').subscribe({
       next: (packs) => {
         this.packs.set(packs);
@@ -74,18 +53,25 @@ export class WorkshopTexturesService {
     });
   }
 
+  /**
+   * Выбирает набор и начинает загрузку его текстур с первой страницы.
+   *
+   * @param packId Идентификатор набора текстур.
+   */
   loadPack(packId: string) {
     this.selectedPackId.set(packId);
     this.#page = 1;
     this.#loadTexturePage(false);
   }
 
+  /** Загружает следующую страницу текстур, если она доступна. */
   loadMore() {
     if (this.loading() || !this.hasMore()) return;
     this.#page += 1;
     this.#loadTexturePage(true);
   }
 
+  /** Загружает текущую страницу текстур и обновляет список в сигнале. */
   #loadTexturePage(append: boolean) {
     const packId = this.selectedPackId();
     if (!packId) return;
@@ -104,7 +90,7 @@ export class WorkshopTexturesService {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (response) => {
-          const textures = response.items.map(this.#toTexture);
+          const textures = response.items.map(toWorkshopTexture);
           this.textures.update((current) =>
             append ? [...current, ...textures] : textures,
           );
@@ -114,6 +100,7 @@ export class WorkshopTexturesService {
       });
   }
 
+  /** Оставляет выбранный набор или выбирает первый доступный. */
   #resolveSelectedPackId(packs: WorkshopTexturePack[]): string | null {
     const selectedPackId = this.selectedPackId();
     if (packs.some((pack) => pack.id === selectedPackId)) {
@@ -121,9 +108,4 @@ export class WorkshopTexturesService {
     }
     return packs[0]?.id ?? null;
   }
-
-  #toTexture = (texture: TextureResponse): WorkshopTexture => ({
-    ...texture,
-    imageUrl: `/api/textures/${encodeURIComponent(texture.id)}/file`,
-  });
 }

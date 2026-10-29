@@ -7,6 +7,7 @@ import {
 import { SvgComponent } from '@wm/web/common-ui';
 import { DateDiffPipe } from '@wm/web/common-ui';
 
+/** Представляет публикацию автора в теме форума. */
 @Component({
   selector: 'wm-forum-post',
   imports: [SvgComponent, DateDiffPipe],

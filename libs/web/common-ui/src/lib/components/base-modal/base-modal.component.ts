@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { ModalService } from './modal.service';
 
+/** Предоставляет общую оболочку модального окна. */
 @Component({
   selector: 'wm-base-modal',
   standalone: true,

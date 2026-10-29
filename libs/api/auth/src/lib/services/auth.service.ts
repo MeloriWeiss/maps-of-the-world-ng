@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { refreshTokenDigest } from '../utils/refresh-token-hash';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 
+/** Выполняет операции авторизации, управления аккаунтом и сеансами. */
 @Injectable()
 export class AuthService {
   constructor(

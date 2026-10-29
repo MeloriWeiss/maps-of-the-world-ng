@@ -12,6 +12,7 @@ interface StructuredLogEntry {
   meta?: LogMeta;
 }
 
+/** Форматирует и отправляет структурированные записи журнала API. */
 @Injectable()
 export class ApiLogger implements LoggerService {
   log(message: string, meta?: LogMeta, context?: string) {

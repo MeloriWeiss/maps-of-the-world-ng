@@ -9,6 +9,7 @@ import { MockService } from '@wm/web/data-access/mock';
 import { ModsFiltersItemComponent } from './mods-filters-item';
 import { SvgComponent } from '@wm/web/common-ui';
 
+/** Боковая панель фильтров списка материалов режима. */
 @Component({
   selector: 'wm-mods-list-sidebar',
   standalone: true,

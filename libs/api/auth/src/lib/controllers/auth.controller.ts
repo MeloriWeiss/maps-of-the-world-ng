@@ -34,6 +34,7 @@ import { UserResponseDto } from '@wm/shared/users';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 
 @ApiTags('Auth')
+/** Обрабатывает HTTP-запросы входа, регистрации и управления сеансами. */
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

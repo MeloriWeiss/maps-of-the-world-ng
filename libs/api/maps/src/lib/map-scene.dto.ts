@@ -11,6 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+/** Проверяет данные для копирования сцены между картами. */
 export class CopySceneDto {
   @Type(() => Number)
   @IsInt()
@@ -18,6 +19,7 @@ export class CopySceneDto {
   sourceMapId!: number;
 }
 
+/** Описывает проверенную часть сцены, передаваемую через API. */
 export class SceneChunkDto {
   @IsString()
   @Matches(/^-?\d+:-?\d+$/)
@@ -28,6 +30,7 @@ export class SceneChunkDto {
   body!: string;
 }
 
+/** Проверяет содержимое сцены перед сохранением. */
 export class SaveSceneDto {
   @IsInt()
   @Min(0)

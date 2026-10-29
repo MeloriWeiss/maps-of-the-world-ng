@@ -11,6 +11,7 @@ import { JwtTokenPayload, RefreshPayload } from '../../interfaces';
 import { UserStatus } from '@wm/shared/users';
 import { refreshTokenDigest } from '../../utils/refresh-token-hash';
 
+/** Проверяет refresh-токен для обновления или завершения сеанса. */
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,

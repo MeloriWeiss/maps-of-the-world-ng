@@ -8,7 +8,7 @@ interface Entry {
   pins: number;
 }
 
-/** Local image scope for one verified dependency bundle. */
+/** Локальный набор изображений, ограниченный одним проверенным пакетом зависимостей. */
 export class SceneDependencyImages implements ShapeImageSource {
   readonly #dependencies: SceneDependencyStore;
   readonly #documentKey: string;

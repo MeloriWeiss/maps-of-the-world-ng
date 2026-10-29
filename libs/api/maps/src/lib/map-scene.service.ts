@@ -11,6 +11,7 @@ import { OBJECT_STORAGE, ObjectStorage } from '@wm/api/shared';
 import { SaveSceneDto } from './map-scene.dto';
 import { isMapChunkBody, isMapSceneManifest } from '@wm/shared/workshop';
 
+/** Возвращает ключи частей сцены, входящих в указанный диапазон. */
 export function sceneChunkKeys(raw: string) {
   let value: unknown;
   try {
@@ -23,6 +24,7 @@ export function sceneChunkKeys(raw: string) {
   return value.chunks.map((chunk) => chunk.key);
 }
 
+/** Загружает и сохраняет сериализованные сцены карт. */
 @Injectable()
 export class MapSceneService {
   constructor(

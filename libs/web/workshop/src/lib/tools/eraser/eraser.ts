@@ -9,6 +9,7 @@ import { WorkshopCanvasManagerService } from '../../services/workshop-canvas-man
 import { WorkshopTools } from '../../consts';
 import { canvasColor } from '../../rendering/palette';
 
+/** Инструмент стирания фигур и участков их линий на холсте. */
 export class EraserTool implements Tool {
   static readonly displayName = 'Ластик';
   #shapes = inject(WorkshopShapesService);

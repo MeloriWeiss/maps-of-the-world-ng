@@ -3,6 +3,7 @@ import { PrismaClient } from '../generated/prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 
+/** Управляет подключением Prisma к основной базе данных. */
 @Injectable()
 export class PrismaMainService
   extends PrismaClient

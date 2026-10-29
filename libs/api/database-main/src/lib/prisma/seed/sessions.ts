@@ -2,6 +2,7 @@ import { SeedPrismaClient } from './client';
 import { daysAgo, daysFromNow } from './dates';
 import { SeedAccount } from './types';
 
+/** Создаёт тестовые сеансы аккаунтов. */
 export async function seedSessions(
   prisma: SeedPrismaClient,
   accounts: SeedAccount[],

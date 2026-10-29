@@ -4,7 +4,7 @@ import { LabeledFormFieldWrapperComponent } from './labeled-form-field-wrapper/l
 import { PaginationComponent } from './pagination/pagination.component';
 import { SearchInputComponent } from './search-input/search-input.component';
 import { SvgComponent } from './svg/svg.component';
-import { LabeledCheckboxComponent } from './labeled-checbox/labeled-checkbox.component';
+import { LabeledCheckboxComponent } from './labeled-checkbox/labeled-checkbox.component';
 import { DeskListComponent } from './desk-list/desk-list.component';
 import { PaginationService } from './pagination/pagination.service';
 import { ImagesSliderComponent } from './images-slider/images-slider.component';
@@ -27,7 +27,7 @@ import { EmptyStateComponent } from './empty-state/empty-state.component';
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { ToggleComponent } from './toggle/toggle.component';
 import { SelectComponent } from './select/select.component';
-import { SelectOptionComponent } from './select/select-option.component';
+import { SelectOptionComponent } from './select/select-option/select-option.component';
 import { TabsComponent } from './tabs/tabs.component';
 import { InputComponent } from './input/input.component';
 
@@ -66,13 +66,13 @@ export {
   InputComponent,
 };
 
-export type { TabItem } from './tabs/tabs.component';
+export type { TabItem } from './tabs/tabs.component.types';
 export { AvatarComponent } from './avatar/avatar.component';
 
-export type { VirtualListItemContext } from './virtual-list/virtual-list.component';
-export type { PopoverAlignment } from './popover/popover.component';
-export type { SearchableSelectOption } from './searchable-select/searchable-select.component';
+export type { VirtualListItemContext } from './virtual-list/virtual-list.component.types';
+export type { PopoverAlignment } from './popover/popover.component.types';
+export type { SearchableSelectOption } from './searchable-select/searchable-select.component.types';
 export type {
   PopoverAppearance,
   PopoverPosition,
-} from './popover/popover.component';
+} from './popover/popover.component.types';

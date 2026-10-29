@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { NavigationHistoryService } from './navigation-history.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+/** Показывает навигационные ссылки с учётом предыдущих переходов. */
 @Component({
   selector: 'wm-navigation-manager',
   imports: [],

@@ -8,6 +8,7 @@ import { queueSceneBlobCleanup } from './scene-blob-cleanup.service';
 import { MapCatalogQueryDto, SaveMapDto } from './maps.dto';
 import { createEmptyMapSceneHeader } from '@wm/shared/workshop';
 
+/** Выполняет запросы и операции API карт. */
 @Injectable()
 export class MapsService {
   constructor(private readonly prisma: PrismaMainService) {}

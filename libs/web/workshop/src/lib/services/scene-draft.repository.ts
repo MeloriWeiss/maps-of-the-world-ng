@@ -16,8 +16,10 @@ const MAX_BATCH_BYTES = 1024 * 1024;
 const LEASE_MS = 15_000;
 const encoder = new TextEncoder();
 
+/** Изменение сцены до назначения ключа документа и номера последовательности. */
 export type NewSceneMutation = Omit<SceneLocalMutation, 'documentKey' | 'seq'>;
 
+/** Преобразует ошибку IndexedDB в ошибку локального черновика. */
 function storageError(error: DOMException | null): Error {
   if (error?.name === 'QuotaExceededError') {
     return new SceneLocalStorageError(
@@ -28,17 +30,24 @@ function storageError(error: DOMException | null): Error {
   return error ?? new Error('Не удалось записать локальный черновик');
 }
 
-/** Durable source of truth. A loaded graph is only a view of this document. */
+/**
+ * Надёжное локальное хранилище изменений документа Workshop.
+ *
+ * Загруженный граф служит представлением документа, а журнал операций позволяет
+ * восстановить изменения независимо от текущего состояния редактора.
+ */
 export class SceneDraftRepository {
   readonly #writerId = crypto.randomUUID();
   readonly #queues = new Map<string, Promise<void>>();
 
+  /** Создаёт или находит локальный документ для пользователя и карты. */
   async createDocument(
     accountId: number,
     mapId: number | undefined,
     baseRevision: number,
   ): Promise<SceneLocalDocument> {
     const db = await openWorkshopSceneDatabase();
+
     const localDocumentId = crypto.randomUUID();
     const document: SceneLocalDocument = {
       documentKey: `${accountId}:${localDocumentId}`,
@@ -51,6 +60,7 @@ export class SceneDraftRepository {
       acknowledgedSeq: 0,
       writerEpoch: 0,
     };
+
     return new Promise<SceneLocalDocument>((resolve, reject) => {
       const tx = db.transaction('documents', 'readwrite');
       const store = tx.objectStore('documents');
@@ -65,14 +75,17 @@ export class SceneDraftRepository {
       } else {
         store.add(document);
       }
+
       tx.oncomplete = () => resolve(result);
       tx.onabort = () => reject(storageError(tx.error));
       tx.onerror = () => reject(storageError(tx.error));
     });
   }
 
+  /** Читает метаданные локального документа. */
   async readDocument(documentKey: string): Promise<SceneLocalDocument | null> {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('documents', 'readonly');
       const request = tx.objectStore('documents').get(documentKey);
@@ -82,8 +95,10 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Связывает локальный черновик с картой, если связь ещё не задана. */
   async bindMap(token: SceneWriterToken, mapId: number): Promise<void> {
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction('documents', 'readwrite');
       const store = tx.objectStore('documents');
@@ -97,15 +112,22 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         if (document.mapId === undefined) store.put({ ...document, mapId });
       };
+
       tx.oncomplete = () => resolve();
       tx.onabort = () => reject(storageError(tx.error));
       tx.onerror = () => reject(storageError(tx.error));
     });
   }
 
-  /** The old publisher may acknowledge its own verified server commit while transport migration is in progress. */
+  /**
+   * Подтверждает проверенную публикацию, выполненную прежним транспортом.
+   *
+   * Операция сохраняется для переноса существующих черновиков и принимает
+   * подтверждение только для ожидаемой версии и уже записанной последовательности.
+   */
   async acknowledgeLegacyPublication(
     token: SceneWriterToken,
     input: {
@@ -124,7 +146,9 @@ export class SceneDraftRepository {
         'Не подтверждена версия сохранённой карты',
       );
     }
+
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction('documents', 'readwrite');
       const store = tx.objectStore('documents');
@@ -141,6 +165,7 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         store.put({
           ...document,
           baseRevision: input.publishedRevision,
@@ -153,11 +178,13 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Выполняет действие под эксклюзивной блокировкой документа. */
   async withWriter<T>(
     documentKey: string,
     action: (token: SceneWriterToken) => Promise<T>,
   ): Promise<T> {
     const previous = this.#queues.get(documentKey) ?? Promise.resolve();
+
     let unblock: () => void = () => undefined;
     const next = new Promise<void>((resolve) => {
       unblock = resolve;
@@ -165,6 +192,7 @@ export class SceneDraftRepository {
     const tail = previous.then(() => next);
     this.#queues.set(documentKey, tail);
     await previous;
+
     const run = async () => {
       const token = await this.#claimWriter(documentKey);
       const heartbeat = setInterval(() => {
@@ -177,6 +205,7 @@ export class SceneDraftRepository {
         await this.#releaseWriter(token).catch(() => undefined);
       }
     };
+
     try {
       if (typeof navigator !== 'undefined' && navigator.locks) {
         return await navigator.locks.request(
@@ -184,6 +213,7 @@ export class SceneDraftRepository {
           run,
         );
       }
+
       return await run();
     } finally {
       unblock();
@@ -192,6 +222,7 @@ export class SceneDraftRepository {
     }
   }
 
+  /** Добавляет завершённую операцию в последовательный журнал изменений. */
   async appendOperation(
     token: SceneWriterToken,
     operationId: string,
@@ -204,11 +235,14 @@ export class SceneDraftRepository {
         'Пустое изменение нельзя сохранить',
       );
     }
+
     await this.#discardIncomplete(token);
     const seq = await this.#beginOperation(token, operationId, expectedRecords);
+
     let batch: SceneLocalMutation[] = [];
     let batchBytes = 0;
     let total = 0;
+
     for await (const mutation of mutations) {
       const record: SceneLocalMutation = {
         ...mutation,
@@ -216,12 +250,14 @@ export class SceneDraftRepository {
         seq,
       };
       const size = encoder.encode(JSON.stringify(record)).byteLength;
+
       if (size > MAX_MUTATION_BYTES) {
         throw new SceneLocalStorageError(
           'invalid-part',
           'Часть объекта превышает локальный лимит 256 KiB',
         );
       }
+
       if (
         batch.length === MAX_BATCH_RECORDS ||
         batchBytes + size > MAX_BATCH_BYTES
@@ -234,17 +270,21 @@ export class SceneDraftRepository {
       batchBytes += size;
       total++;
     }
+
     if (total !== expectedRecords) {
       throw new SceneLocalStorageError(
         'invalid-part',
         'Количество частей изменения не совпало',
       );
     }
+
     if (batch.length) await this.#writeMutationBatch(token, batch);
+
     await this.#finishOperation(token, seq);
     return seq;
   }
 
+  /** Проверяет, что все изменения документа записаны в IndexedDB. */
   async flush(token: SceneWriterToken): Promise<number> {
     const document = await this.#fencedRead(token);
     if (document.activeSeq !== document.durableSeq) {
@@ -256,6 +296,7 @@ export class SceneDraftRepository {
     return document.durableSeq;
   }
 
+  /** Фиксирует диапазон изменений как новый коммит для публикации. */
   async seal(
     token: SceneWriterToken,
     input: {
@@ -268,6 +309,7 @@ export class SceneDraftRepository {
     },
   ): Promise<SceneLocalCommit> {
     const db = await openWorkshopSceneDatabase();
+
     const localCommitId = crypto.randomUUID();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(['documents', 'localCommits'], 'readwrite');
@@ -284,6 +326,7 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         commit = {
           version: 2,
           documentKey: token.documentKey,
@@ -308,6 +351,7 @@ export class SceneDraftRepository {
           completedParts: 0,
           idempotencyKey: crypto.randomUUID(),
         };
+
         store.put({ ...document, activeCommitId: localCommitId });
         tx.objectStore('localCommits').add(commit);
       };
@@ -317,6 +361,7 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Читает последнее состояние сущности не позднее заданного номера операции. */
   async readEntityAt(
     documentKey: string,
     entityType: SceneEntityType,
@@ -342,6 +387,7 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Перебирает изменения документа постранично в заданном диапазоне. */
   async *iterateMutations(
     documentKey: string,
     fromSeq: number,
@@ -361,7 +407,11 @@ export class SceneDraftRepository {
     }
   }
 
-  /** Entity order keeps only one entity's revisions in memory at a time. */
+  /**
+   * Возвращает первое и последнее изменение каждой сущности в диапазоне.
+   *
+   * Обход постраничный и хранит в памяти изменения только одной сущности.
+   */
   async *iterateChangedEntities(
     documentKey: string,
     fromSeq: number,
@@ -390,12 +440,14 @@ export class SceneDraftRepository {
     }
   }
 
+  /** Подтверждает публикацию коммита и продвигает базовую ревизию документа. */
   async acknowledge(
     token: SceneWriterToken,
     localCommitId: string,
     publishedRevision: number,
   ): Promise<void> {
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(['documents', 'localCommits'], 'readwrite');
       const documentStore = tx.objectStore('documents');
@@ -404,14 +456,17 @@ export class SceneDraftRepository {
       const commitRequest = commitStore.get([token.documentKey, localCommitId]);
       let document: SceneLocalDocument | undefined;
       let commit: SceneLocalCommit | undefined;
+
       let documentLoaded = false;
       let commitLoaded = false;
+
       const update = () => {
         if (!documentLoaded || !commitLoaded) return;
         if (!document || !commit) {
           tx.abort();
           return;
         }
+
         if (
           !this.#isWriter(document, token) ||
           document.activeCommitId !== localCommitId ||
@@ -421,6 +476,7 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         documentStore.put({
           ...document,
           baseRevision: publishedRevision,
@@ -433,11 +489,13 @@ export class SceneDraftRepository {
           publishedRevision,
         });
       };
+
       docRequest.onsuccess = () => {
         document = docRequest.result as SceneLocalDocument | undefined;
         documentLoaded = true;
         update();
       };
+
       commitRequest.onsuccess = () => {
         commit = commitRequest.result as SceneLocalCommit | undefined;
         commitLoaded = true;
@@ -449,6 +507,7 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Читает страницу записей журнала между заданными номерами операций. */
   async #mutationPage(
     documentKey: string,
     fromSeq: number,
@@ -456,6 +515,7 @@ export class SceneDraftRepository {
     after?: IDBValidKey,
   ) {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise<{ items: SceneLocalMutation[]; lastKey?: IDBValidKey }>(
       (resolve, reject) => {
         const tx = db.transaction('mutations', 'readonly');
@@ -469,11 +529,13 @@ export class SceneDraftRepository {
         const request = tx
           .objectStore('mutations')
           .openCursor(IDBKeyRange.bound(lower, upper, Boolean(after)));
+
         const items: SceneLocalMutation[] = [];
         let lastKey: IDBValidKey | undefined;
         request.onsuccess = () => {
           const cursor = request.result;
           if (!cursor || items.length === MAX_BATCH_RECORDS) return;
+
           items.push(cursor.value as SceneLocalMutation);
           lastKey = cursor.primaryKey;
           cursor.continue();
@@ -485,12 +547,14 @@ export class SceneDraftRepository {
     );
   }
 
+  /** Читает страницу истории одной сущности в порядке её изменений. */
   async #entityPage(
     documentKey: string,
     entityType: SceneEntityType,
     after?: IDBValidKey,
   ) {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise<{ items: SceneLocalMutation[]; lastKey?: IDBValidKey }>(
       (resolve, reject) => {
         const tx = db.transaction('mutations', 'readonly');
@@ -505,11 +569,13 @@ export class SceneDraftRepository {
           .objectStore('mutations')
           .index('byEntity')
           .openCursor(IDBKeyRange.bound(lower, upper, Boolean(after)));
+
         const items: SceneLocalMutation[] = [];
         let lastKey: IDBValidKey | undefined;
         request.onsuccess = () => {
           const cursor = request.result;
           if (!cursor || items.length === MAX_BATCH_RECORDS) return;
+
           items.push(cursor.value as SceneLocalMutation);
           lastKey = cursor.key;
           cursor.continue();
@@ -521,17 +587,20 @@ export class SceneDraftRepository {
     );
   }
 
+  /** Резервирует следующий номер операции и создаёт запись со статусом записи. */
   async #beginOperation(
     token: SceneWriterToken,
     operationId: string,
     expectedRecords: number,
   ): Promise<number> {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction(['documents', 'operations'], 'readwrite');
       const documents = tx.objectStore('documents');
       const request = documents.get(token.documentKey);
       let seq = 0;
+
       request.onsuccess = () => {
         const document = request.result as SceneLocalDocument | undefined;
         if (
@@ -541,6 +610,7 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         seq = document.activeSeq + 1;
         documents.put({ ...document, activeSeq: seq });
         const operation: SceneLocalOperation = {
@@ -552,17 +622,20 @@ export class SceneDraftRepository {
         };
         tx.objectStore('operations').add(operation);
       };
+
       tx.oncomplete = () => resolve(seq);
       tx.onabort = () => reject(storageError(tx.error));
       tx.onerror = () => reject(storageError(tx.error));
     });
   }
 
+  /** Пакетно записывает изменения и проверяет актуальность токена владельца. */
   async #writeMutationBatch(
     token: SceneWriterToken,
     batch: readonly SceneLocalMutation[],
   ): Promise<void> {
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(['documents', 'mutations'], 'readwrite');
       const request = tx.objectStore('documents').get(token.documentKey);
@@ -576,6 +649,7 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         for (const mutation of batch) tx.objectStore('mutations').add(mutation);
       };
       tx.oncomplete = () => resolve();
@@ -584,12 +658,15 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Отмечает операцию полностью записанной и фиксирует её номер. */
   async #finishOperation(token: SceneWriterToken, seq: number): Promise<void> {
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(['documents', 'operations'], 'readwrite');
       const documents = tx.objectStore('documents');
       const request = documents.get(token.documentKey);
+
       request.onsuccess = () => {
         const document = request.result as SceneLocalDocument | undefined;
         if (
@@ -599,6 +676,7 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         const operations = tx.objectStore('operations');
         const operationRequest = operations.get([token.documentKey, seq]);
         operationRequest.onsuccess = () => {
@@ -609,6 +687,7 @@ export class SceneDraftRepository {
             tx.abort();
             return;
           }
+
           operations.put({ ...operation, status: 'complete' });
           documents.put({ ...document, durableSeq: seq });
         };
@@ -619,13 +698,17 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Удаляет незавершённую запись, оставшуюся после прерванной операции. */
   async #discardIncomplete(token: SceneWriterToken): Promise<void> {
     const document = await this.#fencedRead(token);
     if (document.activeSeq === document.durableSeq) return;
+
     const seq = document.activeSeq;
+
     while (true) {
       const page = await this.#mutationPage(token.documentKey, seq, seq);
       if (!page.items.length) break;
+
       const db = await openWorkshopSceneDatabase();
       await new Promise<void>((resolve, reject) => {
         const tx = db.transaction(['documents', 'mutations'], 'readwrite');
@@ -655,6 +738,7 @@ export class SceneDraftRepository {
         tx.onerror = () => reject(storageError(tx.error));
       });
     }
+
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(['documents', 'operations'], 'readwrite');
@@ -677,6 +761,7 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Читает документ, только если токен записи всё ещё действителен. */
   async #fencedRead(token: SceneWriterToken): Promise<SceneLocalDocument> {
     const document = await this.readDocument(token.documentKey);
     if (!document || !this.#isWriter(document, token)) {
@@ -688,6 +773,7 @@ export class SceneDraftRepository {
     return document;
   }
 
+  /** Проверяет идентификатор владельца, эпоху и срок действия блокировки. */
   #isWriter(
     document: SceneLocalDocument | undefined,
     token: SceneWriterToken,
@@ -699,13 +785,16 @@ export class SceneDraftRepository {
     );
   }
 
+  /** Получает право записи документа и продвигает эпоху владельца. */
   async #claimWriter(documentKey: string): Promise<SceneWriterToken> {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('documents', 'readwrite');
       const store = tx.objectStore('documents');
       const request = store.get(documentKey);
       let token: SceneWriterToken;
+
       request.onsuccess = () => {
         const document = request.result as SceneLocalDocument | undefined;
         if (
@@ -716,6 +805,7 @@ export class SceneDraftRepository {
           tx.abort();
           return;
         }
+
         token = {
           documentKey,
           writerId: this.#writerId,
@@ -728,6 +818,7 @@ export class SceneDraftRepository {
           leaseUntil: Date.now() + LEASE_MS,
         });
       };
+
       tx.oncomplete = () => resolve(token);
       tx.onabort = () =>
         reject(
@@ -740,6 +831,7 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Продлевает аренду активного владельца документа. */
   async #renewWriter(token: SceneWriterToken): Promise<void> {
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
@@ -766,6 +858,7 @@ export class SceneDraftRepository {
     });
   }
 
+  /** Освобождает блокировку документа, если токен всё ещё принадлежит писателю. */
   async #releaseWriter(token: SceneWriterToken): Promise<void> {
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {

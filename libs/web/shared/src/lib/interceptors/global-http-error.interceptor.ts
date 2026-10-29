@@ -4,6 +4,7 @@ import { inject } from '@angular/core';
 import { ErrorToastComponent, ToastService } from '@wm/web/common-ui';
 import { BYPASS_GLOBAL_ERROR } from '@wm/web/data-access/shared';
 
+/** Обрабатывает общие HTTP-ошибки приложения. */
 export const globalHttpErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastService = inject(ToastService);
 

@@ -1,17 +1,10 @@
+import type { S3Config } from './interfaces/s3-config';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, createHmac } from 'node:crypto';
 import { ObjectStorage, PutObjectInput } from './object-storage.interface';
 
-interface S3Config {
-  endpoint: string;
-  region: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucket: string;
-  forcePathStyle: boolean;
-}
-
+/** Выполняет операции с объектами в S3-совместимом хранилище. */
 @Injectable()
 export class S3ObjectStorageService implements ObjectStorage {
   readonly #config: S3Config;

@@ -52,6 +52,7 @@ const packNames = [
   'Пустой черновик',
 ];
 
+/** Создаёт тестовые наборы текстур и их файлы. */
 export async function seedTexturePacks(
   prisma: SeedPrismaClient,
   accounts: SeedAccount[],

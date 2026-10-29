@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { ToastService } from '../toast.service';
 
+/** Размещает активные всплывающие уведомления на странице. */
 @Component({
   selector: 'wm-toast-host',
   imports: [],

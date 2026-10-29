@@ -15,6 +15,7 @@ import {
 } from './dto/user-analytics-query.dto';
 import { AdminAuditQueryDto } from './dto/admin-audit-query.dto';
 
+/** Выполняет административные выборки и операции модерации. */
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaMainService) {}

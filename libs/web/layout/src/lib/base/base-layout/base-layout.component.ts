@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 import { FooterComponent } from '../footer/footer.component';
 
+/** Общий макет публичных страниц с шапкой и подвалом. */
 @Component({
   selector: 'wm-base-layout',
   imports: [RouterOutlet, HeaderComponent, FooterComponent],

@@ -1,0 +1,78 @@
+@use '../../forum-layout' as *;
+header {
+  margin-bottom: 30px;
+}
+h1 {
+  font-size: clamp(28px, 4vw, 42px);
+  margin: 12px 0 16px;
+}
+header > p:last-child {
+  line-height: 1.7;
+  color: var(--text-secondary-color);
+}
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 32px;
+}
+.editor {
+  padding: 28px;
+  display: grid;
+  gap: 12px;
+}
+label,
+.field-label {
+  font-weight: 600;
+  margin-top: 8px;
+}
+.hint {
+  font-size: 12px;
+  color: var(--text-secondary-color);
+}
+.tips {
+  line-height: 1.7;
+  padding: 24px;
+  align-self: start;
+  border: 1px solid var(--page-line-color);
+  background: var(--page-paper-deep-color);
+  border-radius: 16px;
+}
+.tips h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+.tips ol {
+  padding-left: 22px;
+}
+.tips li {
+  list-style: decimal;
+  margin-bottom: 14px;
+}
+.editor .actions {
+  margin-top: 12px;
+}
+.editor .actions > a {
+  padding: 12px;
+  text-decoration: underline;
+}
+.preview {
+  border-top: 1px solid var(--border-separator-color);
+  padding-top: 24px;
+}
+.preview p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+  margin-top: 20px;
+}
+.preview h2 {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 800px) {
+  .editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .editor {
+    padding: 18px;
+  }
+}

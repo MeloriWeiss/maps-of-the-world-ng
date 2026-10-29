@@ -1,6 +1,7 @@
 import { Shape, ShapeActions } from '../shape';
 import { Point } from '../../interfaces';
 
+/** Фигура мазка с текстурой, параметрами поворота и точками траектории. */
 export interface TextureStroke extends Shape {
   points: Point[];
   textureId: string | null;
@@ -10,6 +11,7 @@ export interface TextureStroke extends Shape {
   textureColor: string;
 }
 
+/** Данные мазка для создания до назначения идентификатора и методов фигуры. */
 export type TextureStrokeCreateData = Omit<
   TextureStroke,
   keyof ShapeActions | 'id'

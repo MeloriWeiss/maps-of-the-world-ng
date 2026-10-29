@@ -1,3 +1,4 @@
+/** Краткие данные профиля для связанных разделов приложения. */
 export interface ProfileSummaryDto {
   nickname: string;
   avatarUrl: string | null;

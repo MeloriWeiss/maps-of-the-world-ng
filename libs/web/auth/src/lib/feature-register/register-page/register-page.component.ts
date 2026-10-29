@@ -21,6 +21,7 @@ import { authConfig } from '@wm/shared/auth';
 import { firstValueFrom, tap } from 'rxjs';
 import { authReturnUrl } from '../../auth/auth-return-url';
 
+/** Содержит форму регистрации аккаунта и обработку её результата. */
 @Component({
   selector: 'wm-signup-page',
   imports: [

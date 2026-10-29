@@ -5,7 +5,7 @@ interface ImageEntry {
   pins: number;
 }
 
-/** Shared, bounded cache. Derived resolutions never enter map snapshots or storage. */
+/** Общий ограниченный кэш изображений; производные размеры не попадают в снимки карты и хранилище. */
 class WorkshopImageCache {
   #entries = new Map<string, ImageEntry>();
   #budget = 96 * 1024 * 1024;
@@ -92,4 +92,5 @@ class WorkshopImageCache {
   }
 }
 
+/** Общий кэш изображений, используемых при отрисовке Workshop. */
 export const workshopImages = new WorkshopImageCache();

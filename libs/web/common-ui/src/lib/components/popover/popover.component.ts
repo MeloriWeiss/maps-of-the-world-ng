@@ -1,3 +1,8 @@
+import type {
+  PopoverAlignment,
+  PopoverAppearance,
+  PopoverPosition,
+} from './popover.component.types';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,13 +13,7 @@ import {
 } from '@angular/core';
 import { ClickOutsideDirective } from '../../directives';
 
-export type PopoverAlignment = 'start' | 'center' | 'end';
-export type PopoverAppearance = 'default' | 'bare';
-export interface PopoverPosition {
-  x: number;
-  y: number;
-}
-
+/** Показывает всплывающее содержимое рядом с элементом-триггером. */
 @Component({
   selector: 'wm-popover',
   imports: [ClickOutsideDirective],

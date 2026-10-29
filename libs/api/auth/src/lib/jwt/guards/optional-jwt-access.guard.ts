@@ -3,6 +3,7 @@ import { Request } from 'express';
 import { jwtConfig } from '../consts';
 import { JwtAccessGuard } from './jwt-access.guard';
 
+/** Добавляет данные пользователя к запросу, если access-токен передан и действителен. */
 @Injectable()
 export class OptionalJwtAccessGuard extends JwtAccessGuard {
   override canActivate(context: ExecutionContext) {

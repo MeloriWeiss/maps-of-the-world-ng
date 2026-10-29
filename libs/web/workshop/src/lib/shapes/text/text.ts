@@ -8,6 +8,7 @@ import {
   ShapeRenderContext,
 } from '../../rendering/shape-render-context';
 
+/** Реализация текстовой фигуры с измерением и отрисовкой текста. */
 export class TextShape extends BaseShapeShape implements Text {
   type = ShapesTypes.TEXT;
 

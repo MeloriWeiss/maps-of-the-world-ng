@@ -1,3 +1,10 @@
+import type {
+  SerializedShapeNode,
+  SerializedChunkShape,
+  SerializedNode,
+  SerializedShape,
+  WorkshopSnapshot,
+} from '../interfaces/workshop-scene-graph-storage';
 import { Injectable, signal } from '@angular/core';
 import type { SceneMutation } from './scene-history';
 import { NodesTypes, ShapesTypes } from '../consts';
@@ -7,7 +14,6 @@ import { restoreSerializedShape } from '../shapes/restore-serialized-shape';
 import {
   Text,
   StampShape,
-  StampInstance,
   Line,
   LineShape,
   Rectangle,
@@ -16,117 +22,7 @@ import {
   TextureStroke,
 } from '../shapes';
 
-export interface SerializedBaseNode {
-  id: string;
-  type: NodesTypes;
-  visible: boolean;
-  locked?: boolean;
-  isDirty: boolean;
-  zIndex: number;
-  childIndex?: number;
-  children: SerializedNode[];
-}
-
-interface SerializedLayerNode extends SerializedBaseNode {
-  type: NodesTypes.LAYER;
-  layerData: unknown;
-}
-
-interface SerializedGroupNode extends SerializedBaseNode {
-  type: NodesTypes.GROUP;
-}
-
-interface SerializedShapeNode extends SerializedBaseNode {
-  type: NodesTypes.SHAPE;
-  shapeId: string;
-}
-
-export interface SerializedChunkShape {
-  shape: SerializedShape;
-  node: SerializedShapeNode;
-  parentId: string;
-  index: number;
-  bounds?: { x: number; y: number; width: number; height: number };
-}
-
-export type SerializedNode =
-  | SerializedLayerNode
-  | SerializedGroupNode
-  | SerializedShapeNode;
-
-interface SerializedBaseShape {
-  id: string;
-  objectId?: string;
-  erasures?: Shape['erasures'];
-  name?: string;
-  type: ShapesTypes;
-  strokeColor: string;
-  opacity: number;
-  strokeWidth: number;
-  selected?: boolean;
-  layerId?: string;
-  shadowColor?: string;
-  shadowBlur?: number;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
-  minZoom?: number;
-  maxZoom?: number;
-  mapObjectType?: string;
-}
-
-interface SerializedLineShape extends SerializedBaseShape {
-  type: ShapesTypes.LINE;
-  points: Line['points'];
-}
-
-interface SerializedRectangleShape extends SerializedBaseShape {
-  type: ShapesTypes.RECTANGLE;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fillColor: string;
-}
-
-interface SerializedTextureShape extends SerializedBaseShape {
-  type: ShapesTypes.TEXTURE;
-  points: TextureStroke['points'];
-  textureId: string | null;
-  textureUrl: string | null;
-  textureScale: number;
-  textureRotation: number;
-  textureColor: string;
-}
-
-interface SerializedTextShape extends SerializedBaseShape {
-  type: ShapesTypes.TEXT;
-  text: string;
-  x: number;
-  y: number;
-  fontSize: number;
-  fontFamily: string;
-  fillColor: string;
-}
-interface SerializedStampShape extends SerializedBaseShape {
-  type: ShapesTypes.STAMP;
-  textureId: string;
-  textureUrl: string;
-  instances: StampInstance[];
-}
-
-export type SerializedShape =
-  | SerializedTextShape
-  | SerializedStampShape
-  | SerializedLineShape
-  | SerializedRectangleShape
-  | SerializedTextureShape;
-
-export interface WorkshopSnapshot {
-  version: 1 | 2;
-  shapes: SerializedShape[];
-  nodes: SerializedNode;
-}
-
+/** Сериализует и восстанавливает граф сцены для локальных снимков. */
 @Injectable()
 export class WorkshopSceneGraphStorageService {
   persistRemoteDraft: (() => void) | null = null;
@@ -142,6 +38,7 @@ export class WorkshopSceneGraphStorageService {
   #nodeOrder = new Map<string, number>();
   #nodeParent = new Map<string, string>();
 
+  /** Создаёт корневой узел сцены и очищает состояние предыдущей карты. */
   importSceneRoot(id: string) {
     this.shapes.clear();
     this.nodes.clear();
@@ -150,6 +47,7 @@ export class WorkshopSceneGraphStorageService {
     this.#nodeOrder.clear();
     this.#nodeParent.clear();
     const root = new LayerNode({ name: 'Карта' });
+
     this.#setReadonlyId(root, id);
     this.nodes.set(id, root);
     this.nodesRoot.set(root);
@@ -157,6 +55,12 @@ export class WorkshopSceneGraphStorageService {
     this.graphVersion.update((value) => value + 1);
   }
 
+  /**
+   * Импортирует слои и группы из описания сцены.
+   *
+   * @param containers Описания контейнеров, их порядка и родительских узлов.
+   * @param overwrite Нужно ли обновлять уже существующие контейнеры.
+   */
   importSceneContainers(
     containers: readonly {
       id: string;
@@ -180,6 +84,7 @@ export class WorkshopSceneGraphStorageService {
         existing.zIndex = item.orderKey;
         if (existing instanceof LayerNode)
           existing.layerData = { name: item.name };
+
         const parent = item.parentId ? this.nodes.get(item.parentId) : null;
         if (parent && existing.parent !== parent) {
           existing.parent?.removeChild(existing.id);
@@ -190,8 +95,10 @@ export class WorkshopSceneGraphStorageService {
             (this.#nodeOrder.get(a.id) ?? a.zIndex) -
             (this.#nodeOrder.get(b.id) ?? b.zIndex),
         );
+
         continue;
       }
+
       const parent = item.parentId ? this.nodes.get(item.parentId) : null;
       if (!parent) continue;
       const node =
@@ -212,9 +119,11 @@ export class WorkshopSceneGraphStorageService {
       );
       this.nodes.set(node.id, node);
     }
+
     this.graphVersion.update((value) => value + 1);
   }
 
+  /** Индексирует сериализованные узлы для последующей подстановки страниц фигур. */
   indexSceneNodes(nodes: SerializedNode) {
     this.#pendingNodes.clear();
     this.#nodeOrder.clear();
@@ -235,10 +144,12 @@ export class WorkshopSceneGraphStorageService {
     visit(nodes);
   }
 
+  /** Возвращает отложенный узел фигуры по её идентификатору. */
   pendingChunkNode(shapeId: string) {
     return this.#pendingNodes.get(shapeId);
   }
 
+  /** Возвращает следующий свободный индекс дочернего узла контейнера. */
   nextChunkChildIndex(parentId: string) {
     let next = 0;
     for (const pending of this.#pendingNodes.values()) {
@@ -248,6 +159,7 @@ export class WorkshopSceneGraphStorageService {
     return next;
   }
 
+  /** Обновляет отложенные метаданные фигур после замены страницы сцены. */
   replaceChunkMetadata(
     removedIds: ReadonlySet<string>,
     records: readonly SerializedChunkShape[],
@@ -271,6 +183,7 @@ export class WorkshopSceneGraphStorageService {
     }
   }
 
+  /** Импортирует дерево контейнеров и откладывает загрузку узлов фигур. */
   importSceneNodes(nodes: SerializedNode) {
     this.indexSceneNodes(nodes);
     const strip = (node: SerializedNode): SerializedNode => ({
@@ -287,9 +200,17 @@ export class WorkshopSceneGraphStorageService {
     );
   }
 
+  /**
+   * Восстанавливает фигуры страницы и добавляет их в граф сцены.
+   *
+   * @param raw Сериализованное содержимое страницы.
+   * @param isCurrent Проверка актуальности асинхронной операции.
+   * @param overwrite Разрешает заменять уже загруженные фигуры.
+   */
   async importChunk(raw: string, isCurrent = () => true, overwrite = false) {
     const input: unknown = JSON.parse(raw);
     if (!isMapChunkBody(input)) throw new Error('Invalid chunk data');
+
     const records = input as unknown as SerializedChunkShape[];
     if (records.some((record) => !this.nodes.has(record.parentId)))
       throw new Error('Invalid chunk parent');
@@ -302,11 +223,13 @@ export class WorkshopSceneGraphStorageService {
       this.#nodeOrder.set(record.node.id, record.index);
       this.#nodeParent.set(record.node.id, record.parentId);
     }
+
     const restored = this.#deserializeShapes(
       records.map((record) => record.shape as unknown as SerializedShape),
     );
     await Promise.all([...restored.values()].map((shape) => shape.whenReady()));
     if (!isCurrent()) return;
+
     for (const [id, shape] of restored) {
       if (this.shapes.has(id) && !overwrite) continue;
       const pending = this.#pendingNodes.get(id);
@@ -329,9 +252,11 @@ export class WorkshopSceneGraphStorageService {
           (this.#nodeOrder.get(b.id) ?? b.zIndex),
       );
     }
+
     this.graphVersion.update((value) => value + 1);
   }
 
+  /** Сериализует все фигуры или только фигуры из указанного набора. */
   exportShapes(ids?: ReadonlySet<string>) {
     const shapes = ids
       ? [...ids].flatMap((id) => {
@@ -342,10 +267,12 @@ export class WorkshopSceneGraphStorageService {
     return shapes.map((shape) => this.#serializeShape(shape));
   }
 
+  /** Сериализует граф вместе с узлами фигур. */
   exportNodes() {
     return this.#serializeNode(this.nodesRoot());
   }
 
+  /** Сериализует описание контейнеров без загруженных узлов фигур. */
   exportManifestNodes(): SerializedNode {
     const serialize = (node: GraphNode, childIndex = 0): SerializedNode => {
       const children = node.children
@@ -381,6 +308,7 @@ export class WorkshopSceneGraphStorageService {
     return serialize(this.nodesRoot());
   }
 
+  /** Удаляет фигуры страницы из дерева и индексов в памяти. */
   releaseChunk(ids: ReadonlySet<string>) {
     for (const node of this.nodes.values()) {
       if (!(node instanceof ShapeNode) || !ids.has(node.shape.id)) continue;
@@ -402,10 +330,12 @@ export class WorkshopSceneGraphStorageService {
 
   activeNodeId = signal<string | null>(null);
 
+  /** Добавляет восстановленную фигуру в хранилище сцены. */
   addShape(shapeId: string, shape: Shape) {
     this.shapes.set(shapeId, shape);
   }
 
+  /** Восстанавливает граф и фигуры из локального хранилища браузера. */
   loadFromStorage() {
     const serializedShapes = this.#safeParse<SerializedShape[]>(
       localStorage.getItem(this.#shapesStorageKey),
@@ -434,11 +364,13 @@ export class WorkshopSceneGraphStorageService {
     this.activeNodeId.set(null);
   }
 
+  /** Сохраняет сцену локально или передаёт сохранение владельцу черновика. */
   saveToStorage() {
     if (this.persistRemoteDraft) {
       this.persistRemoteDraft();
       return;
     }
+
     const shapes = Array.from(this.shapes.values()).map((shape) =>
       this.#serializeShape(shape),
     );
@@ -448,6 +380,7 @@ export class WorkshopSceneGraphStorageService {
     localStorage.setItem(this.#nodesStorageKey, JSON.stringify(nodes));
   }
 
+  /** Создаёт сериализованный снимок текущей сцены для истории изменений. */
   exportSnapshot(): string {
     const snapshot: WorkshopSnapshot = {
       version: 2,
@@ -459,6 +392,7 @@ export class WorkshopSceneGraphStorageService {
     return JSON.stringify(snapshot);
   }
 
+  /** Восстанавливает сцену из снимка и синхронизирует локальное хранилище. */
   importSnapshot(raw: string) {
     const snapshot = JSON.parse(raw) as WorkshopSnapshot;
     if (
@@ -477,9 +411,11 @@ export class WorkshopSceneGraphStorageService {
     this.nodesRoot.set(root);
     this.activeNodeId.set(root.id);
     this.graphVersion.update((version) => version + 1);
+
     this.saveToStorage();
   }
 
+  /** Преобразует узел графа в сериализуемую запись с дочерними узлами. */
   #serializeNode(node: GraphNode, childIndex = 0): SerializedNode {
     const children = node.children
       .filter(
@@ -520,6 +456,7 @@ export class WorkshopSceneGraphStorageService {
     }
   }
 
+  /** Восстанавливает узел графа и рекурсивно добавляет его потомков. */
   #deserializeNode(node: SerializedNode): GraphNode {
     let graphNode: GraphNode;
 
@@ -562,6 +499,7 @@ export class WorkshopSceneGraphStorageService {
     return graphNode;
   }
 
+  /** Преобразует фигуру в формат хранения с полями её конкретного типа. */
   #serializeShape(shape: Shape): SerializedShape {
     const baseShape = {
       id: shape.id,
@@ -599,6 +537,7 @@ export class WorkshopSceneGraphStorageService {
           fillColor: text.fillColor,
         };
       }
+
       case ShapesTypes.STAMP: {
         const stamp = shape as StampShape;
         return {
@@ -609,12 +548,14 @@ export class WorkshopSceneGraphStorageService {
           instances: stamp.instances,
         };
       }
+
       case ShapesTypes.LINE:
         return {
           ...baseShape,
           type: ShapesTypes.LINE,
           points: (shape as Line).points,
         };
+
       case ShapesTypes.RECTANGLE:
         return {
           ...baseShape,
@@ -625,6 +566,7 @@ export class WorkshopSceneGraphStorageService {
           height: (shape as Rectangle).height,
           fillColor: (shape as Rectangle).fillColor,
         };
+
       case ShapesTypes.TEXTURE: {
         const texture = shape as TextureStroke;
         return {
@@ -638,20 +580,25 @@ export class WorkshopSceneGraphStorageService {
           textureColor: texture.textureColor,
         };
       }
+
       default:
         throw new Error(`Unsupported shape type: ${shape.type}`);
     }
   }
 
+  /** Восстанавливает коллекцию фигур из сериализованных записей. */
   #deserializeShapes(shapes: SerializedShape[]) {
     const shapesMap = new Map<string, Shape>();
+
     for (const record of shapes) {
       const restored = restoreSerializedShape(record);
       shapesMap.set(restored.id, restored);
     }
+
     return shapesMap;
   }
 
+  /** Регистрирует узел и всех его потомков в общем индексе графа. */
   #registerNodeRecursive(node: GraphNode) {
     this.nodes.set(node.id, node);
 
@@ -660,6 +607,7 @@ export class WorkshopSceneGraphStorageService {
     }
   }
 
+  /** Читает JSON из хранилища и возвращает запасное значение при ошибке. */
   #safeParse<T>(raw: string | null, fallback: T): T {
     if (!raw) return fallback;
 
@@ -670,6 +618,7 @@ export class WorkshopSceneGraphStorageService {
     }
   }
 
+  /** Назначает идентификатор узлу и запрещает его обычное изменение. */
   #setReadonlyId(target: { id: string }, id: string) {
     Object.defineProperty(target, 'id', {
       value: id,
@@ -678,9 +627,11 @@ export class WorkshopSceneGraphStorageService {
     });
   }
 
+  /** Удаляет локальную сцену и создаёт пустой корневой слой. */
   clearStorage(): void {
     localStorage.removeItem(this.#shapesStorageKey);
     localStorage.removeItem(this.#nodesStorageKey);
+
     this.deletedShapeIds.clear();
     this.shapes.clear();
     this.nodes.clear();
@@ -692,6 +643,7 @@ export class WorkshopSceneGraphStorageService {
     this.graphVersion.update((version) => version + 1);
   }
 
+  /** Создаёт тестовые фигуры в памяти для ручной проверки производительности. */
   generateRandomShapesInMemory(count = 10_000) {
     // очищаем текущие данные
     this.shapes.clear();

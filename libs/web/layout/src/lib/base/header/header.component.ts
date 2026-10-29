@@ -25,6 +25,7 @@ import {
   trigger,
 } from '@angular/animations';
 
+/** Шапка сайта с основной навигацией и действиями аккаунта. */
 @Component({
   selector: 'wm-header',
   imports: [

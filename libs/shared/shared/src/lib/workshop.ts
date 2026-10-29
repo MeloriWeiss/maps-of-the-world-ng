@@ -1,6 +1,10 @@
+/** Виды текстур, доступные для использования в Workshop. */
 export const textureKinds = ['SURFACE', 'STAMP'] as const;
+
+/** Допустимое значение вида текстуры. */
 export type TextureKind = (typeof textureKinds)[number];
 
+/** Прямоугольные границы области карты в мировых координатах. */
 export interface WorldBounds {
   x: number;
   y: number;
@@ -8,11 +12,19 @@ export interface WorldBounds {
   height: number;
 }
 
+/** Размер ячейки карты в мировых координатах. */
 export const mapChunkSize = 2048;
+
+/** Половина предельной протяжённости карты от начала координат по каждой оси. */
 export const mapWorldHalfSize = 2 ** 30;
+
+/** Максимальный уровень детализации тайлов превью карты. */
 export const mapPreviewMaxLevel = 20;
+
+/** Размер изображения одного тайла превью в пикселях. */
 export const mapPreviewPixels = 256;
 
+/** Описание страницы объектов, привязанной к ячейке карты. */
 export interface MapScenePageDescriptor {
   cellX: number;
   cellY: number;
@@ -20,6 +32,7 @@ export interface MapScenePageDescriptor {
   bounds: WorldBounds;
 }
 
+/** Координаты и версия тайла в пирамиде превью. */
 export interface MapPreviewDescriptor {
   level: number;
   x: number;
@@ -27,6 +40,7 @@ export interface MapPreviewDescriptor {
   version: number;
 }
 
+/** Заголовок сериализованной сцены карты четвёртой версии. */
 export interface MapSceneHeaderV4 {
   version: 4;
   previewContentVersion?: number;
@@ -37,6 +51,7 @@ export interface MapSceneHeaderV4 {
   documentPalette: string;
 }
 
+/** Создаёт заголовок пустой сцены с начальными границами и корневым слоем. */
 export function createEmptyMapSceneHeader(): MapSceneHeaderV4 {
   return {
     version: 4,
@@ -47,14 +62,17 @@ export function createEmptyMapSceneHeader(): MapSceneHeaderV4 {
   };
 }
 
+/** Возвращает индекс ячейки, в которую попадает мировая координата. */
 export function mapCellOf(value: number): number {
   return Math.floor(value / mapChunkSize);
 }
 
+/** Находит родительский тайл на уровень выше в пирамиде превью. */
 export function mapPreviewParent(level: number, x: number, y: number) {
   return { level: level + 1, x: Math.floor(x / 2), y: Math.floor(y / 2) };
 }
 
+/** Вычисляет мировые границы тайла превью заданного уровня. */
 export function mapPreviewBounds(
   level: number,
   x: number,
@@ -64,6 +82,7 @@ export function mapPreviewBounds(
   return { x: x * size, y: y * size, width: size, height: size };
 }
 
+/** Проверяет структуру и допустимые значения заголовка сцены четвёртой версии. */
 export function isMapSceneHeaderV4(value: unknown): value is MapSceneHeaderV4 {
   return (
     isRecord(value) &&
@@ -97,15 +116,18 @@ export function isMapSceneHeaderV4(value: unknown): value is MapSceneHeaderV4 {
   );
 }
 
+/** Ключ и границы одной части карты, хранящейся отдельно от манифеста. */
 export interface MapChunkDescriptor {
   key: string;
   bounds: WorldBounds;
 }
 
+/** Данные ячейки карты вместе с её адресом и границами. */
 export interface MapChunkPayload extends MapChunkDescriptor {
   body: string;
 }
 
+/** Манифест сцены третьей версии со структурой узлов и перечнем ячеек. */
 export interface MapSceneManifest {
   version: 3;
   nodes: unknown;
@@ -114,6 +136,7 @@ export interface MapSceneManifest {
   overviewBounds?: WorldBounds;
 }
 
+/** Создаёт манифест пустой карты с корневым слоем и начальными границами. */
 export function createEmptyMapSceneManifest(): MapSceneManifest {
   return {
     version: 3,
@@ -132,6 +155,7 @@ export function createEmptyMapSceneManifest(): MapSceneManifest {
   };
 }
 
+/** Связанные сериализованные фигура и узел внутри части карты. */
 export interface MapChunkShapeRecord {
   shape: Record<string, unknown>;
   node: Record<string, unknown>;
@@ -140,6 +164,7 @@ export interface MapChunkShapeRecord {
   bounds?: WorldBounds;
 }
 
+/** Проверяет структуру манифеста сцены третьей версии и ограничивает размер дерева. */
 export function isMapSceneManifest(value: unknown): value is MapSceneManifest {
   if (
     !isRecord(value) ||
@@ -186,6 +211,7 @@ export function isMapSceneManifest(value: unknown): value is MapSceneManifest {
   });
 }
 
+/** Проверяет сериализованные записи фигур в части карты. */
 export function isMapChunkBody(value: unknown): value is MapChunkShapeRecord[] {
   if (!Array.isArray(value)) return false;
   return value.every((item) => {
@@ -324,6 +350,7 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+/** Проверяет пересечение двух прямоугольных областей карты. */
 export function intersectsBounds(a: WorldBounds, b: WorldBounds) {
   return (
     a.x <= b.x + b.width &&

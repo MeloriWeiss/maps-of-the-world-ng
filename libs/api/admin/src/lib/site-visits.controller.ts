@@ -4,6 +4,7 @@ import { AdminService } from './admin.service';
 import { RecordSiteVisitDto } from './dto/record-site-visit.dto';
 
 @ApiTags('Site visits')
+/** Принимает сведения о посещениях для административной аналитики. */
 @Controller('site-visits')
 export class SiteVisitsController {
   constructor(private readonly adminService: AdminService) {}

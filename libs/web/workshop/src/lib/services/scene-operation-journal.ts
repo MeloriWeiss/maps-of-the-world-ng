@@ -10,7 +10,12 @@ interface PendingOperation {
   mutations: NewSceneMutation[];
 }
 
-/** Captures completed gestures immediately; IndexedDB writes are serialized per document. */
+/**
+ * Сохраняет завершённые операции редактора в локальном журнале.
+ *
+ * Записи IndexedDB выполняются последовательно для документа, чтобы сохранить
+ * порядок изменений и корректно восстановить состояние после перезагрузки.
+ */
 export class SceneOperationJournal {
   readonly #repository = new SceneDraftRepository();
   #documentKey: Promise<string> | null = null;
@@ -20,6 +25,7 @@ export class SceneOperationJournal {
 
   constructor(readonly onError: (error: unknown) => void) {}
 
+  /** Создаёт локальный документ и активирует запись изменений для него. */
   activate(accountId: number, mapId: number | undefined, revision: number) {
     this.#documentKey = this.#repository
       .createDocument(accountId, mapId, revision)
@@ -27,6 +33,7 @@ export class SceneOperationJournal {
     void this.#documentKey.catch((error) => this.onError(error));
   }
 
+  /** Добавляет завершённую операцию в очередь последовательной записи. */
   capture(mutation: SceneMutation, direction: 'undo' | 'redo') {
     const mutations = captureSceneOperation(mutation, direction);
     if (!mutations.length) return;
@@ -34,6 +41,7 @@ export class SceneOperationJournal {
     void this.#drain().catch((error) => this.onError(error));
   }
 
+  /** Дожидается записи очереди и возвращает последний сохранённый номер операции. */
   async flush(): Promise<number> {
     if (!this.#documentKey)
       throw new Error('Local scene journal is not active');
@@ -44,6 +52,7 @@ export class SceneOperationJournal {
     );
   }
 
+  /** Связывает активный локальный документ с идентификатором карты. */
   async bindMap(mapId: number) {
     if (!this.#documentKey)
       throw new Error('Local scene journal is not active');
@@ -53,6 +62,7 @@ export class SceneOperationJournal {
     );
   }
 
+  /** Подтверждает публикацию локальных изменений на сервере. */
   async acknowledge(input: {
     serverCommitId: string;
     expectedRevision: number;
@@ -67,12 +77,14 @@ export class SceneOperationJournal {
     );
   }
 
+  /** Последовательно записывает ожидающие операции и сохраняет порядок журнала. */
   async #drain(): Promise<void> {
     if (this.#draining) {
       await this.#draining;
       if (this.#pending.length) await this.#drain();
       return;
     }
+
     if (this.#error) this.#error = null;
     const run = async () => {
       if (!this.#documentKey)
@@ -81,6 +93,7 @@ export class SceneOperationJournal {
       await this.#repository.withWriter(documentKey, async (token) => {
         while (this.#pending.length) {
           const operation = this.#pending[0];
+
           async function* records() {
             for (const mutation of operation.mutations) yield mutation;
           }
@@ -94,6 +107,7 @@ export class SceneOperationJournal {
         }
       });
     };
+
     const task = run();
     this.#draining = task;
     try {

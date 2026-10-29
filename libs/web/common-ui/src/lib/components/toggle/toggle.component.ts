@@ -5,6 +5,7 @@ import {
   output,
 } from '@angular/core';
 
+/** Переключает булево значение и отображает его текущее состояние. */
 @Component({
   selector: 'wm-toggle',
   templateUrl: './toggle.component.html',

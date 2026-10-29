@@ -13,6 +13,7 @@ import { OptionalAccessRequest, OptionalJwtAccessGuard } from '@wm/api/auth';
 import { TexturesService } from './textures.service';
 
 @ApiTags('textures')
+/** Обрабатывает загрузку и получение файлов текстур. */
 @Controller('textures')
 export class TexturesController {
   constructor(private readonly textures: TexturesService) {}

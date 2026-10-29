@@ -7,7 +7,7 @@ import {
 
 const decoder = new TextDecoder('utf-8', { fatal: true });
 
-/** A dependency response becomes usable only after its verified terminal frame. */
+/** Делает ответ с зависимостями доступным только после проверки завершающего кадра. */
 export class SceneDependencyReceiver {
   readonly #store: SceneDependencyStore;
 
@@ -15,6 +15,15 @@ export class SceneDependencyReceiver {
     this.#store = store;
   }
 
+  /**
+   * Проверяет поток зависимостей и сохраняет его части локально.
+   *
+   * Запись завершается только после проверки итогового кадра и контрольной суммы.
+   *
+   * @param token Токен записи локального документа.
+   * @param localCommitId Идентификатор принимаемого локального коммита.
+   * @param stream Поток кадров с данными сцены и её зависимостями.
+   */
   async receive(
     token: SceneWriterToken,
     localCommitId: string,
@@ -37,9 +46,11 @@ export class SceneDependencyReceiver {
         ) {
           throw new Error('Unexpected dependency frame type');
         }
+
         const kind = metadata.kind as SceneDependencyKind;
         if (kind === 'empty' && payload.byteLength !== 0)
           throw new Error('Nonempty empty dependency');
+
         const record = {
           documentKey: token.documentKey,
           localCommitId,
@@ -52,9 +63,11 @@ export class SceneDependencyReceiver {
             ? { blob: new Blob([payload]) }
             : { body: decoder.decode(payload) }),
         };
+
         await this.#store.put(token, record, metadata.ordinal + 1, prefixHash);
       },
     );
+
     await this.#store.complete(
       token,
       localCommitId,

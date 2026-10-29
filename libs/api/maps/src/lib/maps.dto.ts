@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+/** Проверяет параметры поиска и пагинации каталога карт. */
 export class MapCatalogQueryDto {
   @Type(() => Number)
   @IsInt()
@@ -23,6 +24,7 @@ export class MapCatalogQueryDto {
   pageSize = 9;
 }
 
+/** Проверяет поля карты, передаваемые при создании или обновлении. */
 export class SaveMapDto {
   @IsString()
   @MinLength(1)
@@ -39,6 +41,7 @@ export class SaveMapDto {
   description?: string;
 }
 
+/** Проверяет новое состояние публикации карты. */
 export class UpdateMapPublicationDto {
   @IsBoolean()
   isPublished!: boolean;

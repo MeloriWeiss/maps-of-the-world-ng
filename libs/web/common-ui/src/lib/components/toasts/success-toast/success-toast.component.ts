@@ -15,6 +15,7 @@ import {
 import { ToastBaseComponent } from '../toast-base/toast-base.component';
 import { ToastComponent } from '../toast.interface';
 
+/** Представляет уведомление об успешном действии. */
 @Component({
   selector: 'wm-success-toast',
   imports: [ToastBaseComponent],

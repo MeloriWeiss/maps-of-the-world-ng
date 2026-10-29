@@ -20,6 +20,7 @@ interface Progress {
 }
 const encoder = new TextEncoder();
 
+/** Бинарным поиском находит первый индекс значения не меньше цели. */
 function firstAtLeast(values: readonly number[], target: number): number {
   let low = 0,
     high = values.length;
@@ -31,9 +32,11 @@ function firstAtLeast(values: readonly number[], target: number): number {
   return low;
 }
 
+/** Бинарным поиском находит первый ряд с координатой не меньше цели. */
 function firstRowAtLeast(rows: readonly Row[], target: number): number {
   let low = 0,
     high = rows.length;
+
   while (low < high) {
     const middle = (low + high) >>> 1;
     if (rows[middle].y < target) low = middle + 1;
@@ -42,6 +45,7 @@ function firstRowAtLeast(rows: readonly Row[], target: number): number {
   return low;
 }
 
+/** Проверяет и восстанавливает контрольную точку построения ссылок превью. */
 function parseProgress(body: string): Progress {
   const value: unknown = JSON.parse(body);
   if (
@@ -78,7 +82,12 @@ function parseProgress(body: string): Progress {
   };
 }
 
-/** Temporary, bounded index for the dirty leaves of one sealed commit. */
+/**
+ * Создаёт и читает индекс листьев превью для сохранения сцены.
+ *
+ * Индекс формируется из изменённых частей коммита и не зависит от активного
+ * состояния редактора.
+ */
 export class ScenePreviewIndex {
   readonly #commits: SceneCommitStore;
   readonly #dependencies: SceneDependencyStore;
@@ -88,6 +97,7 @@ export class ScenePreviewIndex {
     this.#dependencies = dependencies;
   }
 
+  /** Создаёт индекс ссылок между итоговыми частями и тайлами превью. */
   async prepare(
     token: SceneWriterToken,
     snapshot: SceneSaveSnapshot,
@@ -111,16 +121,19 @@ export class ScenePreviewIndex {
     ) {
       throw new Error('Итоговые части карты ещё не подготовлены');
     }
+
     const completed = await this.#commits.readWork(
       snapshot.documentKey,
       snapshot.localCommitId,
       'checkpoint:links',
     );
     if (completed?.status === 'complete') return;
+
     const rows = await this.#loadLeaves(snapshot);
     if (!completed) await this.#writeLeafTasks(token, snapshot, rows);
 
     let progress = completed?.body ? parseProgress(completed.body) : null;
+
     if (progress && progress.offset >= 0) {
       const descriptor = await this.#commits.readWork(
         snapshot.documentKey,
@@ -145,15 +158,23 @@ export class ScenePreviewIndex {
       progress = { ...progress, rank: progress.rank + 1, offset: -1 };
     }
 
-    let afterKey: IDBValidKey | undefined = progress
-      ? [
-          snapshot.documentKey,
-          snapshot.localCommitId,
-          progress.orderPath,
-          progress.partId,
-        ]
-      : undefined;
+    let afterKey: IDBValidKey | undefined;
+
+    if (progress) {
+      const orderPathKey: IDBValidKey[] = progress.orderPath.map(
+        ([orderKey, index, nodeId]) => [orderKey, index, nodeId],
+      );
+
+      afterKey = [
+        snapshot.documentKey,
+        snapshot.localCommitId,
+        orderPathKey,
+        progress.partId,
+      ];
+    }
+
     let rank = progress?.rank ?? 0;
+
     while (true) {
       const page = await this.#commits.listFinalOrder(
         snapshot.documentKey,
@@ -162,6 +183,7 @@ export class ScenePreviewIndex {
         1,
       );
       if (!page.items.length) break;
+
       const descriptor = page.items[0];
       if (
         !descriptor.partId ||
@@ -170,6 +192,7 @@ export class ScenePreviewIndex {
         descriptor.visible === undefined
       )
         throw new Error('Неполное описание итоговой части');
+
       if (descriptor.visible) {
         await this.#linkPart(token, snapshot, rows, descriptor, rank, 0);
         rank++;
@@ -181,8 +204,10 @@ export class ScenePreviewIndex {
           offset: -1,
         });
       }
+
       afterKey = page.nextKey;
     }
+
     const finalCheckpoint = await this.#commits.readWork(
       snapshot.documentKey,
       snapshot.localCommitId,
@@ -195,6 +220,7 @@ export class ScenePreviewIndex {
     });
   }
 
+  /** Перебирает подготовленные листья превью постранично. */
   async *leaves(snapshot: SceneSaveSnapshot): AsyncGenerator<SceneLocalWork> {
     let after = '';
     while (true) {
@@ -210,6 +236,7 @@ export class ScenePreviewIndex {
     }
   }
 
+  /** Перебирает части сцены, пересекающие заданный лист превью. */
   async *partsForLeaf(
     snapshot: SceneSaveSnapshot,
     x: number,
@@ -240,6 +267,7 @@ export class ScenePreviewIndex {
     }
   }
 
+  /** Читает сохранённую геометрию фигуры для рендеринга превью. */
   async readPayload(
     snapshot: SceneSaveSnapshot,
     partId: string,
@@ -253,11 +281,13 @@ export class ScenePreviewIndex {
     return work.body;
   }
 
+  /** Загружает и проверяет список изменённых листьев превью. */
   async #loadLeaves(snapshot: SceneSaveSnapshot): Promise<Row[]> {
     const byY = new Map<number, Set<number>>();
     let after: readonly [string, number] | null = null;
     let frames = 0,
       count = 0;
+
     while (true) {
       const records = await this.#dependencies.list(
         snapshot.documentKey,
@@ -267,14 +297,18 @@ export class ScenePreviewIndex {
         1,
       );
       if (!records.length) break;
+
       const record = records[0];
       if (record.segment !== 0 || !record.body)
         throw new Error('Неполный план превью');
+
       const values: unknown = JSON.parse(record.body);
       if (!Array.isArray(values)) throw new Error('Неверный план превью');
       const leaves: unknown[] = values;
+
       frames++;
       if (frames > 4096) throw new Error('Слишком много порций плана превью');
+
       for (const item of leaves) {
         if (
           !item ||
@@ -299,14 +333,17 @@ export class ScenePreviewIndex {
           if (count > 4096) throw new Error('Слишком много затронутых тайлов');
         }
       }
+
       after = [record.resourceKey, record.segment];
     }
+
     if (!frames) throw new Error('Отсутствует план затронутых тайлов');
     return [...byY]
       .map(([y, xs]) => ({ y, xs: [...xs].sort((a, b) => a - b) }))
       .sort((a, b) => a.y - b.y);
   }
 
+  /** Сохраняет задачи рендеринга изменённых листьев пакетами. */
   async #writeLeafTasks(
     token: SceneWriterToken,
     snapshot: SceneSaveSnapshot,
@@ -334,6 +371,7 @@ export class ScenePreviewIndex {
     if (batch.length) await this.#commits.putWorks(token, batch);
   }
 
+  /** Находит листья сетки, пересекающие границы итоговой фигуры. */
   #intersections(
     rows: readonly Row[],
     bounds: readonly [number, number, number, number],
@@ -360,6 +398,7 @@ export class ScenePreviewIndex {
     return result;
   }
 
+  /** Создаёт ссылки от листьев превью к фигуре и сохраняет прогресс. */
   async #linkPart(
     token: SceneWriterToken,
     snapshot: SceneSaveSnapshot,
@@ -370,11 +409,14 @@ export class ScenePreviewIndex {
   ) {
     if (!part.bounds || !part.partId || !part.orderPath)
       throw new Error('Нет данных итоговой части');
+
     const leaves = this.#intersections(rows, part.bounds);
     if (start > leaves.length) throw new Error('Неверный checkpoint ссылок');
+
     for (let offset = start; offset < leaves.length; ) {
       const links: SceneLocalWork[] = [];
       let bytes = 0;
+
       while (offset < leaves.length && links.length < 128) {
         const leaf = leaves[offset];
         const link: SceneLocalWork = {
@@ -391,12 +433,14 @@ export class ScenePreviewIndex {
           rank,
         };
         const size = encoder.encode(JSON.stringify(link)).byteLength;
+
         if (links.length && bytes + size > 64 * 1024) break;
         if (size > 64 * 1024) throw new Error('Ссылка превью слишком велика');
         links.push(link);
         bytes += size;
         offset++;
       }
+
       await this.#save(token, snapshot, links, {
         partId: part.partId,
         orderPath: part.orderPath,
@@ -404,6 +448,7 @@ export class ScenePreviewIndex {
         offset,
       });
     }
+
     await this.#save(token, snapshot, [], {
       partId: part.partId,
       orderPath: part.orderPath,
@@ -412,6 +457,7 @@ export class ScenePreviewIndex {
     });
   }
 
+  /** Записывает ссылки и контрольную точку индекса атомарно. */
   async #save(
     token: SceneWriterToken,
     snapshot: SceneSaveSnapshot,
@@ -430,6 +476,7 @@ export class ScenePreviewIndex {
     );
   }
 
+  /** Создаёт базовую запись задачи индекса для текущего снимка. */
   #work(
     snapshot: SceneSaveSnapshot,
     taskKey: string,

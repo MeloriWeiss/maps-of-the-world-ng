@@ -1,3 +1,4 @@
+import type { ForumCommentView } from './interfaces/forum-comment-view';
 import {
   ForbiddenException,
   Injectable,
@@ -15,19 +16,7 @@ import {
   ModerateForumDto,
 } from './forum.dto';
 
-interface ForumCommentView {
-  id: number;
-  text: string;
-  createdAt: Date;
-  updatedAt: Date;
-  author: {
-    id: number;
-    nickname: string;
-    avatarUrl: string | null;
-  };
-  replies: ForumCommentView[];
-}
-
+/** Выполняет запросы к темам, комментариям и категориям форума. */
 @Injectable()
 export class ForumService {
   constructor(private readonly prisma: PrismaMainService) {}

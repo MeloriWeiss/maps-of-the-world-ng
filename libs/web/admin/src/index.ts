@@ -1,1 +1,1 @@
-export { adminRoutes } from './lib/admin.routes';
+export { adminRoutes } from './lib/feature-admin/consts/admin.routes';

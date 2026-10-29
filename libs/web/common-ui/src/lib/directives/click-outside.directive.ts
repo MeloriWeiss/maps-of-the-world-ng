@@ -6,6 +6,7 @@ import {
   output,
 } from '@angular/core';
 
+/** Генерирует событие, когда пользователь нажимает за пределами элемента. */
 @Directive({
   selector: '[wmClickOutside]',
 })

@@ -2,6 +2,7 @@ import { GraphNode } from './graph-node';
 import { Bounds } from '../interfaces';
 import { NodesTypes } from '../consts';
 
+/** Корневой узел слоя с настройками отображения набора фигур. */
 export class LayerNode extends GraphNode {
   offscreen?: OffscreenCanvas | HTMLCanvasElement;
   offscreenCtx?:

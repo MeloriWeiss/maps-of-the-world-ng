@@ -11,6 +11,7 @@ import { Shape } from '../../shapes';
 
 type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
+/** Инструмент выбора, перемещения и преобразования фигур. */
 export class SelectTool implements Tool {
   static readonly displayName = 'Выделение';
   #workshopShapesService = inject(WorkshopShapesService);

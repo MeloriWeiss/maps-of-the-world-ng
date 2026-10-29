@@ -14,6 +14,7 @@ import {
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+/** Поле поиска, сообщающее об изменении введённого запроса. */
 @Component({
   selector: 'wm-search-input',
   imports: [ReactiveFormsModule],

@@ -11,6 +11,7 @@ import {
 } from '../../rendering/shape-render-context';
 import { SelectionRect } from '../../tools';
 
+/** Реализация фигуры мазка, отрисовываемого выбранной текстурой. */
 export class TextureStrokeShape
   extends BaseShapeShape
   implements TextureStroke

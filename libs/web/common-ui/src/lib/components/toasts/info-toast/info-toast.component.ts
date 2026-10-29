@@ -8,6 +8,7 @@ import {
 import { ToastBaseComponent } from '../toast-base/toast-base.component';
 import { ToastComponent } from '../toast.interface';
 
+/** Представляет информационное уведомление. */
 @Component({
   selector: 'wm-info-toast',
   imports: [ToastBaseComponent],

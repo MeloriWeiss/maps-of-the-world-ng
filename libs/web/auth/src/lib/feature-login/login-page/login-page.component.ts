@@ -17,6 +17,7 @@ import { validateEmail } from '../../validators';
 import { authConfig } from '@wm/shared/auth';
 import { authReturnUrl } from '../../auth/auth-return-url';
 
+/** Содержит форму входа и обработку результата авторизации. */
 @Component({
   selector: 'wm-login-page',
   imports: [

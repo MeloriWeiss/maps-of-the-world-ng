@@ -1,3 +1,1 @@
-import { MockService } from './mock.service';
-
-export { MockService };
+export * from './services';

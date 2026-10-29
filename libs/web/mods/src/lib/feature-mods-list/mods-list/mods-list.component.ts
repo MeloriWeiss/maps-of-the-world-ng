@@ -15,6 +15,7 @@ import { ModeCardComponent } from '@wm/web/common-ui';
 import { CarouselModule } from 'ngx-owl-carousel-o';
 import { ModsListSidebarComponent } from './mods-list-sidebar';
 
+/** Список материалов режима с поиском и постраничной навигацией. */
 @Component({
   selector: 'wm-mods-list',
   imports: [

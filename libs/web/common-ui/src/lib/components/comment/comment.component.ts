@@ -8,6 +8,7 @@ import { SvgComponent } from '../index';
 import { CommentItem } from '@wm/web/data-access/shared';
 import { DatePipe } from '@angular/common';
 
+/** Отображает сообщение и доступные действия с комментарием. */
 @Component({
   selector: 'wm-comment',
   imports: [SvgComponent, DatePipe],

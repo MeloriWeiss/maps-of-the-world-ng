@@ -1,5 +1,6 @@
 import { isProd } from '@wm/api/shared';
 
+/** Запрещает запуск заполнения базы в неподходящем окружении. */
 export const assertDevelopmentSeedAllowed = (production = isProd) => {
   if (!production) return;
 

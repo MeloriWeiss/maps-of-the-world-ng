@@ -1,7 +1,4 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
+/** Запускает API-приложение NestJS и подключает общие HTTP-обработчики. */
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';

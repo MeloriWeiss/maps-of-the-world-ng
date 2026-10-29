@@ -12,6 +12,7 @@ import { ChunkRenderer } from '../rendering/chunk-renderer';
 import { canvasColor } from '../rendering/palette';
 import { WorkshopModeService } from './workshop-mode.service';
 
+/** Управляет жизненным циклом и настройкой холста редактора Workshop. */
 @Injectable()
 export class WorkshopCanvasManagerService {
   #workshopCanvasService = inject(WorkshopCanvasService);
@@ -21,6 +22,7 @@ export class WorkshopCanvasManagerService {
   #mode = inject(WorkshopModeService);
   #chunks = inject(WorkshopChunksService);
   #renderer = new ChunkRenderer();
+
   constructor() {
     this.#chunks.changed = () => this.requestRedraw();
     effect(() => {
@@ -28,6 +30,7 @@ export class WorkshopCanvasManagerService {
       if (this.#workshopCanvasService.ctx) this.requestRedraw();
     });
   }
+
   #rootNode = this.#workshopSceneGraphStorageService.nodesRoot;
 
   useOffscreen = signal(false);
@@ -40,6 +43,7 @@ export class WorkshopCanvasManagerService {
   stats_culledNodesLastFrame = 0; // отсечено по viewport
   stats_totalNodesLastFrame = 0; // всего обойдено в дереве
 
+  /** Очищает пиксели холста и сбрасывает его преобразование координат. */
   clearCanvas() {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
 
@@ -52,12 +56,14 @@ export class WorkshopCanvasManagerService {
     );
   }
 
+  /** Сбрасывает пользовательское содержимое сцены и перерисовывает холст. */
   clearUserContent() {
     this.#workshopShapesService.clearSelection();
     this.#workshopSceneGraphStorageService.clearStorage();
     this.redraw();
   }
 
+  /** Полностью перерисовывает видимую область сцены. */
   redraw() {
     // сброс статистики
     this.stats_renderedNodesLastFrame = 0;
@@ -79,6 +85,7 @@ export class WorkshopCanvasManagerService {
     this.render();
   }
 
+  /** Отрисовывает сцену, сетку, фон и рамку выделения. */
   render() {
     const ctx = this.#workshopCanvasService.ctx;
     const zoom = this.#workshopCoordsService.zoom;
@@ -106,6 +113,7 @@ export class WorkshopCanvasManagerService {
     this.#drawSelection();
   }
 
+  /** Рисует сетку с шагом, выбранным для текущего масштаба. */
   #drawGrid(ctx: CanvasRenderingContext2D, viewport: Bounds, zoom: number) {
     const gridSize = this.#gridSizeForZoom(zoom);
     const startX = Math.floor(viewport.x / gridSize) * gridSize;
@@ -131,6 +139,7 @@ export class WorkshopCanvasManagerService {
     }
   }
 
+  /** Планирует перерисовку на ближайшем кадре браузера. */
   requestRedraw() {
     this.#dirtyForRedraw = true;
 
@@ -147,6 +156,7 @@ export class WorkshopCanvasManagerService {
     });
   }
 
+  /** Создаёт поток горячих клавиш для отмены, повтора и удаления объектов. */
   listenKeyEvents() {
     return fromEvent<KeyboardEvent, void>(document.body, 'keydown', (e) => {
       if (this.#mode.isReadOnly()) return;
@@ -458,6 +468,7 @@ export class WorkshopCanvasManagerService {
   //   );
   // }
 
+  /** Возвращает читаемый шаг сетки для заданного масштаба. */
   #gridSizeForZoom(zoom: number) {
     if (zoom < 0.2) return 2000;
     if (zoom < 0.6) return 500;
@@ -465,6 +476,7 @@ export class WorkshopCanvasManagerService {
     return 25;
   }
 
+  /** Рисует рамку и маркеры вокруг выбранных фигур. */
   #drawSelection() {
     const bounds = this.#workshopShapesService.getSelectionBounds();
     if (!bounds) return;

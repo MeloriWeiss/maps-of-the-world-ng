@@ -4,6 +4,7 @@ import { Discussion } from '@wm/web/data-access/forum';
 import { RouterLink } from '@angular/router';
 import { DateDiffPipe } from '../../pipes';
 
+/** Показывает краткие сведения об обсуждении в списке форума. */
 @Component({
   selector: 'wm-discussion-card',
   imports: [SvgComponent, RouterLink, DateDiffPipe],

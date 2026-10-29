@@ -11,6 +11,7 @@ import { ForumModule } from '@wm/api/forum';
 import { HealthController } from './health.controller';
 import { AdminModule } from '@wm/api/admin';
 
+/** Корневой модуль API и точка подключения серверных библиотек. */
 @Module({
   imports: [
     ApiAuthModule,

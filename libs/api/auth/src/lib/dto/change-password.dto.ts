@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { authConfig } from '@wm/shared/auth';
 
+/** Проверяет данные для смены пароля. */
 export class ChangePasswordDto {
   @ApiProperty()
   @IsString()

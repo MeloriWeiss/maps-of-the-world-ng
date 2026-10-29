@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { tap } from 'rxjs';
 
+/** Хранит историю переходов, используемую компонентами навигации. */
 @Injectable({
   providedIn: 'root',
 })

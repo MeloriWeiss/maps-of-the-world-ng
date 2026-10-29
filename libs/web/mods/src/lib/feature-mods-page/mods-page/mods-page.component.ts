@@ -16,6 +16,7 @@ import {
   SeoService,
 } from '@wm/web/shared';
 
+/** Страница выбранного режима с описанием и списком материалов. */
 @Component({
   selector: 'wm-mods-page',
   standalone: true,

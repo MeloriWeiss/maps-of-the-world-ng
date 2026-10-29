@@ -25,6 +25,7 @@ import {
 } from '@wm/web/common-ui';
 import { distinctUntilChanged, filter, map, startWith } from 'rxjs';
 
+/** Список тем форума с фильтрацией, сортировкой и пагинацией. */
 @Component({
   selector: 'wm-forum-discussions-list',
   standalone: true,

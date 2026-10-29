@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Bounds, QuadtreeItem, QuadtreeNode } from '../interfaces';
 
+/** Поддерживает пространственный индекс фигур для поиска в видимой области. */
 @Injectable()
 export class WorkshopQuadtreeService {
   // #shapesStorageService = inject(WorkshopShapesStorageService);
@@ -16,6 +17,7 @@ export class WorkshopQuadtreeService {
 
   // shapes = this.#shapesStorageService.shapes;
 
+  /** Создаёт начальный пространственный индекс. */
   constructor() {
     // effect(() => {
     //   this.shapes();
@@ -23,16 +25,19 @@ export class WorkshopQuadtreeService {
     // });
   }
 
+  /** Удаляет все элементы и дочерние узлы индекса. */
   clear() {
     this.root.items = [];
     this.root.nodes = [];
   }
 
+  /** Добавляет объект в подходящие узлы дерева. */
   insert(item: QuadtreeItem) {
     this.expandToFit(item.bounds);
     this.#insert(this.root, item);
   }
 
+  /** Расширяет корневую область, пока она не вместит указанные границы. */
   expandToFit(itemBounds: Bounds) {
     while (!this.intersects(this.root.bounds, itemBounds)) {
       const old = this.root;
@@ -57,6 +62,7 @@ export class WorkshopQuadtreeService {
     }
   }
 
+  /** Размещает объект в пересекающихся узлах с учётом глубины дерева. */
   #insert(node: QuadtreeNode, item: QuadtreeItem) {
     if (!this.intersects(node.bounds, item.bounds)) return;
 
@@ -92,10 +98,12 @@ export class WorkshopQuadtreeService {
     }
   }
 
+  /** Возвращает объекты, пересекающие заданную область. */
   retrieve(queryBounds: Bounds): QuadtreeItem[] {
     return this.#retrieve(this.root, queryBounds);
   }
 
+  /** Собирает объекты, пересекающие область запроса в текущей ветке. */
   #retrieve(node: QuadtreeNode, queryBounds: Bounds): QuadtreeItem[] {
     const result: QuadtreeItem[] = [];
 
@@ -116,6 +124,7 @@ export class WorkshopQuadtreeService {
     return result;
   }
 
+  /** Делит область узла на четыре дочерних квадранта. */
   #subdivide(node: QuadtreeNode) {
     const { x, y, width, height } = node.bounds;
     const w = width / 2;
@@ -158,6 +167,7 @@ export class WorkshopQuadtreeService {
     ];
   }
 
+  /** Проверяет пересечение двух прямоугольных областей. */
   intersects(shapeBounds: Bounds, viewport: Bounds) {
     return !(
       shapeBounds.x + shapeBounds.width < viewport.x ||
@@ -167,6 +177,7 @@ export class WorkshopQuadtreeService {
     );
   }
 
+  /** Перестраивает индекс на основе актуальной коллекции фигур. */
   rebuildQuadtree() {
     // const shapes = this.shapes();
     // if (!shapes.length) return;

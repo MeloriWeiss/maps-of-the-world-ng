@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { SiteVisitTrackerService } from './site-visit-tracker.service';
+import { SiteVisitTrackerService } from '@wm/web/data-access/site-visits';
 
 describe('AppComponent (shell with NavigationManagerComponent)', () => {
   let component: AppComponent;

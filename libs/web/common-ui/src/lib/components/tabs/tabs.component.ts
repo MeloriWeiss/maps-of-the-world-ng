@@ -1,3 +1,4 @@
+import type { TabItem } from './tabs.component.types';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,12 +7,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
-export interface TabItem {
-  readonly id: string;
-  readonly label: string;
-  readonly routerLink?: string | unknown[];
-}
-
+/** Переключает содержимое между вкладками. */
 @Component({
   selector: 'wm-tabs',
   imports: [RouterLink, RouterLinkActive],

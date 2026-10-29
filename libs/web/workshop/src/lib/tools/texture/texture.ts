@@ -10,6 +10,7 @@ import { Point } from '../../interfaces';
 import { ShapesTypes } from '../../consts';
 import { splitStrokePoints } from '../shared/split-stroke-points';
 
+/** Инструмент рисования мазков выбранной текстурой. */
 export class TextureTool implements Tool {
   static readonly displayName = 'Покрытие';
   #shapesService = inject(WorkshopShapesService);

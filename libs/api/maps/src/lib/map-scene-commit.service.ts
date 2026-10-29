@@ -1,3 +1,9 @@
+import type {
+  PageKey,
+  PageRow,
+  ObjectPartRow,
+  TextureRefRow,
+} from './interfaces/map-scene-commit';
 import {
   BadRequestException,
   ConflictException,
@@ -20,32 +26,6 @@ import { lockSceneCommit } from './scene-commit-lock';
 import { queueSceneBlobCleanup } from './scene-blob-cleanup.service';
 import { sceneContainerCoverage } from './map-scene-container-coverage';
 
-interface PageKey {
-  cellX: number;
-  cellY: number;
-  pageId: number;
-}
-interface PageRow extends PageKey {
-  mapId: number;
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  body: string;
-}
-interface ObjectPartRow extends PageKey {
-  mapId: number;
-  objectId: string;
-  partId: string;
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-}
-interface TextureRefRow extends PageKey {
-  mapId: number;
-  textureId: string;
-}
 const pageBoundsTolerance = 1e-6;
 
 function objectId(record: MapChunkShapeRecord) {
@@ -156,6 +136,7 @@ function affectedPreviewTiles(bounds: WorldBounds, result: Set<string>) {
     }
 }
 
+/** Управляет созданием и публикацией версионируемых коммитов сцены. */
 @Injectable()
 export class MapSceneCommitService {
   constructor(private readonly prisma: PrismaMainService) {}

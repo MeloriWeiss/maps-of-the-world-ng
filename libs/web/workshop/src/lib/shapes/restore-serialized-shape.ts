@@ -1,5 +1,5 @@
 import { ShapesTypes } from '../consts';
-import type { SerializedShape } from '../services/workshop-scene-graph-storage.service';
+import type { SerializedShape } from '../interfaces/workshop-scene-graph-storage';
 import { LineShape } from './line';
 import { RectangleShape } from './rectangle';
 import { Shape } from './shape';
@@ -7,7 +7,7 @@ import { StampShape } from './stamp/stamp';
 import { TextShape } from './text';
 import { TextureStrokeShape } from './texture-stroke';
 
-/** The editor and the save builder instantiate the same shape implementation. */
+/** Восстанавливает фигуру тем же классом, который используют редактор и сборщик сохранения. */
 export function restoreSerializedShape(
   record: SerializedShape,
   selected = record.selected ?? false,

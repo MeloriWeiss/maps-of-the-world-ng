@@ -9,6 +9,7 @@ import { WorkshopCanvasSizeService } from './workshop-canvas-size.service';
 import { Bounds } from '../interfaces';
 import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
 
+/** Обрабатывает перемещение рабочей области карты мышью и касанием. */
 @Injectable()
 export class WorkshopPanningService {
   #workshopDrawService = inject(WorkshopDrawService);
@@ -33,6 +34,7 @@ export class WorkshopPanningService {
     height: 34_000,
   };
 
+  /** Создаёт поток событий начала, перемещения и завершения панорамирования. */
   listenPanningEvents() {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
 
@@ -58,12 +60,14 @@ export class WorkshopPanningService {
     );
   }
 
+  /** Создаёт поток событий масштабирования колесом мыши. */
   listenZoomEvent() {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
 
     return fromEvent<WheelEvent, void>(canvas, 'wheel', (e) => this.onWheel(e));
   }
 
+  /** Объединяет потоки панорамирования и масштабирования холста. */
   listenCanvasPanningEvents() {
     const panningEvents$ = this.listenPanningEvents();
     const zoomEvent$ = this.listenZoomEvent();
@@ -71,6 +75,7 @@ export class WorkshopPanningService {
     return merge(panningEvents$, zoomEvent$);
   }
 
+  /** Подбирает начальное положение холста по содержимому или центру области. */
   setup() {
     if (!this.fitContent()) {
       this.#centerCanvas(false);
@@ -78,6 +83,7 @@ export class WorkshopPanningService {
     }
   }
 
+  /** Размещает камеру в центре холста и при необходимости перерисовывает сцену. */
   #centerCanvas(redraw = true) {
     this.#workshopCoordsService.cameraX =
       -this.#canvasSizeService.canvasWidth / 2;
@@ -87,6 +93,7 @@ export class WorkshopPanningService {
     if (redraw) this.redraw();
   }
 
+  /** Пересчитывает видимую область мира и обновляет отрисовку. */
   #updateViewport(redraw = true) {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
 
@@ -101,6 +108,7 @@ export class WorkshopPanningService {
     if (redraw) this.#workshopCanvasManagerService.requestRedraw();
   }
 
+  /** Масштабирует карту относительно положения указателя при нажатом Ctrl. */
   onWheel(e: WheelEvent) {
     if (!e.ctrlKey) return;
 
@@ -135,6 +143,7 @@ export class WorkshopPanningService {
     this.#updateViewport();
   }
 
+  /** Устанавливает масштаб в процентах относительно центра холста. */
   setZoomPercent(percent: number) {
     const oldZoom = this.#workshopCoordsService.zoom;
     const nextZoom = Math.min(
@@ -157,6 +166,7 @@ export class WorkshopPanningService {
     this.#updateViewport();
   }
 
+  /** Преобразует позицию ползунка в логарифмический диапазон масштаба. */
   setZoomSliderPosition(position: number) {
     const min = this.#workshopCoordsService.minZoom;
     const max = this.#workshopCoordsService.maxZoom;
@@ -164,20 +174,28 @@ export class WorkshopPanningService {
     this.setZoomPercent(min * Math.pow(max / min, normalized) * 100);
   }
 
+  /** Обновляет границы мира, используемые командой подгонки масштаба. */
   setWorldBounds(bounds: Bounds) {
     this.worldBounds = bounds;
   }
 
+  /** Подгоняет масштаб под сохранённые границы всего мира. */
   fitWorld() {
     this.fitBounds(this.worldBounds);
   }
 
+  /**
+   * Вычисляет границы содержимого и подгоняет карту под холст.
+   *
+   * @returns `true`, если найдены границы, по которым можно подогнать карту.
+   */
   fitContent() {
     if (this.#sceneStorage.sceneBounds) {
       this.setWorldBounds(this.#sceneStorage.sceneBounds);
       this.fitBounds(this.#sceneStorage.sceneBounds);
       return true;
     }
+
     const shapes = Array.from(this.#sceneStorage.shapes.values());
     if (shapes.length === 0) return false;
 
@@ -215,6 +233,7 @@ export class WorkshopPanningService {
     return true;
   }
 
+  /** Центрирует указанные границы на холсте и выбирает подходящий масштаб. */
   fitBounds(bounds: Bounds, padding = 0.9) {
     const canvas = this.#workshopCanvasService.canvasRef.nativeElement;
     if (bounds.width <= 0 || bounds.height <= 0) return;
@@ -239,6 +258,7 @@ export class WorkshopPanningService {
     this.#updateViewport();
   }
 
+  /** Начинает панорамирование, если нажата назначенная кнопка мыши. */
   onMouseDown(e: MouseEvent) {
     if (e.button !== this.#workshopSettingsService.panningMouseButton) return;
 
@@ -250,10 +270,12 @@ export class WorkshopPanningService {
     this.cameraStartY = this.#workshopCoordsService.cameraY;
   }
 
+  /** Завершает текущее панорамирование. */
   onMouseUp() {
     this.isPanning = false;
   }
 
+  /** Обновляет положение камеры во время панорамирования. */
   onMouseMove(e: MouseEvent) {
     if (!this.isPanning) return;
 
@@ -265,10 +287,12 @@ export class WorkshopPanningService {
     this.#updateViewport();
   }
 
+  /** Запрашивает перерисовку холста. */
   redraw() {
     this.#workshopCanvasManagerService.redraw();
   }
 
+  /** Переводит масштаб карты в позицию ползунка. */
   #zoomToSlider(zoom: number) {
     const min = this.#workshopCoordsService.minZoom;
     const max = this.#workshopCoordsService.maxZoom;

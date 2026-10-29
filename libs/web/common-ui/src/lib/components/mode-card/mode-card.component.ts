@@ -10,6 +10,7 @@ import { ImagesSliderComponent, SvgComponent } from '../index';
 import { CarouselModule, OwlOptions } from 'ngx-owl-carousel-o';
 import { RouterLink } from '@angular/router';
 
+/** Показывает краткое описание режима и ссылку на его страницу. */
 @Component({
   selector: 'wm-mode-card',
   imports: [

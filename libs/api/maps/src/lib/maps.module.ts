@@ -11,6 +11,7 @@ import { MapSceneV4Service } from './map-scene-v4.service';
 import { MapSceneCommitService } from './map-scene-commit.service';
 import { SceneBlobCleanupService } from './scene-blob-cleanup.service';
 
+/** Подключает API карт, каталог и связанные сервисы. */
 @Module({
   imports: [DatabaseMainModule, ApiAuthModule, ObjectStorageModule],
   controllers: [MapsController, MapSceneController, MapSceneV4Controller],

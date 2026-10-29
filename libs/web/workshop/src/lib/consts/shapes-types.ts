@@ -1,3 +1,4 @@
+/** Типы фигур, поддерживаемые редактором Workshop. */
 export enum ShapesTypes {
   STAMP = 'stamp',
   LINE = 'line',

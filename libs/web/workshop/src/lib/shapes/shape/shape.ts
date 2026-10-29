@@ -5,6 +5,7 @@ import {
   ShapeRenderContext,
 } from '../../rendering/shape-render-context';
 
+/** Базовая реализация общих операций и стилей фигур Workshop. */
 export abstract class BaseShapeShape implements BaseShape {
   erasures: { x: number; y: number; radius: number }[] = [];
   protected partialErase = false;

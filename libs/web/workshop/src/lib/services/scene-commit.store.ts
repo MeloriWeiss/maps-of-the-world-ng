@@ -18,6 +18,7 @@ const PAGE_BYTES = 256 * 1024;
 const PNG_BYTES = 350_000;
 const MAX_CURSOR_PAGE = 16;
 
+/** Преобразует ошибку IndexedDB в понятную ошибку локального хранилища. */
 function asFailure(error: DOMException | null): Error {
   if (error?.name === 'QuotaExceededError') {
     return new SceneLocalStorageError(
@@ -28,6 +29,7 @@ function asFailure(error: DOMException | null): Error {
   return error ?? new Error('Не удалось сохранить подготовленную часть карты');
 }
 
+/** Проверяет, что блокировка документа принадлежит актуальному писателю. */
 function isCurrentWriter(
   document:
     | { writerEpoch: number; writerId?: string; leaseUntil?: number }
@@ -41,7 +43,12 @@ function isCurrentWriter(
   );
 }
 
-/** Prepared payload lives one part per record; only descriptors are enumerated. */
+/**
+ * Хранит подготовленные части локального коммита сцены.
+ *
+ * Данные и индексные описания записываются раздельно, а перечисления читают
+ * только описания, чтобы не загружать весь коммит в память.
+ */
 export class SceneCommitStore {
   readonly #drafts: SceneDraftRepository;
 
@@ -49,6 +56,7 @@ export class SceneCommitStore {
     this.#drafts = drafts;
   }
 
+  /** Читает манифест локального коммита. */
   async readManifest(
     documentKey: string,
     localCommitId: string,
@@ -65,12 +73,14 @@ export class SceneCommitStore {
     });
   }
 
+  /** Возвращает активный незавершённый коммит документа, если он есть. */
   async pending(documentKey: string): Promise<SceneLocalCommit | null> {
     const document = await this.#drafts.readDocument(documentKey);
     if (!document?.activeCommitId) return null;
     return this.readManifest(documentKey, document.activeCommitId);
   }
 
+  /** Записывает задачу подготовки коммита под блокировкой документа. */
   async putWork(token: SceneWriterToken, work: SceneLocalWork): Promise<void> {
     this.#sameDocument(token, work.documentKey);
     const db = await openWorkshopSceneDatabase();
@@ -90,6 +100,12 @@ export class SceneCommitStore {
     });
   }
 
+  /**
+   * Атомарно сохраняет часть коммита и контрольную точку задачи.
+   *
+   * Повторная запись уже сохранённой части допустима только с теми же
+   * контрольной суммой, размером и порядковым номером.
+   */
   async writePartAndCheckpoint(
     token: SceneWriterToken,
     part: SceneLocalPart,
@@ -107,7 +123,9 @@ export class SceneCommitStore {
         'Checkpoint не соответствует части сохранения',
       );
     }
+
     this.#validatePart(part);
+
     const descriptor: SceneLocalPartDescriptor = {
       documentKey: part.documentKey,
       localCommitId: part.localCommitId,
@@ -128,6 +146,7 @@ export class SceneCommitStore {
       ...(part.y !== undefined ? { y: part.y } : {}),
       ...(part.deleted !== undefined ? { deleted: part.deleted } : {}),
     };
+
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
@@ -146,6 +165,7 @@ export class SceneCommitStore {
           tx.abort();
           return;
         }
+
         const commits = tx.objectStore('localCommits');
         const commitRequest = commits.get([
           part.documentKey,
@@ -157,6 +177,7 @@ export class SceneCommitStore {
             tx.abort();
             return;
           }
+
           const parts = tx.objectStore('commitParts');
           const existingRequest = parts.get([
             part.documentKey,
@@ -177,6 +198,7 @@ export class SceneCommitStore {
               tx.abort();
               return;
             }
+
             if (!existing) {
               parts.add(part);
               tx.objectStore('commitPartDescriptors').add(descriptor);
@@ -200,6 +222,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Читает подготовленную часть коммита по её ключу. */
   async readPart(
     documentKey: string,
     localCommitId: string,
@@ -207,6 +230,7 @@ export class SceneCommitStore {
     partKey: string,
   ): Promise<SceneLocalPart | null> {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('commitParts', 'readonly');
       const request = tx
@@ -218,6 +242,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Перечисляет описания частей коммита после заданного порядкового номера. */
   async listDescriptors(
     documentKey: string,
     localCommitId: string,
@@ -225,9 +250,12 @@ export class SceneCommitStore {
     afterOrdinal = -1,
     limit = MAX_CURSOR_PAGE,
   ): Promise<SceneCursorPage<SceneLocalPartDescriptor>> {
-    if (limit < 1 || limit > MAX_CURSOR_PAGE)
+    if (limit < 1 || limit > MAX_CURSOR_PAGE) {
       throw new RangeError('Invalid cursor page size');
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('commitPartDescriptors', 'readonly');
       const lower = [documentKey, localCommitId, kind, afterOrdinal];
@@ -235,10 +263,12 @@ export class SceneCommitStore {
       const request = tx
         .objectStore('commitPartDescriptors')
         .openCursor(IDBKeyRange.bound(lower, upper, true));
+
       const items: SceneLocalPartDescriptor[] = [];
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor || items.length === limit) return;
+
         items.push(cursor.value as SceneLocalPartDescriptor);
         cursor.continue();
       };
@@ -254,15 +284,19 @@ export class SceneCommitStore {
     });
   }
 
+  /** Перечисляет задачи подготовки коммита после указанного ключа. */
   async listWork(
     documentKey: string,
     localCommitId: string,
     afterKey = '',
     limit = MAX_CURSOR_PAGE,
   ): Promise<SceneCursorPage<SceneLocalWork>> {
-    if (limit < 1 || limit > MAX_CURSOR_PAGE)
+    if (limit < 1 || limit > MAX_CURSOR_PAGE) {
       throw new RangeError('Invalid cursor page size');
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('commitWork', 'readonly');
       const request = tx
@@ -274,10 +308,12 @@ export class SceneCommitStore {
             true,
           ),
         );
+
       const items: SceneLocalWork[] = [];
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor || items.length === limit) return;
+
         items.push(cursor.value as SceneLocalWork);
         cursor.continue();
       };
@@ -293,7 +329,7 @@ export class SceneCommitStore {
     });
   }
 
-  /** A payload and its small descriptor become visible together. */
+  /** Атомарно сохраняет пакет задач подготовки одного коммита. */
   async putWorks(
     token: SceneWriterToken,
     works: readonly SceneLocalWork[],
@@ -312,7 +348,9 @@ export class SceneCommitStore {
         'Неверный пакет локальных записей',
       );
     }
+
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
         ['documents', 'localCommits', 'commitWork'],
@@ -324,6 +362,7 @@ export class SceneCommitStore {
           tx.abort();
           return;
         }
+
         const commit = tx
           .objectStore('localCommits')
           .get([token.documentKey, works[0].localCommitId]);
@@ -335,6 +374,7 @@ export class SceneCommitStore {
             tx.abort();
             return;
           }
+
           const workStore = tx.objectStore('commitWork');
           for (const work of works) workStore.put(work);
         };
@@ -345,12 +385,14 @@ export class SceneCommitStore {
     });
   }
 
+  /** Читает задачу подготовки коммита по её ключу. */
   async readWork(
     documentKey: string,
     localCommitId: string,
     taskKey: string,
   ): Promise<SceneLocalWork | null> {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const request = db
         .transaction('commitWork', 'readonly')
@@ -362,6 +404,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Перечисляет задачи, ключи которых начинаются с указанного префикса. */
   async listWorkPrefix(
     documentKey: string,
     localCommitId: string,
@@ -396,6 +439,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Перечисляет задачи фигур, относящиеся к заданной ячейке карты. */
   async listFinalCell(
     documentKey: string,
     localCommitId: string,
@@ -415,15 +459,19 @@ export class SceneCommitStore {
     );
   }
 
+  /** Перечисляет итоговые задачи коммита в порядке их сохранения. */
   async listFinalOrder(
     documentKey: string,
     localCommitId: string,
     afterKey?: IDBValidKey,
     limit = MAX_CURSOR_PAGE,
   ): Promise<SceneCursorPage<SceneLocalWork>> {
-    if (limit < 1 || limit > MAX_CURSOR_PAGE)
+    if (limit < 1 || limit > MAX_CURSOR_PAGE) {
       throw new RangeError('Invalid cursor page size');
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('commitWork', 'readonly');
       const request = tx
@@ -435,11 +483,13 @@ export class SceneCommitStore {
             afterKey !== undefined,
           ),
         );
+
       const items: SceneLocalWork[] = [];
       let lastKey: IDBValidKey | undefined;
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor || items.length === limit) return;
+
         const work = cursor.value as SceneLocalWork;
         if (
           work.documentKey !== documentKey ||
@@ -460,6 +510,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Перечисляет листья превью для заданной позиции и уровня. */
   async listPreviewLeaf(
     documentKey: string,
     localCommitId: string,
@@ -487,24 +538,30 @@ export class SceneCommitStore {
     );
   }
 
+  /** Читает ограниченную страницу задач через выбранный индекс IndexedDB. */
   async #listIndex(
     indexName: string,
     range: IDBKeyRange,
     limit: number,
   ): Promise<SceneLocalWork[]> {
-    if (limit < 1 || limit > MAX_CURSOR_PAGE)
+    if (limit < 1 || limit > MAX_CURSOR_PAGE) {
       throw new RangeError('Invalid cursor page size');
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('commitWork', 'readonly');
       const request = tx
         .objectStore('commitWork')
         .index(indexName)
         .openCursor(range);
+
       const items: SceneLocalWork[] = [];
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor || items.length === limit) return;
+
         items.push(cursor.value as SceneLocalWork);
         cursor.continue();
       };
@@ -514,14 +571,18 @@ export class SceneCommitStore {
     });
   }
 
+  /** Помечает задачу подготовки завершённой, если коммит ещё готовится. */
   async completeWork(
     token: SceneWriterToken,
     work: SceneLocalWork,
   ): Promise<void> {
     this.#sameDocument(token, work.documentKey);
-    if (work.status !== 'complete')
+    if (work.status !== 'complete') {
       throw new SceneLocalStorageError('invalid-part', 'Неверный checkpoint');
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
         ['documents', 'localCommits', 'commitWork'],
@@ -533,6 +594,7 @@ export class SceneCommitStore {
           tx.abort();
           return;
         }
+
         const commit = tx
           .objectStore('localCommits')
           .get([work.documentKey, work.localCommitId]);
@@ -544,6 +606,7 @@ export class SceneCommitStore {
             tx.abort();
             return;
           }
+
           tx.objectStore('commitWork').put(work);
         };
       };
@@ -553,6 +616,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Атомарно сохраняет ссылки превью и контрольную точку их генерации. */
   async writeLinksAndCheckpoint(
     token: SceneWriterToken,
     localCommitId: string,
@@ -579,16 +643,21 @@ export class SceneCommitStore {
         'Неверный пакет ссылок превью',
       );
     }
+
     const wireBytes = links.reduce(
       (sum, link) => sum + encoder.encode(JSON.stringify(link)).byteLength,
       0,
     );
-    if (wireBytes > 64 * 1024)
+
+    if (wireBytes > 64 * 1024) {
       throw new SceneLocalStorageError(
         'invalid-part',
         'Пакет ссылок слишком велик',
       );
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
         ['documents', 'localCommits', 'commitWork'],
@@ -612,6 +681,7 @@ export class SceneCommitStore {
             tx.abort();
             return;
           }
+
           const workStore = tx.objectStore('commitWork');
           const count = (commit.linkCount ?? 0) + links.length;
           const bytes = (commit.linkBytes ?? 0) + wireBytes;
@@ -619,6 +689,7 @@ export class SceneCommitStore {
             tx.abort();
             return;
           }
+
           for (const link of links) workStore.add(link);
           commits.put({
             ...commit,
@@ -635,11 +706,13 @@ export class SceneCommitStore {
     });
   }
 
+  /** Переводит коммит в состояние готовности после завершения всех этапов. */
   async markReady(
     token: SceneWriterToken,
     localCommitId: string,
   ): Promise<void> {
     const db = await openWorkshopSceneDatabase();
+
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
         ['documents', 'localCommits', 'commitWork'],
@@ -666,6 +739,7 @@ export class SceneCommitStore {
           'checkpoint:links',
           'checkpoint:previews',
         ];
+
         const stages = new Map<string, boolean>();
         for (const stage of requiredStages) {
           const request = workStore.get([
@@ -679,9 +753,11 @@ export class SceneCommitStore {
             update();
           };
         }
+
         let commit: SceneLocalCommit | undefined;
         let pending: number | undefined;
         let commitLoaded = false;
+
         const update = () => {
           if (
             !commitLoaded ||
@@ -717,6 +793,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Обновляет этап публикации и дополнительные поля коммита. */
   async setPhase(
     token: SceneWriterToken,
     localCommitId: string,
@@ -737,6 +814,7 @@ export class SceneCommitStore {
           tx.abort();
           return;
         }
+
         const store = tx.objectStore('localCommits');
         const request = store.get([token.documentKey, localCommitId]);
         request.onsuccess = () => {
@@ -745,6 +823,7 @@ export class SceneCommitStore {
             tx.abort();
             return;
           }
+
           store.put({ ...commit, ...patch, state: phase });
         };
       };
@@ -754,6 +833,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Сохраняет подтверждение отправки части коммита на сервер. */
   async recordReceipt(
     token: SceneWriterToken,
     receipt: SceneUploadReceipt,
@@ -776,6 +856,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Проверяет, совпадает ли сохранённое подтверждение с контрольной суммой. */
   async hasReceipt(receipt: SceneUploadReceipt): Promise<boolean> {
     const db = await openWorkshopSceneDatabase();
     return new Promise((resolve, reject) => {
@@ -797,6 +878,7 @@ export class SceneCommitStore {
     });
   }
 
+  /** Завершает публикацию и продвигает локальный документ на новую ревизию. */
   async completePublication(
     token: SceneWriterToken,
     localCommitId: string,
@@ -805,6 +887,7 @@ export class SceneCommitStore {
     await this.#drafts.acknowledge(token, localCommitId, publishedRevision);
   }
 
+  /** Проверяет, что операция относится к документу токена записи. */
   #sameDocument(token: SceneWriterToken, documentKey: string) {
     if (token.documentKey !== documentKey) {
       throw new SceneLocalStorageError(
@@ -814,11 +897,13 @@ export class SceneCommitStore {
     }
   }
 
+  /** Проверяет поля, размер и содержимое части перед записью коммита. */
   #validatePart(part: SceneLocalPart) {
     const safeInteger = (value: number | undefined): value is number =>
       typeof value === 'number' && Number.isSafeInteger(value);
     const finite = (value: number | undefined): value is number =>
       typeof value === 'number' && Number.isFinite(value);
+
     if (
       !part.partKey ||
       !Number.isSafeInteger(part.ordinal) ||
@@ -831,6 +916,7 @@ export class SceneCommitStore {
         'Неверная часть сохранения',
       );
     }
+
     if (
       part.kind === 'page' &&
       (!safeInteger(part.cellX) ||
@@ -850,6 +936,7 @@ export class SceneCommitStore {
         'Неверные границы страницы карты',
       );
     }
+
     const actual = part.png?.size ?? encoder.encode(part.body ?? '').byteLength;
     const limit = part.kind === 'tile' ? PNG_BYTES : PAGE_BYTES;
     if (

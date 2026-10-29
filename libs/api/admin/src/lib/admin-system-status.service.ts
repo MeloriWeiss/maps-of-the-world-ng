@@ -1,14 +1,9 @@
+import type { SystemResourceCheck } from './interfaces/admin-system-status';
 import { Inject, Injectable } from '@nestjs/common';
 import { OBJECT_STORAGE, ObjectStorage } from '@wm/api/shared';
 import { Prisma, PrismaMainService } from '@wm/api/database-main';
 
-type SystemResourceStatus = 'available' | 'unavailable';
-
-interface SystemResourceCheck {
-  status: SystemResourceStatus;
-  responseTimeMs: number;
-}
-
+/** Проверяет доступность API, базы данных и объектного хранилища. */
 @Injectable()
 export class AdminSystemStatusService {
   constructor(

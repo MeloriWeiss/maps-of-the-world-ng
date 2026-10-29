@@ -57,6 +57,7 @@ const messages = [
   'Интересная идея. Ещё можно добавить несколько вариантов для разных биомов.',
 ];
 
+/** Заполняет базу тестовыми категориями, темами и комментариями форума. */
 export async function seedForum(
   prisma: SeedPrismaClient,
   accounts: SeedAccount[],

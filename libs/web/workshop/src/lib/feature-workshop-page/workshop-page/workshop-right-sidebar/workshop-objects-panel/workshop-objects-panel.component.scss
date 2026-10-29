@@ -1,0 +1,94 @@
+:host {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 8px;
+  color: var(--text-light-color);
+  background: var(--bg-surface-tertiary-color);
+}
+.search {
+  display: grid;
+  gap: 4px;
+}
+.status {
+  color: var(--text-light-color);
+  font-size: 12px;
+  margin: 0;
+  opacity: 0.75;
+}
+.objects {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.object {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--bg-surface-variant-color);
+  color: var(--text-light-color);
+  transition: background-color 0.15s ease;
+}
+button {
+  color: inherit;
+  padding: 5px;
+  border-radius: 4px;
+}
+.object.selected {
+  background: var(--dark-cyan-color);
+}
+.object:hover {
+  background: var(--cyan-color);
+}
+.object button:hover {
+  background: rgb(from var(--light-color) r g b / 12%);
+}
+.object__action {
+  display: grid;
+  flex: 0 0 28px;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--text-light-color);
+}
+.object__action--locked {
+  background: rgb(from var(--dark-color) r g b / 20%);
+}
+.object__action svg {
+  display: block;
+  color: var(--text-light-color);
+  fill: var(--text-light-color);
+}
+.name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  color: var(--text-light-color);
+  text-align: left;
+}
+.name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.instances {
+  display: grid;
+  gap: 4px;
+  padding-left: 12px;
+}

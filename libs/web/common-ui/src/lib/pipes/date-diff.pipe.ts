@@ -27,7 +27,7 @@ import { DateTime } from 'luxon';
 })
 export class DateDiffPipe implements PipeTransform {
   /**
-   * Transform pipe-метод для подсчёта разницы.
+   * Преобразует дату в полное или относительное представление.
    *
    * @param {string} value ISO-строка даты (UTC) или null/undefined.
    * @returns {string} Форматированная строка разницы или пустая строка при ошибке/null.

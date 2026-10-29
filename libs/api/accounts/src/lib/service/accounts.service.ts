@@ -8,6 +8,7 @@ import {
 import { UpdateAccountDto } from '../dto';
 import { AvatarsService } from './avatars.service';
 
+/** Выполняет операции с аккаунтами и профилями пользователей. */
 @Injectable()
 export class AccountsService {
   #prisma: PrismaMainService;

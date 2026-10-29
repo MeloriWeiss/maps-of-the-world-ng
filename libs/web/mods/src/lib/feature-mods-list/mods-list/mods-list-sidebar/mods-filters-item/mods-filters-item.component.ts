@@ -1,3 +1,4 @@
+import type { ModsFilter } from './mods-filters-item.component.types';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,20 +7,7 @@ import {
 } from '@angular/core';
 import { CollapsibleDirective, SvgComponent } from '@wm/web/common-ui';
 
-interface ModsFilterExtra {
-  name: string;
-  value: string;
-  count: number;
-  selected: boolean;
-}
-
-interface ModsFilter {
-  name: string;
-  value: string;
-  count: number;
-  extras: ModsFilterExtra[];
-}
-
+/** Отображает один фильтр списка и сообщает о выборе значения. */
 @Component({
   selector: 'wm-mods-filters-item',
   imports: [CollapsibleDirective, SvgComponent],

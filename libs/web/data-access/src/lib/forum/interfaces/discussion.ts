@@ -1,3 +1,4 @@
+/** Краткие данные темы для списков и карточек обсуждений. */
 export interface Discussion {
   isPinned?: boolean;
   isClosed?: boolean;
@@ -14,6 +15,7 @@ export interface Discussion {
   category: ForumCategorySummary;
 }
 
+/** Параметры фильтрации и постраничной загрузки тем форума. */
 export interface GetDiscussionsDto {
   sort?: 'active' | 'new' | 'unanswered';
   scope?: 'mine';
@@ -23,23 +25,27 @@ export interface GetDiscussionsDto {
   category?: string;
 }
 
+/** Краткое представление категории форума в теме или сообщении. */
 export interface ForumCategorySummary {
   slug: string;
   title: string;
 }
 
+/** Категория форума с идентификатором, описанием и счётчиком тем. */
 export interface ForumCategory extends ForumCategorySummary {
   id: number;
   description: string | null;
   discussionsCount: number;
 }
 
+/** Данные автора сообщения, используемые в интерфейсе форума. */
 export interface ForumAuthor {
   id: number;
   nickname: string;
   avatarUrl: string | null;
 }
 
+/** Комментарий с вложенными ответами для отображения дерева обсуждения. */
 export interface ForumComment {
   id: number;
   text: string;
@@ -49,6 +55,7 @@ export interface ForumComment {
   replies: ForumComment[];
 }
 
+/** Полные данные темы, включая публикацию, автора и загруженные комментарии. */
 export interface ForumDiscussionDetails {
   isPinned: boolean;
   isClosed: boolean;
@@ -67,6 +74,7 @@ export interface ForumDiscussionDetails {
   comments: ForumComment[];
 }
 
+/** Страница кратких данных тем с общим количеством результатов. */
 export interface ForumDiscussionsPage {
   items: Array<{
     isPinned: boolean;
@@ -86,17 +94,20 @@ export interface ForumDiscussionsPage {
   pageSize: number;
 }
 
+/** Поля формы, передаваемые при создании темы форума. */
 export interface CreateForumDiscussion {
   title: string;
   post: string;
   category: string;
 }
 
+/** Текст нового комментария и необязательный идентификатор родителя. */
 export interface CreateForumComment {
   comment: string;
   parentId?: number;
 }
 
+/** Сообщение дерева комментариев с правами текущего пользователя. */
 export interface ForumMessage {
   id: number;
   repliesCount?: number;
@@ -109,6 +120,7 @@ export interface ForumMessage {
   parent: { id: number; nickname: string } | null;
 }
 
+/** Страница сообщений с путём к ветке и параметрами пагинации. */
 export interface ForumCommentsPage {
   path?: Array<{ id: number; parentId: number | null; page: number }>;
   items: ForumMessage[];

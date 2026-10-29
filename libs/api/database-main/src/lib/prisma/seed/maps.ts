@@ -26,6 +26,7 @@ const comments = [
   'Подскажите, какой текстур-пак использовался?',
 ];
 
+/** Создаёт тестовые карты и их содержимое. */
 export async function seedMaps(
   prisma: SeedPrismaClient,
   accounts: SeedAccount[],

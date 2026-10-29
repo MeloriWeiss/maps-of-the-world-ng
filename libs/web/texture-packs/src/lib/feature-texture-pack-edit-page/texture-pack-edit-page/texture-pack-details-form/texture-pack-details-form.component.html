@@ -1,0 +1,29 @@
+<section class="details-card" aria-labelledby="pack-details-title">
+  <div class="section-heading">
+    <div>
+      <span class="step-number">01</span>
+      <h2 id="pack-details-title">Название и описание</h2>
+    </div>
+    @if (form().dirty) {
+      <span class="unsaved-badge">Есть несохранённые изменения</span>
+    }
+  </div>
+
+  <form class="details-form" [formGroup]="form()" (ngSubmit)="submitted.emit()">
+    <label>
+      <span>Название</span>
+      <input formControlName="name" maxlength="120" />
+    </label>
+    <label>
+      <span>Описание</span>
+      <textarea
+        formControlName="description"
+        maxlength="500"
+        rows="4"
+      ></textarea>
+    </label>
+    <button type="submit" [disabled]="form().invalid || saving()">
+      {{ saving() ? 'Сохраняем…' : 'Сохранить изменения' }}
+    </button>
+  </form>
+</section>

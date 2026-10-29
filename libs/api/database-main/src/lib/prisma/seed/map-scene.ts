@@ -1,4 +1,4 @@
-/** Pure fixture builder. The seed runner itself removes existing data. */
+/** Создаёт тестовые данные карты без побочных эффектов; существующие данные удаляет сам seed-сценарий. */
 export function seedMapScene(index: number) {
   const rootId = `seed-map-${index}-root`;
   const shapeId = `seed-map-${index}-title`;

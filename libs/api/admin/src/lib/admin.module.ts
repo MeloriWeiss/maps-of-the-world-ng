@@ -7,6 +7,7 @@ import { SiteVisitsController } from './site-visits.controller';
 import { ObjectStorageModule } from '@wm/api/shared';
 import { AdminSystemStatusService } from './admin-system-status.service';
 
+/** Подключает сервисы и контроллеры административного раздела. */
 @Module({
   imports: [ApiAuthModule, DatabaseMainModule, ObjectStorageModule],
   controllers: [AdminController, SiteVisitsController],

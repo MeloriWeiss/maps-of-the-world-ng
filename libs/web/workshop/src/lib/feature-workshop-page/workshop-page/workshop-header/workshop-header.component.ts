@@ -21,6 +21,7 @@ import {
   PopoverComponent,
 } from '@wm/web/common-ui';
 
+/** Заголовок Workshop с действиями карты и сохранения. */
 @Component({
   selector: 'wm-workshop-header',
   imports: [

@@ -7,6 +7,7 @@ import { Bounds } from '../interfaces';
 import { NodesTypes } from '../consts';
 import { WorkshopCoordsService } from './workshop-coords.service';
 
+/** Управляет изменениями графа сцены и связями между его узлами. */
 @Injectable()
 export class WorkshopSceneGraphService {
   #shapesStorageService = inject(WorkshopSceneGraphStorageService);
@@ -29,6 +30,7 @@ export class WorkshopSceneGraphService {
     }),
   );
 
+  /** Создаёт узел фигуры, добавляет его в граф и планирует сохранение. */
   createShapeNode(shape: Shape, nodeToId?: string) {
     const shapeNode = new ShapeNode(shape);
     shapeNode.zIndex = ++this.#nextShapeOrder;
@@ -41,6 +43,7 @@ export class WorkshopSceneGraphService {
     this.saveNodes();
   }
 
+  /** Перемещает фигуру в указанный слой. */
   moveToLayer(shapeId: string, newLayerId: string) {
     const shapeNode = this.#findNodeById(shapeId) as ShapeNode;
     const oldLayer = shapeNode.parent as LayerNode;
@@ -52,6 +55,7 @@ export class WorkshopSceneGraphService {
     this.root.update((r) => r);
   }
 
+  /** Ищет узел по идентификатору обходом дерева от корня. */
   #findNodeById(id: string): GraphNode | null {
     function search(node: GraphNode): GraphNode | null {
       if (node.id === id) return node;
@@ -66,6 +70,7 @@ export class WorkshopSceneGraphService {
     return search(this.root());
   }
 
+  /** Создаёт слой и вставляет его в граф на заданную позицию. */
   addLayerNode(
     layerData: unknown,
     options: {
@@ -86,6 +91,7 @@ export class WorkshopSceneGraphService {
     this.saveNodes();
   }
 
+  /** Создаёт группу и вставляет её в граф на заданную позицию. */
   addGroupNode(options: { parentId?: string; index?: number } = {}) {
     const groupNode = new GroupNode();
     this.registerNode(groupNode);
@@ -101,6 +107,7 @@ export class WorkshopSceneGraphService {
     this.saveNodes();
   }
 
+  /** Загружает граф из локального хранилища и уведомляет подписчиков. */
   getNodes() {
     this.#shapesStorageService.loadFromStorage();
     this.root.update((root) => root);
@@ -108,6 +115,7 @@ export class WorkshopSceneGraphService {
     return of(void 0);
   }
 
+  /** Ожидает готовности всех загруженных фигур. */
   waitUntilShapesReady(): Promise<void> {
     return Promise.all(
       Array.from(this.#shapesStorageService.shapes.values()).map((shape) =>
@@ -116,22 +124,27 @@ export class WorkshopSceneGraphService {
     ).then(() => undefined);
   }
 
+  /** Планирует сохранение текущего графа. */
   saveNodes() {
     this.#nodesChanges$.next();
   }
 
+  /** Назначает активный узел графа. */
   setActiveNode(layerId: string) {
     this.activeNodeId.set(layerId);
   }
 
+  /** Снимает активное состояние со всех узлов. */
   clearActiveNode() {
     this.activeNodeId.set(null);
   }
 
+  /** Проверяет, является ли указанный узел активным. */
   isNodeActive(id: string): boolean {
     return this.activeNodeId() === id;
   }
 
+  /** Изменяет видимость узла и помечает содержащие его слои изменёнными. */
   setNodeVisibility(nodeId: string, visible: boolean) {
     const node = this.nodeById(nodeId);
     if (!node) return;
@@ -142,18 +155,21 @@ export class WorkshopSceneGraphService {
     this.saveNodes();
   }
 
+  /** Возвращает фигуры, видимые с учётом состояния всех родительских узлов. */
   getVisibleShapes(): Shape[] {
     const result: Shape[] = [];
     this.#collectVisibleShapes(this.root(), true, result);
     return result;
   }
 
+  /** Возвращает видимые фигуры, пересекающие заданную область мира. */
   getVisibleShapesInViewport(viewport: Bounds): Shape[] {
     const result: Shape[] = [];
     this.#collectVisibleShapesInViewport(this.root(), true, viewport, result);
     return result;
   }
 
+  /** Помечает содержащий фигуру слой изменённым и обновляет версию графа. */
   markShapeDirty(shape: Shape) {
     const shapeNode = this.#findShapeNode(shape.id);
     if (!shapeNode) return;
@@ -162,6 +178,7 @@ export class WorkshopSceneGraphService {
     this.#touchGraph();
   }
 
+  /** Удаляет узел и его потомков из графа и локального индекса. */
   removeNode(nodeId: string) {
     const node = this.nodeById(nodeId);
     if (!node || node === this.root()) return;
@@ -178,6 +195,15 @@ export class WorkshopSceneGraphService {
     this.saveNodes();
   }
 
+  /**
+   * Перемещает узел внутрь целевого контейнера или сразу за ним.
+   *
+   * Перемещение игнорируется, если оно создаёт цикл или затрагивает корневой узел.
+   *
+   * @param nodeId Идентификатор перемещаемого узла.
+   * @param targetNodeId Идентификатор целевого узла.
+   * @param mode Способ размещения относительно целевого узла.
+   */
   moveNode(
     nodeId: string,
     targetNodeId: string,
@@ -211,7 +237,7 @@ export class WorkshopSceneGraphService {
     );
     oldParent.removeChild(node.id);
 
-    // adjust index when moving within same parent
+    // При перемещении внутри одного родителя учитываем удаление старой позиции.
     if (
       newParent.id === oldParent.id &&
       oldIndexInParent !== -1 &&
@@ -229,19 +255,23 @@ export class WorkshopSceneGraphService {
     this.saveNodes();
   }
 
+  /** Регистрирует узел в общем индексе графа. */
   registerNode(node: GraphNode) {
     this.#shapesStorageService.nodes.set(node.id, node);
   }
 
+  /** Возвращает узел по идентификатору или `null`, если он не найден. */
   nodeById(id: string) {
     return this.#shapesStorageService.nodes.get(id) ?? null;
   }
 
+  /** Сохраняет граф и возвращает завершённый поток для конвейера автосохранения. */
   #sendNodes() {
     this.#shapesStorageService.saveToStorage();
     return of(void 0);
   }
 
+  /** Выбирает контейнер, в который следует поместить новый узел. */
   #resolveParentNode(nodeId?: string | null): GraphNode {
     const resolvedNodeId = nodeId ?? this.activeNodeId() ?? this.root().id;
     const resolvedNode = this.nodeById(resolvedNodeId);
@@ -254,10 +284,12 @@ export class WorkshopSceneGraphService {
     return resolvedNode;
   }
 
+  /** Увеличивает версию графа для обновления зависимых представлений. */
   #touchGraph() {
     this.#shapesStorageService.graphVersion.update((version) => version + 1);
   }
 
+  /** Удаляет узел и всех потомков из дерева и связанных индексов. */
   #removeNodeDeep(node: GraphNode) {
     for (const child of node.children) {
       this.#removeNodeDeep(child);
@@ -276,6 +308,7 @@ export class WorkshopSceneGraphService {
     node.parent = null;
   }
 
+  /** Собирает видимые фигуры с учётом масштаба и родительских контейнеров. */
   #collectVisibleShapes(node: GraphNode, isVisible: boolean, target: Shape[]) {
     const nextVisible = isVisible && node.visible;
     if (!nextVisible) return;
@@ -298,6 +331,7 @@ export class WorkshopSceneGraphService {
     }
   }
 
+  /** Собирает видимые фигуры, которые попадают в текущую область просмотра. */
   #collectVisibleShapesInViewport(
     node: GraphNode,
     isVisible: boolean,
@@ -332,6 +366,7 @@ export class WorkshopSceneGraphService {
     }
   }
 
+  /** Проверяет пересечение прямоугольных границ фигуры и области просмотра. */
   #intersects(a: Bounds, b: Bounds): boolean {
     return !(
       a.x + a.width < b.x ||
@@ -341,6 +376,7 @@ export class WorkshopSceneGraphService {
     );
   }
 
+  /** Находит узел графа, содержащий фигуру с указанным идентификатором. */
   #findShapeNode(shapeId: string): ShapeNode | null {
     for (const node of this.#shapesStorageService.nodes.values()) {
       if (node.type !== NodesTypes.SHAPE) continue;
@@ -351,6 +387,7 @@ export class WorkshopSceneGraphService {
     return null;
   }
 
+  /** Помечает все родительские слои узла требующими перерисовки. */
   #markLayerDirty(node: GraphNode | null | undefined) {
     let current = node;
     while (current) {
@@ -361,6 +398,7 @@ export class WorkshopSceneGraphService {
     }
   }
 
+  /** Проверяет, находится ли кандидат внутри поддерева указанного узла. */
   #isDescendant(potentialParent: GraphNode, candidate: GraphNode): boolean {
     if (potentialParent.id === candidate.id) return true;
 

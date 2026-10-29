@@ -12,6 +12,7 @@ import {
   WorkshopCanvasSetupFacade,
 } from '../../../../services';
 
+/** Компонент холста, передающий пользовательский ввод инструментам Workshop. */
 @Component({
   selector: 'wm-workshop-canvas',
   imports: [FormsModule],

@@ -15,6 +15,7 @@ import {
 import { PassportModule } from '@nestjs/passport';
 import { RolesGuard } from './roles';
 
+/** Подключает аутентификацию, стратегии токенов и защиту API. */
 @Module({
   imports: [
     DatabaseMainModule,

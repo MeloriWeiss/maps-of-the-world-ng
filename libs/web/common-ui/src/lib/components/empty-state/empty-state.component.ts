@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
+/** Показывает пояснение и необязательное действие для пустого раздела. */
 @Component({
   selector: 'wm-empty-state',
   templateUrl: './empty-state.component.html',

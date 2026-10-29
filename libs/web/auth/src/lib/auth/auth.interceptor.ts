@@ -17,6 +17,7 @@ import { AuthService } from '@wm/web/data-access/auth';
 
 const isRefreshing$ = new BehaviorSubject<boolean>(false);
 
+/** Добавляет данные авторизации к исходящим HTTP-запросам. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 

@@ -3,6 +3,7 @@ const MAGIC = encoder.encode('WMSAVE1\n');
 const CHAIN_SEED = encoder.encode('wm-scene-bundle-v1');
 const MAX_METADATA_BYTES = 4096;
 
+/** Типы частей, которые могут передаваться в пакете сцены. */
 export type SceneBundleKind =
   | 'page'
   | 'tile'
@@ -12,6 +13,7 @@ export type SceneBundleKind =
   | 'intent'
   | 'preview-plan';
 
+/** Метаданные бинарного кадра с содержимым одной части коммита. */
 export interface SceneBundleDataMetadata {
   type: 'data';
   kind: SceneBundleKind;
@@ -42,6 +44,7 @@ export interface SceneBundleDataMetadata {
   deleted?: boolean;
 }
 
+/** Итоговая запись пакета с контрольными суммами и числом кадров. */
 export interface SceneBundleTerminalMetadata {
   type: 'terminal';
   count: number;
@@ -49,12 +52,14 @@ export interface SceneBundleTerminalMetadata {
   hash: string;
 }
 
+/** Преобразует последовательность байтов в нижний шестнадцатеричный формат. */
 function hex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join(
     '',
   );
 }
 
+/** Кодирует беззнаковое 32-битное число в сетевом порядке байтов. */
 function uint32(value: number): Uint8Array {
   if (!Number.isSafeInteger(value) || value < 0 || value > 0xffffffff)
     throw new RangeError('Invalid frame length');
@@ -63,10 +68,12 @@ function uint32(value: number): Uint8Array {
   return bytes;
 }
 
+/** Вычисляет SHA-256 для переданного бинарного блока. */
 async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
 }
 
+/** Собирает заголовок и содержимое в бинарный кадр протокола. */
 function frame(metadata: object, payload: Uint8Array): Uint8Array {
   const header = encoder.encode(JSON.stringify(metadata));
   if (header.byteLength > MAX_METADATA_BYTES)
@@ -79,12 +86,14 @@ function frame(metadata: object, payload: Uint8Array): Uint8Array {
   return bytes;
 }
 
+/** Возвращает предельный размер содержимого для типа кадра. */
 function payloadLimit(kind: SceneBundleKind): number {
   if (kind === 'tile') return 350_000;
   if (kind === 'preview-plan') return 64 * 1024;
   return 256 * 1024;
 }
 
+/** Читает бинарный поток последовательно, не требуя целого буфера в памяти. */
 class BundleByteReader {
   readonly #reader: ReadableStreamDefaultReader<Uint8Array>;
   #chunk = new Uint8Array();
@@ -95,6 +104,7 @@ class BundleByteReader {
     this.#reader = stream.getReader();
   }
 
+  /** Читает указанное число байтов, объединяя поступившие чанки потока. */
   async read(length: number): Promise<Uint8Array | null> {
     if (!Number.isSafeInteger(length) || length < 0 || length > 1024 * 1024) {
       throw new RangeError('Invalid bundle read size');
@@ -127,15 +137,19 @@ class BundleByteReader {
     return result;
   }
 
+  /** Проверяет, что поток закончился сразу после последнего кадра. */
   async end(): Promise<boolean> {
     return (await this.read(1)) === null;
   }
+
+  /** Отменяет чтение и освобождает блокировку потока. */
   async cancel() {
     await this.#reader.cancel().catch(() => undefined);
     this.#reader.releaseLock();
   }
 }
 
+/** Проверяет структуру и допустимые значения метаданных кадра данных. */
 function isDataMetadata(value: unknown): value is SceneBundleDataMetadata {
   if (!value || typeof value !== 'object') return false;
   const item = value as Partial<SceneBundleDataMetadata>;
@@ -225,6 +239,7 @@ function isDataMetadata(value: unknown): value is SceneBundleDataMetadata {
   );
 }
 
+/** Проверяет структуру итогового кадра и его контрольные значения. */
 function isTerminal(value: unknown): value is SceneBundleTerminalMetadata {
   if (!value || typeof value !== 'object') return false;
   const item = value as Partial<SceneBundleTerminalMetadata>;
@@ -240,14 +255,29 @@ function isTerminal(value: unknown): value is SceneBundleTerminalMetadata {
   );
 }
 
+/**
+ * Кодирует и проверяет поток частей сцены.
+ *
+ * Кадры связаны цепочкой SHA-256, а завершающий кадр подтверждает число частей,
+ * суммарный размер и полный порядок переданных данных.
+ */
 export class SceneBundleCodec {
   static readonly contentType = 'application/vnd.wm.scene-bundle';
   static readonly magic = MAGIC;
 
+  /** Вычисляет начальную контрольную сумму цепочки кадров. */
   static async initialHash(): Promise<Uint8Array> {
     return sha256(CHAIN_SEED);
   }
 
+  /**
+   * Кодирует кадр данных и вычисляет следующую контрольную сумму цепочки.
+   *
+   * @param input Метаданные части без вычисляемых полей кадра.
+   * @param payload Содержимое части.
+   * @param previousHash Контрольная сумма предыдущего кадра.
+   * @returns Байты кадра, его контрольная сумма и итоговые метаданные.
+   */
   static async data(
     input: Omit<SceneBundleDataMetadata, 'type' | 'digest' | 'byteLength'>,
     payload: Uint8Array,
@@ -266,6 +296,7 @@ export class SceneBundleCodec {
     ) {
       throw new RangeError('Invalid bundle data frame');
     }
+
     const payloadHash = await sha256(payload);
     const metadata: SceneBundleDataMetadata = {
       type: 'data',
@@ -273,6 +304,7 @@ export class SceneBundleCodec {
       digest: hex(payloadHash),
       byteLength: payload.byteLength,
     };
+
     const bytes = frame(metadata, payload);
     const headerLength = new DataView(bytes.buffer).getUint32(0, false);
     const inputHash = new Uint8Array(32 + 4 + headerLength + 4 + 32);
@@ -281,9 +313,11 @@ export class SceneBundleCodec {
     inputHash.set(bytes.subarray(8, 8 + headerLength), 36);
     inputHash.set(bytes.subarray(4, 8), 36 + headerLength);
     inputHash.set(payloadHash, 40 + headerLength);
+
     return { bytes, hash: await sha256(inputHash), metadata };
   }
 
+  /** Формирует завершающий кадр с числом частей, размером данных и хешем. */
   static terminal(
     count: number,
     payloadBytes: number,
@@ -306,11 +340,21 @@ export class SceneBundleCodec {
     return frame(metadata, new Uint8Array());
   }
 
+  /** Возвращает контрольную сумму в шестнадцатеричном виде. */
   static hashHex(hash: Uint8Array): string {
     return hex(hash);
   }
 
-  /** Calls the receiver only after validating each bounded frame; resolves only after terminal and EOF. */
+  /**
+   * Проверяет поток и передаёт каждый подтверждённый кадр получателю.
+   *
+   * Успешное завершение возможно только после проверки завершающего кадра и EOF.
+   * При ошибке чтение отменяется, чтобы освободить поток.
+   *
+   * @param stream Бинарный поток кадров.
+   * @param receive Асинхронная обработка проверенного кадра.
+   * @returns Метаданные проверенного завершающего кадра.
+   */
   static async consume(
     stream: ReadableStream<Uint8Array>,
     receive: (
@@ -323,13 +367,19 @@ export class SceneBundleCodec {
     let hash = await this.initialHash();
     let ordinal = 0;
     let payloadBytes = 0;
+
     try {
       const magic = await reader.read(MAGIC.byteLength);
-      if (!magic || hex(magic) !== hex(MAGIC))
+      if (!magic || hex(magic) !== hex(MAGIC)) {
         throw new Error('Invalid bundle prefix');
+      }
+
       while (true) {
         const lengths = await reader.read(8);
-        if (!lengths) throw new Error('Bundle terminal is missing');
+        if (!lengths) {
+          throw new Error('Bundle terminal is missing');
+        }
+
         const view = new DataView(lengths.buffer);
         const metadataLength = view.getUint32(0, false);
         const payloadLength = view.getUint32(4, false);
@@ -339,13 +389,18 @@ export class SceneBundleCodec {
         ) {
           throw new Error('Bundle frame exceeds size limit');
         }
+
         const metadataBytes = await reader.read(metadataLength);
         const payload = await reader.read(payloadLength);
-        if (!metadataBytes || !payload)
+
+        if (!metadataBytes || !payload) {
           throw new Error('Truncated bundle frame');
+        }
+
         const value: unknown = JSON.parse(
           new TextDecoder('utf-8', { fatal: true }).decode(metadataBytes),
         );
+
         if (isTerminal(value)) {
           if (
             payloadLength ||
@@ -355,8 +410,10 @@ export class SceneBundleCodec {
             !(await reader.end())
           )
             throw new Error('Invalid bundle terminal');
+
           return value;
         }
+
         if (
           !isDataMetadata(value) ||
           value.ordinal !== ordinal ||
@@ -365,6 +422,7 @@ export class SceneBundleCodec {
           value.digest !== hex(await sha256(payload))
         )
           throw new Error('Invalid bundle data frame');
+
         const inputHash = new Uint8Array(32 + 4 + metadataLength + 4 + 32);
         inputHash.set(hash, 0);
         inputHash.set(lengths.subarray(0, 4), 32);
@@ -372,11 +430,14 @@ export class SceneBundleCodec {
         inputHash.set(lengths.subarray(4, 8), 36 + metadataLength);
         inputHash.set(await sha256(payload), 40 + metadataLength);
         hash = await sha256(inputHash);
+
         await receive(value, payload, hex(hash));
         ordinal++;
         payloadBytes += payloadLength;
-        if (ordinal > 100_000 || payloadBytes > 256 * 1024 * 1024)
+
+        if (ordinal > 100_000 || payloadBytes > 256 * 1024 * 1024) {
           throw new Error('Bundle exceeds limits');
+        }
       }
     } finally {
       await reader.cancel();

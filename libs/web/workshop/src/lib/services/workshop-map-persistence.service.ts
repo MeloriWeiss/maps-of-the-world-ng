@@ -15,6 +15,7 @@ import { WorkshopModeService } from './workshop-mode.service';
 import { AuthService } from '@wm/web/data-access/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+/** Формирует ограниченное по длине сообщение для ошибки сохранения карты. */
 function saveFailure(error: unknown) {
   const response =
     error instanceof HttpErrorResponse
@@ -31,6 +32,7 @@ function saveFailure(error: unknown) {
     : 'Не удалось сохранить карту';
 }
 
+/** Загружает и сохраняет карту через API Workshop. */
 @Injectable()
 export class WorkshopMapPersistenceService {
   #chunks = inject(WorkshopChunksService);
@@ -64,6 +66,7 @@ export class WorkshopMapPersistenceService {
     initialValue: this.#authService.isAuthorized$.value,
   });
 
+  /** Восстанавливает выбранную карту и режим редактора из параметров маршрута. */
   async initializeFromRoute() {
     const mapsLoaded = await this.refreshMaps();
 
@@ -104,6 +107,7 @@ export class WorkshopMapPersistenceService {
     this.#chunks.beginLocalDraft();
   }
 
+  /** Загружает список карт пользователя для выбора в редакторе. */
   async refreshMaps() {
     try {
       this.maps.set(await firstValueFrom(this.#mapsService.listMine()));
@@ -114,6 +118,7 @@ export class WorkshopMapPersistenceService {
     }
   }
 
+  /** Сохраняет текущую карту и её сцену в личные карты пользователя. */
   async save() {
     if (this.isReadOnly() || this.busy()) return;
 
@@ -122,6 +127,7 @@ export class WorkshopMapPersistenceService {
     this.busy.set(true);
     this.saving.set(true);
     this.#statusMessage.show('Сохранение…', 0);
+
     const payload: SaveMap = {
       name: this.mapName().trim() || 'Новая карта',
       description: this.mapDescription().trim() || undefined,
@@ -158,6 +164,7 @@ export class WorkshopMapPersistenceService {
     }
   }
 
+  /** Создаёт личную копию открытой публичной карты и переключает редактор на неё. */
   async saveCopy() {
     if (!this.isReadOnly() || !this.canSaveCopy() || this.busy()) return;
 
@@ -166,6 +173,7 @@ export class WorkshopMapPersistenceService {
     this.busy.set(true);
     this.saving.set(true);
     this.#statusMessage.show('Сохраняем копию…', 0);
+
     const copyName = `${this.mapName()} — копия`.slice(0, 120);
     const payload: SaveMap = {
       name: copyName,
@@ -191,6 +199,7 @@ export class WorkshopMapPersistenceService {
     }
   }
 
+  /** Загружает публичную карту в режиме просмотра. */
   async loadPublished(mapId: number) {
     this.busy.set(true);
     this.isReadOnly.set(true);
@@ -201,8 +210,10 @@ export class WorkshopMapPersistenceService {
       const map = await firstValueFrom(
         this.#mapsService.getPublicMap(mapId, this.#silentErrors()),
       );
+
       await this.#chunks.open(map.id, map.body, map.revision ?? 0);
       this.#shapes.resetHistory();
+
       this.mapId.set(null);
       this.publishedMapId.set(map.id);
       this.mapName.set(map.name);
@@ -210,6 +221,7 @@ export class WorkshopMapPersistenceService {
       this.publishedMapLikesCount.set(map.likesCount);
       this.isPublishedMapLiked.set(map.isLiked);
       this.canSaveCopy.set(true);
+
       await this.#resizeAndFitContent();
       this.#statusMessage.show(`Карта «${map.name}» открыта для просмотра`);
     } catch {
@@ -219,6 +231,7 @@ export class WorkshopMapPersistenceService {
     }
   }
 
+  /** Загружает личную карту и восстанавливает редактируемую сцену. */
   async load(mapId = this.mapId()) {
     if (!mapId) {
       this.#statusMessage.show('Выберите карту для загрузки');
@@ -231,9 +244,11 @@ export class WorkshopMapPersistenceService {
       const map = await firstValueFrom(
         this.#mapsService.getOwned(mapId, this.#silentErrors()),
       );
+
       await this.#chunks.open(map.id, map.body, map.revision ?? 0);
       this.#shapes.resetHistory();
       this.#resetPublishedMapState();
+
       this.#rememberMap(map);
       this.#panning.fitContent();
       this.#canvasManager.redraw();
@@ -247,6 +262,7 @@ export class WorkshopMapPersistenceService {
     }
   }
 
+  /** Переключает редактор на выбранную карту или создаёт новый черновик. */
   async selectMap(mapId: number | null) {
     if (mapId === null) {
       this.newMap();
@@ -255,6 +271,7 @@ export class WorkshopMapPersistenceService {
     await this.load(mapId);
   }
 
+  /** Сбрасывает текущую сцену и начинает новый локальный черновик. */
   newMap() {
     this.#chunks.reset();
     this.#shapes.resetHistory();
@@ -278,6 +295,7 @@ export class WorkshopMapPersistenceService {
     );
   }
 
+  /** Переключает отметку «нравится» для открытой публичной карты. */
   async togglePublishedMapLike() {
     const mapId = this.publishedMapId();
     if (!mapId || !this.isAuthorized() || this.isUpdatingLike()) return;
@@ -297,6 +315,7 @@ export class WorkshopMapPersistenceService {
     }
   }
 
+  /** Обновляет выбранную карту и сохраняет её идентификатор между сеансами. */
   #rememberMap(map: MapSummary) {
     this.maps.update((items) => [
       map,
@@ -308,26 +327,31 @@ export class WorkshopMapPersistenceService {
     localStorage.setItem(this.#mapIdKey, String(map.id));
   }
 
+  /** Читает из браузерного хранилища последний выбранный идентификатор карты. */
   #readMapId() {
     const id = Number(localStorage.getItem(this.#mapIdKey));
     return Number.isInteger(id) && id > 0 ? id : null;
   }
 
+  /** Сбрасывает выбранную карту и удаляет её идентификатор из браузера. */
   #forgetMapId() {
     this.mapId.set(null);
     localStorage.removeItem(this.#mapIdKey);
   }
 
+  /** Очищает локальное состояние открытой публичной карты. */
   #resetPublishedMapState() {
     this.publishedMapId.set(null);
     this.publishedMapLikesCount.set(0);
     this.isPublishedMapLiked.set(false);
   }
 
+  /** Создаёт контекст запроса, который обрабатывает ошибку локально. */
   #silentErrors() {
     return new HttpContext().set(BYPASS_GLOBAL_ERROR, true);
   }
 
+  /** Обновляет query-параметр маршрута для выбранной личной карты. */
   #setRoute(mapId: number) {
     return this.#router.navigate([], {
       relativeTo: this.#route,
@@ -336,6 +360,7 @@ export class WorkshopMapPersistenceService {
     });
   }
 
+  /** Пересчитывает размеры холста и вписывает загруженную сцену после кадра. */
   #resizeAndFitContent() {
     return new Promise<void>((resolve) => {
       requestAnimationFrame(() => {

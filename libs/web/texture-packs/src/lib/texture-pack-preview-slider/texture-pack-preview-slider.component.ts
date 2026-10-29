@@ -1,3 +1,4 @@
+import type { TexturePreviewSize } from './texture-pack-preview-slider.component.types';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,8 +9,7 @@ import { ImagesSliderComponent } from '@wm/web/common-ui';
 import { TextureItemView } from '@wm/web/data-access/texture-packs';
 import { OwlOptions } from 'ngx-owl-carousel-o';
 
-type TexturePreviewSize = 'regular' | 'large';
-
+/** Показывает превью текстур набора в горизонтальном слайдере. */
 @Component({
   selector: 'wm-texture-pack-preview-slider',
   imports: [ImagesSliderComponent],

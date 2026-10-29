@@ -8,6 +8,7 @@ import { WorkshopCanvasManagerService } from '../../services/workshop-canvas-man
 import { workshopImages } from '../../rendering/image-cache';
 import { mapCellOf } from '@wm/shared/workshop';
 
+/** Инструмент размещения изображений-штампов на холсте. */
 export class StampTool implements Tool {
   static readonly displayName = 'Изображения';
   #settings = inject(WorkshopSettingsService);

@@ -1,3 +1,7 @@
+import type {
+  ToolButton,
+  ContextMenuState,
+} from './workshop-left-sidebar.component.types';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -37,21 +41,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
-interface ToolButton {
-  name: WorkshopTools;
-  icon: string;
-  label: string;
-  configurable: boolean;
-  secondary?: boolean;
-}
-
-interface ContextMenuState {
-  tool: WorkshopTools;
-  label: string;
-  x: number;
-  y: number;
-}
-
+/** Панель инструментов и настроек рисования Workshop. */
 @Component({
   selector: 'wm-workshop-left-sidebar',
   imports: [

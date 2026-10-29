@@ -8,6 +8,7 @@ import {
 import { PrismaMainService } from '@wm/api/database-main';
 import { OBJECT_STORAGE, ObjectStorage } from '@wm/api/shared';
 
+/** Удаляет неиспользуемые файлы текстур из объектного хранилища. */
 @Injectable()
 export class TextureBlobCleanupService
   implements OnApplicationBootstrap, OnModuleDestroy

@@ -13,14 +13,17 @@ interface CommitStatus {
 }
 const encoder = new TextEncoder();
 
+/** Собирает сериализованные части сцены в один пакет с цепочкой контрольных сумм. */
 async function sceneBundle(
   commit: PreparedSceneCommit,
 ): Promise<{ file: Blob; hash: string; count: number }> {
   const parts: BlobPart[] = [SceneBundleCodec.magic];
+
   let hash = await SceneBundleCodec.initialHash();
   let count = 0;
   let payloadBytes = 0;
   let wireBytes = SceneBundleCodec.magic.byteLength;
+
   const append = async (
     input: Parameters<typeof SceneBundleCodec.data>[0],
     payload: Uint8Array,
@@ -38,6 +41,7 @@ async function sceneBundle(
     )
       throw new Error('Сохранение карты превысило размер одного пакета');
   };
+
   for (const page of commit.pages) {
     await append(
       {
@@ -56,6 +60,7 @@ async function sceneBundle(
       encoder.encode(page.body),
     );
   }
+
   for (const tile of commit.tiles) {
     if (!(tile.png instanceof Blob) || tile.png.size > 350_000)
       throw new Error('Invalid prepared map preview');
@@ -71,11 +76,14 @@ async function sceneBundle(
       new Uint8Array(await tile.png.arrayBuffer()),
     );
   }
+
   const terminal = SceneBundleCodec.terminal(count, payloadBytes, hash);
   parts.push(terminal);
   wireBytes += terminal.byteLength;
+
   if (wireBytes > 270 * 1024 * 1024)
     throw new Error('Сохранение карты превысило размер одного пакета');
+
   return {
     file: new Blob(parts, { type: SceneBundleCodec.contentType }),
     hash: SceneBundleCodec.hashHex(hash),
@@ -83,21 +91,37 @@ async function sceneBundle(
   };
 }
 
+/** Координирует подготовку, загрузку и публикацию коммита сцены. */
 @Injectable({ providedIn: 'root' })
 export class WorkshopSceneCommitCoordinator {
   #http = inject(HttpClient);
   #store = new WorkshopSceneDraftStore();
 
+  /** Возвращает локальный коммит, ожидающий отправки на сервер. */
   pending(accountId: number, mapId: number) {
     return this.#store.readCommit(accountId, mapId);
   }
+
+  /** Сохраняет подготовленный коммит для последующей отправки или повтора. */
   prepare(commit: PreparedSceneCommit) {
     return this.#store.writeCommit(commit);
   }
+
+  /** Удаляет локальную копию коммита после подтверждения сохранения. */
   acknowledge(commit: PreparedSceneCommit) {
     return this.#store.removeCommit(commit.accountId, commit.mapId);
   }
 
+  /**
+   * Загружает пакет сцены и завершает публикацию коммита на сервере.
+   *
+   * При повторном вызове продолжает незавершённый коммит по его ключу
+   * идемпотентности и сообщает прогресс между этапами загрузки.
+   *
+   * @param commit Подготовленные данные сцены для публикации.
+   * @param progress Колбэк для обновления прогресса сохранения.
+   * @returns Сохранённая сцена и идентификатор серверного коммита.
+   */
   async publish(
     commit: PreparedSceneCommit,
     progress: (value: number) => void,
@@ -121,12 +145,15 @@ export class WorkshopSceneCommitCoordinator {
     if (start.status === 'expired') {
       const retry = { ...commit, idempotencyKey: crypto.randomUUID() };
       await this.prepare(retry);
+
       return this.publish(retry, progress);
     }
+
     let revision = start.revision;
     let saved: (MapSceneHeaderV4 & { revision: number }) | undefined;
     if (start.status !== 'committed') {
       if (start.status !== 'uploading') throw new Error('Map save is closed');
+
       if (commit.sourceMapId !== undefined) {
         let complete = false;
         while (!complete) {
@@ -145,8 +172,10 @@ export class WorkshopSceneCommitCoordinator {
           { headers: { 'Content-Type': SceneBundleCodec.contentType } },
         ),
       );
+
       if (receipt.count !== bundle.count || receipt.hash !== bundle.hash)
         throw new Error('Сервер не подтвердил полный пакет карты');
+
       progress(95);
       const result = await firstValueFrom(
         this.#http.patch<{
@@ -160,6 +189,7 @@ export class WorkshopSceneCommitCoordinator {
       revision = result.revision;
       saved = result.scene;
     }
+
     if (revision === undefined) throw new Error('Map save has no revision');
     saved ??= await firstValueFrom(
       this.#http.get<MapSceneHeaderV4 & { revision: number }>(

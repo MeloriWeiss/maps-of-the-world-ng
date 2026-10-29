@@ -1,11 +1,13 @@
 import { DestroyRef, inject, signal, Signal } from '@angular/core';
 
+/** Состояние и операции временного сообщения интерфейса. */
 export interface TransientMessage {
   value: Signal<string>;
   show(message: string, durationMs?: number): void;
   clear(): void;
 }
 
+/** Создаёт реактивное состояние временного сообщения с автоматическим закрытием. */
 export function createTransientMessage(
   defaultDurationMs = 3_500,
 ): TransientMessage {

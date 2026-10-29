@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+/** Описывает данные аккаунта, возвращаемые API. */
 export class AccountDto {
   @ApiProperty({
     example: 'CryptoKnight',
@@ -85,6 +86,7 @@ export class AccountDto {
   updatedAt!: string;
 }
 
+/** Описывает сводные публичные данные профиля. */
 export class ProfileSummaryDto {
   @ApiProperty({
     example: 'CryptoKnight',

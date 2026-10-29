@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../../base/header/header.component';
 import { FooterComponent } from '../../base/footer/footer.component';
 
+/** Макет страниц входа и регистрации. */
 @Component({
   selector: 'wm-auth-layout',
   imports: [RouterOutlet, HeaderComponent, FooterComponent],

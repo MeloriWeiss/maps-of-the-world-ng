@@ -11,6 +11,7 @@ import {
 const MAX_SEGMENT_BYTES = 1024 * 1024;
 const encoder = new TextEncoder();
 
+/** Преобразует ошибку IndexedDB в понятную ошибку хранилища зависимостей. */
 function storageError(error: DOMException | null): Error {
   if (error?.name === 'QuotaExceededError') {
     return new SceneLocalStorageError(
@@ -21,6 +22,7 @@ function storageError(error: DOMException | null): Error {
   return error ?? new Error('Не удалось сохранить зависимость карты');
 }
 
+/** Проверяет владельца, эпоху и срок действия блокировки документа. */
 function isWriter(
   document: SceneLocalDocument | undefined,
   token: SceneWriterToken,
@@ -32,8 +34,14 @@ function isWriter(
   );
 }
 
-/** One verified dependency segment per transaction, never a whole map in memory. */
+/**
+ * Хранит проверенные зависимости локального коммита сцены.
+ *
+ * Сегменты записываются отдельными транзакциями, поэтому подготовка больших карт
+ * не требует загружать все зависимости в память одновременно.
+ */
 export class SceneDependencyStore {
+  /** Записывает очередной проверенный сегмент потока зависимостей. */
   async put(
     token: SceneWriterToken,
     record: SceneDependencyRecord,
@@ -55,6 +63,7 @@ export class SceneDependencyStore {
         'Неверная запись зависимости карты',
       );
     }
+
     const bytes =
       record.blob?.size ?? encoder.encode(record.body ?? '').byteLength;
     if (
@@ -66,6 +75,7 @@ export class SceneDependencyStore {
         'Сегмент зависимости превышает лимит',
       );
     }
+
     const db = await openWorkshopSceneDatabase();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
@@ -80,6 +90,7 @@ export class SceneDependencyStore {
           tx.abort();
           return;
         }
+
         const commits = tx.objectStore('localCommits');
         const request = commits.get([record.documentKey, record.localCommitId]);
         request.onsuccess = () => {
@@ -93,6 +104,7 @@ export class SceneDependencyStore {
             tx.abort();
             return;
           }
+
           tx.objectStore('sceneDependencies').add(record);
           commits.put({
             ...commit,
@@ -108,7 +120,12 @@ export class SceneDependencyStore {
     });
   }
 
-  /** Call only after the codec has verified the terminal frame and exact EOF. */
+  /**
+   * Отмечает зависимости полными после проверки завершающего кадра.
+   *
+   * Вызывать метод можно только после того, как кодек подтвердил контрольную
+   * сумму и точный конец потока.
+   */
   async complete(
     token: SceneWriterToken,
     localCommitId: string,
@@ -126,6 +143,7 @@ export class SceneDependencyStore {
           tx.abort();
           return;
         }
+
         const commits = tx.objectStore('localCommits');
         const request = commits.get([token.documentKey, localCommitId]);
         request.onsuccess = () => {
@@ -139,6 +157,7 @@ export class SceneDependencyStore {
             tx.abort();
             return;
           }
+
           commits.put({
             ...commit,
             dependencyDigest: digest,
@@ -153,6 +172,7 @@ export class SceneDependencyStore {
     });
   }
 
+  /** Читает один сегмент зависимости по ключу коммита и ресурса. */
   async read(
     documentKey: string,
     localCommitId: string,
@@ -161,6 +181,7 @@ export class SceneDependencyStore {
     segment = 0,
   ): Promise<SceneDependencyRecord | null> {
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const request = db
         .transaction('sceneDependencies', 'readonly')
@@ -172,6 +193,7 @@ export class SceneDependencyStore {
     });
   }
 
+  /** Перечисляет зависимости указанного типа постранично. */
   async list(
     documentKey: string,
     localCommitId: string,
@@ -179,9 +201,12 @@ export class SceneDependencyStore {
     after: readonly [string, number] | null = null,
     limit = 16,
   ): Promise<SceneDependencyRecord[]> {
-    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 16)
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 16) {
       throw new RangeError('Invalid dependency page size');
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('sceneDependencies', 'readonly');
       const lower = [
@@ -201,10 +226,12 @@ export class SceneDependencyStore {
       const request = tx
         .objectStore('sceneDependencies')
         .openCursor(IDBKeyRange.bound(lower, upper, after !== null));
+
       const records: SceneDependencyRecord[] = [];
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor || records.length === limit) return;
+
         records.push(cursor.value as SceneDependencyRecord);
         cursor.continue();
       };
@@ -214,6 +241,7 @@ export class SceneDependencyStore {
     });
   }
 
+  /** Перечисляет страницы сцены, относящиеся к указанной ячейке карты. */
   async listCellPages(
     documentKey: string,
     localCommitId: string,
@@ -221,9 +249,12 @@ export class SceneDependencyStore {
     afterKey = '',
     limit = 16,
   ): Promise<SceneDependencyRecord[]> {
-    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 16)
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 16) {
       throw new RangeError('Invalid dependency page size');
+    }
+
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('sceneDependencies', 'readonly');
       const prefix = `${cell}:`;
@@ -238,10 +269,12 @@ export class SceneDependencyStore {
       const request = tx
         .objectStore('sceneDependencies')
         .openCursor(IDBKeyRange.bound(lower, upper, Boolean(afterKey)));
+
       const records: SceneDependencyRecord[] = [];
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor || records.length === limit) return;
+
         records.push(cursor.value as SceneDependencyRecord);
         cursor.continue();
       };
@@ -251,6 +284,7 @@ export class SceneDependencyStore {
     });
   }
 
+  /** Читает сегменты одного ресурса после указанного номера. */
   async listResource(
     documentKey: string,
     localCommitId: string,
@@ -267,7 +301,9 @@ export class SceneDependencyStore {
       afterSegment < -1
     )
       throw new RangeError('Invalid dependency page size');
+
     const db = await openWorkshopSceneDatabase();
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction('sceneDependencies', 'readonly');
       const request = tx
@@ -284,6 +320,7 @@ export class SceneDependencyStore {
             ],
           ),
         );
+
       const records: SceneDependencyRecord[] = [];
       request.onsuccess = () => {
         const cursor = request.result;

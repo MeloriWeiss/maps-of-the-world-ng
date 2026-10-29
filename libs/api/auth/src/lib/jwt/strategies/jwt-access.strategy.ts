@@ -9,6 +9,7 @@ import { Request } from 'express';
 import { PrismaMainService } from '@wm/api/database-main';
 import { UserStatus } from '@wm/shared/users';
 
+/** Проверяет access-токен и формирует данные пользователя запроса. */
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(
   Strategy,

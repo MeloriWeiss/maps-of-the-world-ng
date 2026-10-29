@@ -9,11 +9,12 @@ import {
   signal,
 } from '@angular/core';
 import { ClickOutsideDirective } from '../../directives';
-import { SelectOptionComponent } from './select-option.component';
+import { SelectOptionComponent } from './select-option/select-option.component';
 import { SELECT_HOST, SelectHost } from './select.token';
 
 let selectId = 0;
 
+/** Предоставляет выбор значения из списка доступных параметров. */
 @Component({
   selector: 'wm-select',
   imports: [ClickOutsideDirective],

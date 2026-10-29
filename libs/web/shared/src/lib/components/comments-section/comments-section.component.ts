@@ -9,6 +9,7 @@ import { CommentComponent, CommentInputComponent } from '@wm/web/common-ui';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommentItem } from '@wm/web/data-access/shared';
 
+/** Общий список комментариев с формой добавления и управлением ветками. */
 @Component({
   selector: 'wm-comments-section',
   imports: [ReactiveFormsModule, CommentInputComponent, CommentComponent],

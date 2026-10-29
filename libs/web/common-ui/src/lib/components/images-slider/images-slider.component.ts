@@ -3,6 +3,7 @@ import { CarouselModule, OwlOptions } from 'ngx-owl-carousel-o';
 import { SvgComponent } from '../svg/svg.component';
 import { SliderItemInterface } from '@wm/web/data-access/shared';
 
+/** Переключает изображения в галерее и показывает активный элемент. */
 @Component({
   selector: 'wm-images-slider',
   imports: [CarouselModule, SvgComponent],

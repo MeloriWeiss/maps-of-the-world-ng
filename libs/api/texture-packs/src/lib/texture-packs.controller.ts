@@ -32,6 +32,7 @@ import { UploadedTextureFile } from './texture-file.interface';
 import { TexturePacksService } from './texture-packs.service';
 
 @ApiTags('texture-packs')
+/** Обрабатывает HTTP-запросы к наборам текстур. */
 @Controller('texture-packs')
 export class TexturePacksController {
   constructor(private readonly texturePacks: TexturePacksService) {}

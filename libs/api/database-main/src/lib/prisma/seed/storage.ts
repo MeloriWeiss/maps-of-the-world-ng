@@ -7,11 +7,13 @@ const placeholderPng = Buffer.from(
   'base64',
 );
 
+/** Описание изображения, используемого при заполнении тестовых данных. */
 export interface SeedImage {
   objectKey: string;
   sourcePath?: string;
 }
 
+/** Загружает тестовые изображения в объектное хранилище. */
 export async function uploadSeedImages(images: SeedImage[]) {
   const requiredVariables = [
     'OBJECT_STORAGE_ENDPOINT',

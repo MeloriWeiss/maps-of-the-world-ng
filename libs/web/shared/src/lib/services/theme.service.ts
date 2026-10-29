@@ -1,10 +1,7 @@
+import type { Theme } from '../interfaces/theme';
 import { effect, Injectable, signal } from '@angular/core';
 
-export interface Theme {
-  id: string;
-  title: string;
-}
-
+/** Загружает, сохраняет и применяет выбранную тему оформления. */
 @Injectable({
   providedIn: 'root',
 })

@@ -1,0 +1,170 @@
+<label class="search"
+  >Поиск объектов
+  <wm-input
+    type="search"
+    ariaLabel="Поиск объектов по названию"
+    placeholder="Название объекта"
+    [ngModel]="query()"
+    (ngModelChange)="query.set($event ?? ''); limit.set(100)"
+  />
+</label>
+<wm-select
+  ariaLabel="Тип объектов"
+  [value]="kind()"
+  (valueChange)="setKind($event)"
+>
+  <wm-option value="" label="Все типы">Все типы</wm-option>
+  <wm-option value="texture" label="Покрытия">Покрытия</wm-option>
+  <wm-option value="stamp" label="Изображения">Изображения</wm-option>
+  <wm-option value="text" label="Текст">Текст</wm-option>
+  <wm-option value="line" label="Линии">Линии</wm-option>
+  <wm-option value="rectangle" label="Прямоугольники">Прямоугольники</wm-option>
+</wm-select>
+<wm-select
+  ariaLabel="Область поиска"
+  [value]="scope()"
+  (valueChange)="setScope($event)"
+>
+  <wm-option value="viewport" label="В области просмотра"
+    >В области просмотра</wm-option
+  >
+  <wm-option value="map" label="По всей карте">По всей карте</wm-option>
+</wm-select>
+@if (scope() === 'map' && query().trim().length < 2) {
+  <p class="status">Введите минимум две буквы для поиска по всей карте.</p>
+}
+@if (tooWide() && scope() === 'viewport') {
+  <p class="status">
+    Приблизьте карту, чтобы увидеть список объектов в этой области.
+  </p>
+}
+@if (remoteError()) {
+  <p class="status" role="status">{{ remoteError() }}</p>
+}
+@if (chunks.loading()) {
+  <p class="status" role="status">Загружаем детали области…</p>
+}
+@if (chunks.error()) {
+  <p role="status">
+    {{ chunks.error() }}
+    <button type="button" (click)="chunks.retry()">Повторить</button>
+  </p>
+}
+@if (!chunks.canEditViewport() && !chunks.loading()) {
+  <button type="button" (click)="chunks.loadViewportDetails()">
+    Показать объекты этой области
+  </button>
+}
+<div class="objects wm-scrollbar" aria-label="Объекты карты">
+  @for (item of remoteOnly(); track item.objectId) {
+    <div class="object">
+      <button type="button" class="name" (click)="focusRemote(item)">
+        <span>{{ item.name || 'Объект' }} · {{ item.kind }}</span>
+      </button>
+      <button
+        type="button"
+        class="object__action"
+        (click)="focusRemote(item)"
+        aria-label="Перейти к объекту на карте"
+        wmTooltip="Перейти к объекту"
+        wmTooltipPosition="left"
+      >
+        <svg
+          icon="focus"
+          dir="workshop/"
+          class="svg16"
+          aria-hidden="true"
+        ></svg>
+      </button>
+    </div>
+  }
+  @for (item of shown(); track item.node.id) {
+    <div class="object" [class.selected]="item.node.shape.selected">
+      <button
+        type="button"
+        class="name"
+        (click)="select(item.node)"
+        (dblclick)="focus(item.node)"
+      >
+        @if (item.image) {
+          <img [src]="item.image" alt="" loading="lazy" />
+        }
+        <span>{{ item.name }}</span>
+      </button>
+      <button
+        type="button"
+        class="object__action"
+        (click)="focus(item.node)"
+        aria-label="Перейти к объекту на карте"
+        wmTooltip="Перейти к объекту"
+        wmTooltipPosition="left"
+      >
+        <svg
+          icon="focus"
+          dir="workshop/"
+          class="svg16"
+          aria-hidden="true"
+        ></svg>
+      </button>
+      @if (!readOnly()) {
+        <button
+          type="button"
+          class="object__action"
+          [class.object__action--locked]="item.node.locked"
+          (click)="toggleLock(item.node)"
+          [attr.aria-label]="
+            item.node.locked ? 'Разблокировать объект' : 'Заблокировать объект'
+          "
+          [wmTooltip]="
+            item.node.locked ? 'Разблокировать объект' : 'Заблокировать объект'
+          "
+          wmTooltipPosition="left"
+        >
+          <svg
+            [icon]="item.node.locked ? 'lock-closed' : 'lock-open'"
+            dir="workshop/"
+            class="svg16"
+            aria-hidden="true"
+          ></svg>
+        </button>
+      }
+      @if (item.stamp) {
+        <button
+          type="button"
+          (click)="toggle(item.node.id)"
+          [attr.aria-expanded]="expanded() === item.node.id"
+        >
+          {{ item.count }} шт.
+        </button>
+      }
+    </div>
+    @if (item.stamp && expanded() === item.node.id) {
+      <div class="instances">
+        @for (instance of visibleInstances(); track instance.id) {
+          <button
+            type="button"
+            (click)="selectInstance(instance.node, instance.index)"
+            [disabled]="readOnly() || instance.node.locked"
+          >
+            Изображение {{ instance.index + 1 }} · выделить отдельно
+          </button>
+        }
+        <p class="status">
+          До 100 изображений в текущей области. Приблизьте карту для точного
+          выбора.
+        </p>
+      </div>
+    }
+  }
+  @if (!remoteOnly().length && !shown().length) {
+    <p class="status">Здесь нет подходящих объектов.</p>
+  }
+</div>
+@if (nextCursor()) {
+  <button type="button" (click)="loadMore()">Показать ещё</button>
+}
+@if (objects().length > limit()) {
+  <button type="button" (click)="limit.set(limit() + 100)">
+    Показать ещё загруженные
+  </button>
+}

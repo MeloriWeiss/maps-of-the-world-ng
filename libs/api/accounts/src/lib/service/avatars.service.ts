@@ -11,6 +11,7 @@ import {
 import { PrismaMainService } from '@wm/api/database-main';
 import { avatarPublicUrl } from '../avatar-url';
 
+/** Проверяет, сохраняет и удаляет файлы аватаров. */
 @Injectable()
 export class AvatarsService {
   constructor(

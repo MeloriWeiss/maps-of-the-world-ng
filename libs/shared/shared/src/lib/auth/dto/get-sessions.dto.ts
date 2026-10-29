@@ -1,3 +1,4 @@
+/** Ответ API со списком активных сеансов аккаунта. */
 export interface GetSessionsDto {
   sessions: {
     id: number;

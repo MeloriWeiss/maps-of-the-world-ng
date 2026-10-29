@@ -12,6 +12,7 @@ import {
   MinLength,
 } from 'class-validator';
 
+/** Проверенные название и описание нового набора текстур. */
 export class CreateTexturePackDto {
   @IsString()
   @MinLength(1)
@@ -24,6 +25,7 @@ export class CreateTexturePackDto {
   description?: string;
 }
 
+/** Изменяемые поля метаданных набора текстур. */
 export class UpdateTexturePackDto {
   @IsOptional()
   @IsString()
@@ -37,6 +39,7 @@ export class UpdateTexturePackDto {
   description?: string;
 }
 
+/** Параметры выборки текстур указанного вида и страницы. */
 export class TexturePageQueryDto {
   @IsOptional()
   @IsIn(textureKinds)
@@ -54,12 +57,14 @@ export class TexturePageQueryDto {
   pageSize = 24;
 }
 
+/** Вид текстуры для запросов, где значение может быть опущено. */
 export class TextureKindDto {
   @IsOptional()
   @IsIn(textureKinds)
   kind: TextureKind = 'SURFACE';
 }
 
+/** Параметры постраничной выборки каталога наборов текстур. */
 export class TexturePackCatalogQueryDto {
   @Type(() => Number)
   @IsInt()
@@ -73,6 +78,7 @@ export class TexturePackCatalogQueryDto {
   pageSize = 9;
 }
 
+/** Новое состояние публикации набора текстур. */
 export class UpdateTexturePackPublicationDto {
   @IsBoolean()
   isPublished!: boolean;

@@ -2,6 +2,7 @@ import { Bounds } from '../interfaces';
 import { GraphNode } from './graph-node';
 import { NodesTypes } from '../consts';
 
+/** Узел, объединяющий дочерние контейнеры и фигуры сцены. */
 export class GroupNode extends GraphNode {
   constructor() {
     super();

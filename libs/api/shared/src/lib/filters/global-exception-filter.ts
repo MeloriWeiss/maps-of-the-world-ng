@@ -43,6 +43,7 @@ function isPrismaError(exception: unknown): exception is PrismaError {
   );
 }
 
+/** Преобразует исключения приложения в единый HTTP-ответ. */
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   constructor(

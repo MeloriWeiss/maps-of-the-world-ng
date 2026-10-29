@@ -1,5 +1,6 @@
 import { Point } from '../../../interfaces';
 
+/** Контракт инструмента, обрабатывающего начало, ход и завершение рисования. */
 export interface Tool {
   startDrawing: (
     e: MouseEvent,

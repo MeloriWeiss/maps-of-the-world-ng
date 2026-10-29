@@ -8,6 +8,7 @@ import { RouterLink } from '@angular/router';
 import { SvgComponent } from '@wm/web/common-ui';
 import { ForumCategory } from '@wm/web/data-access/forum';
 
+/** Боковая навигация по категориям и разделам форума. */
 @Component({
   selector: 'wm-forum-sidebar',
   imports: [RouterLink, SvgComponent],

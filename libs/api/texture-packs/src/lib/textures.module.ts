@@ -8,6 +8,7 @@ import { TexturePacksController } from './texture-packs.controller';
 import { TexturePacksService } from './texture-packs.service';
 import { TextureBlobCleanupService } from './texture-blob-cleanup.service';
 
+/** Подключает контроллер и сервис для работы с файлами текстур. */
 @Module({
   imports: [DatabaseMainModule, ApiAuthModule, ObjectStorageModule],
   controllers: [TexturesController, TexturePacksController],

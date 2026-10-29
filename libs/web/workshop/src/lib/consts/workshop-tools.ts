@@ -1,3 +1,4 @@
+/** Перечень инструментов рисования Workshop. */
 export enum WorkshopTools {
   STAMP = 'stamp',
   SELECT = 'select',

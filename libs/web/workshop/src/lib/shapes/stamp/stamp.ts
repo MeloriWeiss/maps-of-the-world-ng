@@ -8,6 +8,7 @@ import {
 } from '../../rendering/shape-render-context';
 import { intersectsBounds } from '@wm/shared/workshop';
 
+/** Один экземпляр штампа с координатами, размером и углом поворота. */
 export interface StampInstance extends Point {
   id?: string;
   width: number;
@@ -15,12 +16,14 @@ export interface StampInstance extends Point {
   rotation: number;
 }
 
+/** Данные текстуры штампа и всех её экземпляров. */
 export interface StampData extends CreateBaseShape {
   textureId: string;
   textureUrl: string;
   instances: StampInstance[];
 }
 
+/** Реализация фигуры, содержащей один или несколько экземпляров штампа. */
 export class StampShape extends BaseShapeShape implements Shape {
   type = ShapesTypes.STAMP;
   protected override partialErase = true;

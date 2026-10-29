@@ -2,6 +2,7 @@ import { IsDefined, IsString, MaxLength, Matches } from 'class-validator';
 import { authConfig } from '@wm/shared/auth';
 import { ApiProperty } from '@nestjs/swagger';
 
+/** Проверяет учётные данные для входа. */
 export class LoginDto {
   @ApiProperty()
   @IsDefined({ message: authConfig.email.required.message })

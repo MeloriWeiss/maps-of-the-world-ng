@@ -38,6 +38,7 @@ const pageLimit = 100;
 const stagedPageBatchSize = 24;
 const stagedTileBatchSize = 8;
 
+/** Загружает части сцены и управляет объектами карты новой версии. */
 @Injectable()
 export class MapSceneV4Service {
   constructor(

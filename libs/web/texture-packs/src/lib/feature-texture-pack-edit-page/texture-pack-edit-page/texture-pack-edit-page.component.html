@@ -1,0 +1,154 @@
+<main class="pack-editor">
+  <div class="container">
+    <a class="back-button" [routerLink]="['/profile', 'me', 'texture-packs']">
+      <span aria-hidden="true">←</span>
+      Назад к моим пакам
+    </a>
+
+    @if (isLoading()) {
+      <div class="page-state">Загружаем текстур-пак…</div>
+    } @else if (!pack()) {
+      <div class="page-state page-state--error">
+        <p>{{ errorMessage() }}</p>
+        <a [routerLink]="['/profile', 'me', 'texture-packs']">
+          Вернуться к моим пакам
+        </a>
+      </div>
+    } @else {
+      <header class="editor-header">
+        <div>
+          <p class="eyebrow">Управление паком</p>
+          <h1>{{ pack()!.name }}</h1>
+          <p>
+            {{ total() }} текстур ·
+            {{ pack()!.isPublished ? 'опубликован' : 'черновик' }}
+          </p>
+        </div>
+        <button
+          class="publication-button"
+          type="button"
+          [disabled]="isPublishing() || (!pack()!.isPublished && total() === 0)"
+          (click)="togglePublication()"
+        >
+          @if (isPublishing()) {
+            Обновляем…
+          } @else {
+            {{
+              pack()!.isPublished ? 'Снять с публикации' : 'Опубликовать пак'
+            }}
+          }
+        </button>
+      </header>
+
+      @if (errorMessage()) {
+        <div class="error-message" role="alert">
+          <span>{{ errorMessage() }}</span>
+          <button type="button" (click)="errorMessage.set(null)">
+            Закрыть
+          </button>
+        </div>
+      }
+
+      <wm-texture-pack-details-form
+        [form]="form"
+        [saving]="isSaving()"
+        (submitted)="saveDetails()"
+      />
+
+      <section class="textures-card" aria-labelledby="pack-textures-title">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">02</span>
+            <h2 id="pack-textures-title">Все текстуры</h2>
+          </div>
+          <span class="texture-total">
+            Показано {{ loadedTotal() }} из {{ total() }}
+          </span>
+        </div>
+
+        @for (section of sections(); track section.kind) {
+          <section
+            class="texture-section"
+            [attr.aria-labelledby]="'texture-section-' + section.kind"
+          >
+            <div class="texture-section__heading">
+              <div>
+                <h3 [id]="'texture-section-' + section.kind">
+                  {{ section.title }}
+                </h3>
+                <p>{{ section.description }}</p>
+              </div>
+              <span class="texture-total"
+                >Показано {{ section.items.length }} из
+                {{ section.total }}</span
+              >
+            </div>
+            <label
+              class="upload-zone"
+              [class.is-uploading]="uploadingKind() === section.kind"
+            >
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                [disabled]="isUploading()"
+                (change)="uploadTextures($event, section.kind)"
+              />
+              <strong>{{
+                uploadingKind() === section.kind
+                  ? 'Загружаем файлы…'
+                  : 'Добавить в «' + section.title + '»'
+              }}</strong>
+              <span>PNG, JPEG или WebP · до 5 МБ · до 50 файлов за раз</span>
+            </label>
+
+            @if (section.items.length) {
+              <div class="texture-grid">
+                @for (texture of section.items; track texture.id) {
+                  <wm-texture-editor-card
+                    [texture]="texture"
+                    [moveLabel]="section.moveLabel"
+                    [deletingDisabled]="deletingTextureId() !== null"
+                    [moving]="updatingKinds().has(texture.id)"
+                    (removed)="removeTexture($event)"
+                    (moved)="updateKind($event, section.moveTo)"
+                  />
+                }
+              </div>
+            } @else {
+              <p class="texture-section__empty">Здесь пока нет текстур.</p>
+            }
+
+            @if (section.hasMore) {
+              <button
+                class="load-more-button"
+                type="button"
+                [disabled]="loadingMoreKind() !== null"
+                (click)="loadMore(section.kind)"
+              >
+                {{ section.loadingMore ? 'Загружаем…' : 'Показать ещё' }}
+              </button>
+            }
+          </section>
+        }
+      </section>
+
+      <section class="danger-zone" aria-labelledby="delete-pack-title">
+        <div>
+          <h2 id="delete-pack-title">Удаление пака</h2>
+          <p>
+            Пак и его текстуры исчезнут из каталога. Уже созданные карты
+            сохранят использованные изображения до удаления последних ссылок.
+          </p>
+        </div>
+        <button
+          type="button"
+          [disabled]="isDeletingPack()"
+          (click)="removePack()"
+        >
+          {{ isDeletingPack() ? 'Удаляем…' : 'Удалить текстур-пак' }}
+        </button>
+      </section>
+    }
+  </div>
+</main>

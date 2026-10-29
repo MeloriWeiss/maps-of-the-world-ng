@@ -3,6 +3,7 @@ import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '@wm/web/data-access/auth';
 
+/** Восстанавливает сохранённый сеанс до завершения запуска приложения. */
 export const authInitializer = async () => {
   const authService = inject(AuthService);
 

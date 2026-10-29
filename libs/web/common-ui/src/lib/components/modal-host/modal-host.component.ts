@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { ModalService } from '../base-modal/modal.service';
 
+/** Отображает содержимое открытого модального окна в корне интерфейса. */
 @Component({
   selector: 'wm-modal-host',
   imports: [],

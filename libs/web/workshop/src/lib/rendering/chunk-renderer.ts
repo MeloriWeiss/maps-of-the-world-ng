@@ -10,7 +10,7 @@ interface Tile {
   canvas: HTMLCanvasElement;
 }
 
-/** Disposable raster cache. Geometry and original assets remain the source of truth. */
+/** Временный растровый кэш; исходными данными остаются геометрия и ресурсы объектов. */
 export class ChunkRenderer {
   #version = -1;
   #ordered: Shape[] = [];

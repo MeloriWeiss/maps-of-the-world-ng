@@ -4,6 +4,7 @@ import { AccessRequest } from '../interfaces';
 import { UserRoleType } from '@wm/shared/users';
 import { REQUIRED_ROLES } from './roles.decorator';
 
+/** Ограничивает доступ к маршрутам по роли пользователя. */
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}

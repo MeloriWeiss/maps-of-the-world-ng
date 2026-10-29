@@ -1,4 +1,9 @@
-﻿import {
+import type { PublicTexturePack } from './interfaces/public-texture-pack';
+import {
+  textureSelect,
+  publicTexturePackSelect,
+} from './utils/texture-pack.select';
+import {
   BadRequestException,
   Injectable,
   NotFoundException,
@@ -14,51 +19,7 @@ import { UploadedTextureFile } from './texture-file.interface';
 import { TextureKind } from '@wm/shared/workshop';
 import { TexturesService } from './textures.service';
 
-const textureSelect = {
-  kind: true,
-  id: true,
-  name: true,
-  mimeType: true,
-  size: true,
-  width: true,
-  height: true,
-  createdAt: true,
-} as const;
-
-const publicTexturePackSelect = (accountId?: number) =>
-  ({
-    id: true,
-    name: true,
-    description: true,
-    isPublished: true,
-    publishedAt: true,
-    createdAt: true,
-    updatedAt: true,
-    likesCount: true,
-    owner: {
-      select: {
-        nickname: true,
-        userId: true,
-      },
-    },
-    _count: {
-      select: {
-        textures: { where: { deletedAt: null } },
-        likes: { where: { accountId: accountId ?? -1 } },
-      },
-    },
-    textures: {
-      where: { deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-      take: 8,
-      select: textureSelect,
-    },
-  }) as const;
-
-type PublicTexturePack = Prisma.TexturePackGetPayload<{
-  select: ReturnType<typeof publicTexturePackSelect>;
-}>;
-
+/** Выполняет операции с наборами текстур и их публикацией. */
 @Injectable()
 export class TexturePacksService {
   constructor(

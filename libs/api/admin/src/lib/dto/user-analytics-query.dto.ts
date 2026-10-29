@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsIn, IsOptional } from 'class-validator';
 
+/** Поддерживаемые интервалы группировки административной статистики. */
 export const analyticsIntervals = [
   'hour',
   'day',
@@ -8,8 +9,10 @@ export const analyticsIntervals = [
   'month',
   'year',
 ] as const;
+/** Тип интервала группировки статистики. */
 export type AnalyticsInterval = (typeof analyticsIntervals)[number];
 
+/** Проверяет период и интервал группировки пользовательской статистики. */
 export class UserAnalyticsQueryDto {
   @ApiPropertyOptional({ format: 'date-time' })
   @IsOptional()

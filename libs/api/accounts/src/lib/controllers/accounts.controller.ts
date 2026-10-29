@@ -35,6 +35,7 @@ import { UploadedImageFile } from '@wm/api/shared';
 import { Response } from 'express';
 
 @ApiTags('Accounts')
+/** Обрабатывает HTTP-запросы к данным аккаунта и профиля. */
 @Controller('accounts')
 export class AccountsController {
   #accountsService: AccountsService;

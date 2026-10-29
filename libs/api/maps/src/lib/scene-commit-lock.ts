@@ -1,6 +1,7 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@wm/api/database-main';
 
+/** Блокирует коммит сцены для последовательного изменения в транзакции. */
 export async function lockSceneCommit(
   tx: Prisma.TransactionClient,
   mapId: number,

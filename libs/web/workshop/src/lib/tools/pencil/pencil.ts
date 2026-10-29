@@ -6,6 +6,7 @@ import { Point } from '../../interfaces';
 import { ShapesTypes } from '../../consts';
 import { splitStrokePoints } from '../shared/split-stroke-points';
 
+/** Инструмент рисования свободной линии на холсте. */
 export class PencilTool implements Tool {
   static readonly displayName = 'Кисть';
   #shapesService = inject(WorkshopShapesService);

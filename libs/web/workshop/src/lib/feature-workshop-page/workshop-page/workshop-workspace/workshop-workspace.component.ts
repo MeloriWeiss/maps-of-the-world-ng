@@ -5,6 +5,7 @@ import { WorkshopCanvasManagerService } from '../../../services';
 import { WorkshopPanningService } from '../../../services';
 import { ToggleComponent } from '@wm/web/common-ui';
 
+/** Рабочая область страницы, объединяющая холст и боковые панели. */
 @Component({
   selector: 'wm-workshop-workspace',
   imports: [FormsModule, WorkshopCanvasComponent, ToggleComponent],

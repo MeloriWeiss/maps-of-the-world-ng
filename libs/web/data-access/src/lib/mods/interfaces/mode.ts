@@ -1,3 +1,4 @@
+/** Описание режима приложения и его раздела материалов. */
 export interface Mode {
   id: number;
   name: string;
@@ -10,6 +11,7 @@ export interface Mode {
   }[];
 }
 
+/** Параметры фильтрации и пагинации материалов режима. */
 export interface GetModsDto {
   page: number;
   search: string;

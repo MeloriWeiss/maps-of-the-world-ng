@@ -1,15 +1,18 @@
-/** All Workshop local stores share one versioned connection and upgrade path. */
+/** Открывает общую версионируемую базу IndexedDB для локальных хранилищ Workshop. */
 let databasePromise: Promise<IDBDatabase> | null = null;
 
+/** Открывает или возвращает общий экземпляр локальной базы Workshop. */
 export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
   databasePromise ??= new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open('workshop-scene-drafts', 5);
     request.onupgradeneeded = () => {
       const database = request.result;
+
       if (!database.objectStoreNames.contains('drafts'))
         database.createObjectStore('drafts');
       if (!database.objectStoreNames.contains('commits'))
         database.createObjectStore('commits');
+
       if (!database.objectStoreNames.contains('documents')) {
         const documents = database.createObjectStore('documents', {
           keyPath: 'documentKey',
@@ -18,11 +21,13 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           unique: true,
         });
       }
+
       if (!database.objectStoreNames.contains('operations')) {
         database.createObjectStore('operations', {
           keyPath: ['documentKey', 'seq'],
         });
       }
+
       if (!database.objectStoreNames.contains('mutations')) {
         const mutations = database.createObjectStore('mutations', {
           keyPath: ['documentKey', 'seq', 'entityType', 'entityId'],
@@ -34,11 +39,13 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           'seq',
         ]);
       }
+
       if (!database.objectStoreNames.contains('localCommits')) {
         database.createObjectStore('localCommits', {
           keyPath: ['documentKey', 'localCommitId'],
         });
       }
+
       if (!database.objectStoreNames.contains('commitParts')) {
         const parts = database.createObjectStore('commitParts', {
           keyPath: ['documentKey', 'localCommitId', 'kind', 'partKey'],
@@ -50,6 +57,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           'ordinal',
         ]);
       }
+
       if (!database.objectStoreNames.contains('commitPartDescriptors')) {
         const descriptors = database.createObjectStore(
           'commitPartDescriptors',
@@ -64,6 +72,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           'partKey',
         ]);
       }
+
       if (!database.objectStoreNames.contains('commitWork')) {
         const work = database.createObjectStore('commitWork', {
           keyPath: ['documentKey', 'localCommitId', 'taskKey'],
@@ -74,6 +83,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           'status',
         ]);
       }
+
       const work = request.transaction?.objectStore('commitWork');
       if (work && !work.indexNames.contains('byFinalCell')) {
         work.createIndex('byFinalCell', [
@@ -84,6 +94,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           'partId',
         ]);
       }
+
       if (work && !work.indexNames.contains('byFinalOrder')) {
         work.createIndex('byFinalOrder', [
           'documentKey',
@@ -92,6 +103,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           'partId',
         ]);
       }
+
       if (work && !work.indexNames.contains('byPreviewLeaf')) {
         work.createIndex('byPreviewLeaf', [
           'documentKey',
@@ -103,6 +115,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           'partId',
         ]);
       }
+
       if (!database.objectStoreNames.contains('uploadReceipts')) {
         database.createObjectStore('uploadReceipts', {
           keyPath: [
@@ -114,6 +127,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           ],
         });
       }
+
       if (!database.objectStoreNames.contains('sceneDependencies')) {
         database.createObjectStore('sceneDependencies', {
           keyPath: [
@@ -125,6 +139,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
           ],
         });
       }
+
       if (!database.objectStoreNames.contains('bundleFrames')) {
         const frames = database.createObjectStore('bundleFrames', {
           keyPath: ['documentKey', 'localCommitId', 'bundleId', 'ordinal'],
@@ -137,6 +152,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
         ]);
       }
     };
+
     request.onsuccess = () => {
       const database = request.result;
       database.onversionchange = () => {
@@ -145,12 +161,14 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
       };
       resolve(database);
     };
+
     const fail = () => {
       databasePromise = null;
       reject(
         request.error ?? new Error('Workshop local database is unavailable'),
       );
     };
+
     request.onerror = fail;
     request.onblocked = () => {
       databasePromise = null;
@@ -160,6 +178,7 @@ export function openWorkshopSceneDatabase(): Promise<IDBDatabase> {
   return databasePromise;
 }
 
+/** Ожидает успешного завершения транзакции IndexedDB. */
 export function transactionCompleted(
   transaction: IDBTransaction,
 ): Promise<void> {
@@ -176,6 +195,7 @@ export function transactionCompleted(
   });
 }
 
+/** Преобразует результат или ошибку запроса IndexedDB в Promise. */
 export function requestValue<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);

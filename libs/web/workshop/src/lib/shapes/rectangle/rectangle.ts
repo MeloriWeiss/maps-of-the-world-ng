@@ -8,6 +8,7 @@ import {
   ShapeRenderContext,
 } from '../../rendering/shape-render-context';
 
+/** Реализация прямоугольной фигуры с заливкой и границами. */
 export class RectangleShape extends BaseShapeShape implements Rectangle {
   type = ShapesTypes.RECTANGLE;
 

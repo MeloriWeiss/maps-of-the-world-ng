@@ -14,6 +14,7 @@ import {
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+/** Универсальное поле ввода с настройками отображения и состояния. */
 @Component({
   selector: 'wm-input',
   imports: [ReactiveFormsModule],

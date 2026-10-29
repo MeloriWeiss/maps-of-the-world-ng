@@ -1,3 +1,4 @@
+/** Публичные поля аккаунта в ответе API. */
 export interface AccountResponseDto {
   nickname: string;
   firstName?: string | null;

@@ -1,6 +1,7 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
 
+/** Настраивает и публикует документацию API в Swagger. */
 export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('Maps of the World API')

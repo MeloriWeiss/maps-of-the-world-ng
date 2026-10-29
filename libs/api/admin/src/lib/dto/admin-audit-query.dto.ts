@@ -10,12 +10,14 @@ import {
   Min,
 } from 'class-validator';
 
+/** Допустимые действия, сохраняемые в журнале аудита. */
 export const adminAuditActions = [
   'USER_ROLE_CHANGED',
   'USER_STATUS_CHANGED',
   'CONTENT_VISIBILITY_CHANGED',
 ] as const;
 
+/** Типы сущностей, к которым относятся записи аудита. */
 export const adminAuditTargetTypes = [
   'USER',
   'MAP',
@@ -23,6 +25,7 @@ export const adminAuditTargetTypes = [
   'FORUM_DISCUSSION',
 ] as const;
 
+/** Проверяет фильтры и параметры пагинации журнала аудита. */
 export class AdminAuditQueryDto {
   @ApiPropertyOptional({ description: 'Actor nickname, username or email' })
   @IsOptional()

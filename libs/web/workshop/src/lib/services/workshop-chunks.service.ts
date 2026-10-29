@@ -1,3 +1,10 @@
+import type {
+  PageResponse,
+  ContainerRecord,
+  TileImage,
+  SceneObjectPage,
+  PageUpload,
+} from '../interfaces/workshop-chunks';
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -17,11 +24,11 @@ import {
   WorldBounds,
 } from '@wm/shared/workshop';
 import { NodesTypes } from '../consts';
-import {
+import { WorkshopSceneGraphStorageService } from './workshop-scene-graph-storage.service';
+import type {
   SerializedChunkShape,
   SerializedNode,
-  WorkshopSceneGraphStorageService,
-} from './workshop-scene-graph-storage.service';
+} from '../interfaces/workshop-scene-graph-storage';
 import { GraphNode, ShapeNode } from '../nodes';
 import { WorkshopCoordsService } from './workshop-coords.service';
 import { CurrentAccountStore } from '@wm/web/data-access/profile';
@@ -30,83 +37,22 @@ import { WorkshopSceneDraftStore } from './workshop-scene-draft.store';
 import {
   PreparedSceneCommit,
   SceneContainerChange,
-  ScenePageUpload,
 } from './scene-commit.types';
 import { WorkshopSceneCommitCoordinator } from './workshop-scene-commit-coordinator';
 import { SceneOperationJournal } from './scene-operation-journal';
 import { createSceneMutation } from './scene-history';
 import { canvasColor } from '../rendering/palette';
+import {
+  pageKey,
+  cellKey,
+  tileKey,
+  contains,
+  unionBounds,
+} from './utils/workshop-chunk-geometry';
 
-interface PageResponse {
-  items: (MapScenePageDescriptor & { body?: string })[];
-  nextCursor: string | null;
-  complete: boolean;
-}
-interface ContainerRecord {
-  id: string;
-  parentId: string | null;
-  kind: string;
-  name: string;
-  visible: boolean;
-  locked: boolean;
-  orderKey: number;
-  childIndex: number;
-}
-interface TileImage {
-  image: HTMLImageElement | HTMLCanvasElement;
-  url: string | null;
-  created: number;
-  version: number;
-}
-export interface SceneObjectSummary {
-  objectId: string;
-  nodeId: string;
-  parentId: string;
-  kind: string;
-  name: string;
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  partCount: number;
-}
-export interface SceneObjectPage {
-  items: SceneObjectSummary[];
-  nextCursor: string | null;
-  complete: boolean;
-}
-type PageUpload = ScenePageUpload;
 const utf8 = new TextEncoder();
 
-function pageKey(page: { cellX: number; cellY: number; pageId: number }) {
-  return `${page.cellX}:${page.cellY}:${page.pageId}`;
-}
-
-function cellKey(x: number, y: number) {
-  return `${x}:${y}`;
-}
-function tileKey(level: number, x: number, y: number) {
-  return `${level}:${x}:${y}`;
-}
-function contains(outer: WorldBounds, inner: WorldBounds) {
-  return (
-    outer.x <= inner.x &&
-    outer.y <= inner.y &&
-    outer.x + outer.width >= inner.x + inner.width &&
-    outer.y + outer.height >= inner.y + inner.height
-  );
-}
-function unionBounds(a: WorldBounds, b: WorldBounds): WorldBounds {
-  const x = Math.min(a.x, b.x),
-    y = Math.min(a.y, b.y);
-  return {
-    x,
-    y,
-    width: Math.max(a.x + a.width, b.x + b.width) - x,
-    height: Math.max(a.y + a.height, b.y + b.height) - y,
-  };
-}
-
+/** Загружает и кэширует страницы объектов и тайлы превью карты. */
 @Injectable()
 export class WorkshopChunksService {
   #http = inject(HttpClient);
@@ -116,6 +62,7 @@ export class WorkshopChunksService {
   #mode = inject(WorkshopModeService);
   #draftStore = new WorkshopSceneDraftStore();
   #commits = inject(WorkshopSceneCommitCoordinator);
+
   #draftTimer: ReturnType<typeof setTimeout> | null = null;
   #epoch = 0;
   #mapId: number | null = null;
@@ -126,8 +73,10 @@ export class WorkshopChunksService {
   #clean = new Map<string, string>();
   #baselineRecords = new Map<string, SerializedChunkShape>();
   #dirtyPages = new Set<string>();
+
   #covered: WorldBounds[] = [];
   #discovering = new Map<string, Promise<void>>();
+
   #tiles = new Map<string, TileImage>();
   #maxTiles = 480;
   #tilePending = new Map<string, Promise<TileImage | null>>();
@@ -139,10 +88,12 @@ export class WorkshopChunksService {
   #availableTiles = new Map<string, number>();
   #tilePackPending = new Map<string, Promise<void>>();
   #tilePackFailed = new Set<string>();
+
   #tileRequestTimer: ReturnType<typeof setTimeout> | null = null;
   #tileRequestSignature = '';
   #knownContainers = new Set<string>();
   #baselineContainers = new Map<string, SceneContainerChange>();
+
   #forceDetails = false;
   #saving = false;
   #recoveryBaseRevision: number | null = null;
@@ -165,18 +116,22 @@ export class WorkshopChunksService {
     inject(DestroyRef).onDestroy(() => this.reset());
   }
 
+  /** Сбрасывает состояние загруженной сцены и освобождает временные ресурсы. */
   reset() {
     this.#journal = null;
     this.#journalCaptureError = null;
     this.#storage.persistCompletedOperation = null;
     this.#epoch += 1;
+
     if (this.#draftTimer) clearTimeout(this.#draftTimer);
     this.#draftTimer = null;
     if (this.#tileRequestTimer) clearTimeout(this.#tileRequestTimer);
     this.#tileRequestTimer = null;
     this.#tileRequestSignature = '';
+
     for (const tile of this.#tiles.values())
       if (tile.url) URL.revokeObjectURL(tile.url);
+
     this.#tiles.clear();
     this.#tilePending.clear();
     this.#tileMissing.clear();
@@ -188,6 +143,7 @@ export class WorkshopChunksService {
     this.#tilePackFailed.clear();
     this.#availableTiles.clear();
     this.#saveFetchedCells.clear();
+
     this.#pages.clear();
     this.#loaded.clear();
     this.#pageIds.clear();
@@ -196,10 +152,12 @@ export class WorkshopChunksService {
     this.#dirtyPages.clear();
     this.#covered = [];
     this.#discovering.clear();
+
     this.#knownContainers.clear();
     this.#header = null;
     this.#mapId = null;
     this.#baselineContainers.clear();
+
     this.sceneMapId.set(null);
     this.sceneRevision.set(0);
     this.#forceDetails = false;
@@ -211,16 +169,25 @@ export class WorkshopChunksService {
     this.#draftRecoveryError = false;
     this.#storage.sceneBounds = null;
     this.#storage.persistRemoteDraft = null;
+
     this.loading.set(false);
     this.error.set('');
     this.saveProgress.set(0);
     this.canEditViewport.set(true);
   }
 
+  /**
+   * Открывает сцену карты и восстанавливает её локальные данные.
+   *
+   * @param id Идентификатор карты.
+   * @param raw Сериализованный заголовок сцены.
+   * @param revision Версия сцены, которую необходимо открыть.
+   */
   async open(id: number, raw: string, revision = 0) {
     this.reset();
     const value: unknown = JSON.parse(raw);
     if (!isMapSceneHeaderV4(value)) throw new Error('Unsupported map format');
+
     this.#mapId = id;
     this.revision = revision;
     this.#header = value;
@@ -252,14 +219,17 @@ export class WorkshopChunksService {
     this.changed();
   }
 
+  /** Проверяет, загружена ли сцена указанной карты. */
   hasSceneFor(id: number) {
     return this.#mapId === id && this.#header !== null;
   }
 
+  /** Рисует доступные обзорные тайлы в текущей области холста. */
   drawOverview(ctx: CanvasRenderingContext2D) {
     const viewport = this.#coords.worldViewport;
     const targetLevel = this.#viewportPreviewLevel(viewport);
     let drawn = false;
+
     for (const [key, tile] of [...this.#tiles].sort(
       ([a], [b]) => Number(b.split(':')[0]) - Number(a.split(':')[0]),
     )) {
@@ -267,6 +237,7 @@ export class WorkshopChunksService {
       if (level < targetLevel) continue;
       const bounds = mapPreviewBounds(level, x, y);
       if (!intersectsBounds(bounds, viewport)) continue;
+
       let parentX = x,
         parentY = y;
       let coveredByParent = false;
@@ -282,6 +253,7 @@ export class WorkshopChunksService {
           break;
         }
       }
+
       const fade = coveredByParent
         ? Math.min(1, (performance.now() - tile.created) / 180)
         : 1;
@@ -291,9 +263,11 @@ export class WorkshopChunksService {
       this.#tiles.set(key, tile);
       drawn = true;
     }
+
     return drawn;
   }
 
+  /** Рисует обзорный тайл с учётом экранного преобразования и плавного появления. */
   #drawPreviewTile(
     ctx: CanvasRenderingContext2D,
     image: HTMLImageElement | HTMLCanvasElement,
@@ -318,6 +292,7 @@ export class WorkshopChunksService {
     ctx.restore();
   }
 
+  /** Проверяет, доступен ли обзорный тайл для заданных границ. */
   hasOverviewFor(bounds: WorldBounds): boolean {
     const targetLevel = this.#viewportPreviewLevel(this.#coords.worldViewport);
     for (let level = targetLevel; level <= mapPreviewMaxLevel; level++) {
@@ -334,6 +309,7 @@ export class WorkshopChunksService {
     return false;
   }
 
+  /** Проверяет, завершена ли загрузка данных сцены для заданной области. */
   ready(bounds: WorldBounds) {
     if (!this.#header) return true;
     if (!this.#covered.some((area) => contains(area, bounds))) return false;
@@ -343,11 +319,14 @@ export class WorkshopChunksService {
     );
   }
 
+  /** Обновляет данные сцены, необходимые для текущего окна просмотра. */
   update(viewport: WorldBounds) {
     this.canEditViewport.set(!this.#saving && this.ready(viewport));
     if (!this.#header || this.#mapId === null) return;
+
     this.#scheduleViewportTiles(viewport);
     if (!this.#forceDetails && this.#coords.zoom * mapChunkSize < 80) return;
+
     const margin = Math.min(
       mapChunkSize,
       Math.max(viewport.width, viewport.height) * 0.3,
@@ -372,6 +351,7 @@ export class WorkshopChunksService {
     const area = { x: left, y: top, width: right - left, height: bottom - top };
     if (area.width > mapChunkSize * 64 || area.height > mapChunkSize * 64)
       return;
+
     const missingPages = [...this.#pages].some(
       ([key, page]) =>
         intersectsBounds(page.bounds, area) && !this.#loaded.has(key),
@@ -381,9 +361,11 @@ export class WorkshopChunksService {
       this.#discovering.size < 2
     )
       void this.#discover(area, true).catch(() => undefined);
+
     if (this.#loaded.size > 64) this.#evict(area);
   }
 
+  /** Сбрасывает состояния ошибок и повторно запрашивает недостающие данные. */
   retry() {
     this.#tileMissing.clear();
     this.#tileFailed.clear();
@@ -393,16 +375,20 @@ export class WorkshopChunksService {
     this.error.set('');
     this.changed();
   }
+
+  /** Принудительно включает загрузку подробных данных текущей области. */
   loadViewportDetails() {
     this.#forceDetails = true;
     this.retry();
   }
 
+  /** Начинает локальный черновик для авторизованного пользователя. */
   beginLocalDraft() {
     const accountId = this.#account.user()?.id;
     if (accountId !== undefined) this.#activateJournal(undefined, 0);
   }
 
+  /** Активирует журнал локальных операций для текущего документа и ревизии. */
   #activateJournal(mapId: number | undefined, revision: number) {
     const accountId = this.#account.user()?.id;
     if (accountId === undefined) return;
@@ -428,16 +414,26 @@ export class WorkshopChunksService {
     };
   }
 
+  /**
+   * Сохраняет изменения сцены в указанную карту.
+   *
+   * @param id Идентификатор карты, в которую сохраняется сцена.
+   * @param copy Признак сохранения как новой копии.
+   */
   async save(id: number, copy = false) {
     if (this.#saving) return;
+
     if (this.#draftRecoveryError)
       throw new Error('Restore the local draft before saving this map');
+
     const accountId = this.#account.user()?.id;
     if (accountId === undefined) throw new Error('Sign in to save a map');
+
     this.#saving = true;
     this.canEditViewport.set(false);
     this.saveProgress.set(0);
     this.#saveFetchedCells.clear();
+
     try {
       if (!this.#journal) {
         const sourceCopy = copy && this.#mapId !== null && this.#mapId !== id;
@@ -447,12 +443,15 @@ export class WorkshopChunksService {
         );
         if (!this.#header || sourceCopy) this.#seedJournal();
       }
+
       if (this.#journalCaptureError) throw this.#journalCaptureError;
       this.#draftTargetMapId = id;
+
       const pending = await this.#commits.pending(accountId, id);
       if (pending) this.#preparedCommit = pending;
       await this.#writeDraft();
       if (pending) await this.#publishPrepared(pending);
+
       const journalCutSeq = await this.#journal?.flush();
       const sourceId =
         copy && this.#mapId !== null && this.#mapId !== id ? this.#mapId : null;
@@ -463,6 +462,7 @@ export class WorkshopChunksService {
           this.#header.previewContentRevision === undefined);
       if (repairPreviews && this.#header)
         await this.#discover(this.#header.bounds, true);
+
       const prepared = await this.#preparePages(initial);
       const containers = this.#containerChanges();
       const changedContainers = containers.some(
@@ -480,6 +480,7 @@ export class WorkshopChunksService {
         this.saveProgress.set(100);
         return;
       }
+
       const containerBounds = await this.#changedContainerBounds(containers);
       const images = await this.#preparePreviewTiles(
         this.#dirtyPreviewKeys(
@@ -499,6 +500,7 @@ export class WorkshopChunksService {
               this.#header.previewContentRevision !== undefined
             ? this.#header.previewContentRevision
             : this.revision + 1;
+
       const commit: PreparedSceneCommit = {
         version: 1,
         accountId,
@@ -529,17 +531,24 @@ export class WorkshopChunksService {
         removedIds: [...this.#storage.deletedShapeIds],
         ...(journalCutSeq !== undefined ? { journalCutSeq } : {}),
       };
+
       await this.#commits.prepare(commit);
       this.#preparedCommit = commit;
       await this.#publishPrepared(commit);
     } finally {
       this.#saveFetchedCells.clear();
+
       this.#saving = false;
       this.canEditViewport.set(this.ready(this.#coords.worldViewport));
       this.#saveDraft();
     }
   }
 
+  /**
+   * Публикует подготовленный коммит и синхронизирует локальное состояние сцены.
+   *
+   * После ответа сервера обновляет базовые страницы, тайлы, ревизию и черновик.
+   */
   async #publishPrepared(commit: PreparedSceneCommit) {
     const { scene: saved, serverCommitId } = await this.#commits.publish(
       commit,
@@ -554,24 +563,30 @@ export class WorkshopChunksService {
         cutSeq: commit.journalCutSeq,
       });
     }
+
     this.#epoch += 1;
     this.#discovering.clear();
     this.loading.set(false);
+
     if (this.#tileRequestTimer) clearTimeout(this.#tileRequestTimer);
     this.#tileRequestTimer = null;
     this.#tileRequestSignature = '';
+
     this.#tilePending.clear();
     this.#tileMissing.clear();
     this.#tileFailed.clear();
+
     this.revision = saved.revision;
     this.#mapId = commit.mapId;
     this.#header = saved;
     this.#forceDetails = false;
+
     for (const [key, tile] of this.#tiles)
       if (!this.#validPreviewTile(tile.version)) {
         if (tile.url) URL.revokeObjectURL(tile.url);
         this.#tiles.delete(key);
       }
+
     this.#tileBlocks.clear();
     this.#tileBlockPending.clear();
     this.#tileBlockFailed.clear();
@@ -579,9 +594,11 @@ export class WorkshopChunksService {
     this.#tilePackFailed.clear();
     this.#availableTiles.clear();
     this.#draftTargetMapId = null;
+
     this.sceneMapId.set(commit.mapId);
     this.sceneRevision.set(saved.revision);
     this.#storage.sceneBounds = saved.bounds;
+
     if (commit.expectedRevision === 0 && commit.sourceMapId === undefined)
       this.#covered = [
         {
@@ -591,6 +608,7 @@ export class WorkshopChunksService {
           height: mapWorldHalfSize * 2,
         },
       ];
+
     for (const upload of commit.pages) {
       const key = pageKey(upload);
       for (const id of this.#pageIds.get(key) ?? [])
@@ -600,6 +618,7 @@ export class WorkshopChunksService {
       this.#pageIds.delete(key);
       this.#clean.delete(key);
       this.#dirtyPages.delete(key);
+
       if (upload.deleted) continue;
       const records: SerializedChunkShape[] = JSON.parse(upload.body);
       const ids = new Set(records.map((record) => record.shape.id));
@@ -617,11 +636,14 @@ export class WorkshopChunksService {
       this.#pageIds.set(key, ids);
       this.#loaded.add(key);
       this.#clean.set(key, this.#recordsSignature(records));
+
       for (const record of records)
         this.#baselineRecords.set(record.shape.id, structuredClone(record));
     }
+
     for (const id of commit.removedIds)
       this.#storage.deletedShapeIds.delete(id);
+
     for (const container of commit.containers) {
       if (container.deleted) {
         this.#knownContainers.delete(container.id);
@@ -631,6 +653,7 @@ export class WorkshopChunksService {
         this.#baselineContainers.set(container.id, container);
       }
     }
+
     for (const tile of commit.tiles) {
       const key = tileKey(tile.level, tile.x, tile.y);
       const previous = this.#tiles.get(key);
@@ -661,15 +684,18 @@ export class WorkshopChunksService {
       });
       this.#pruneTiles();
     }
+
     this.#storage.persistRemoteDraft = () => this.#saveDraft();
     this.#preparedCommit = null;
     this.#recoveryBaseRevision = null;
     await this.#writeDraft();
+
     await this.#commits.acknowledge(commit);
     this.saveProgress.set(100);
     this.changed();
   }
 
+  /** Добавляет исходные фигуры в журнал при начале локального черновика. */
   #seedJournal() {
     const journal = this.#journal;
     if (!journal) return;
@@ -698,6 +724,7 @@ export class WorkshopChunksService {
     journal.capture(mutation, 'redo');
   }
 
+  /** Ищет фигуры сцены по тексту в пределах загруженных данных. */
   searchObjects(
     bounds: WorldBounds,
     kind: string,
@@ -727,22 +754,27 @@ export class WorkshopChunksService {
     );
   }
 
+  /** Загружает описание страниц сцены для указанной области мира. */
   async #discover(area: WorldBounds, withBodies = false) {
     const id = this.#mapId;
     if (id === null) return;
+
     const x = Math.max(-mapWorldHalfSize, area.x);
     const y = Math.max(-mapWorldHalfSize, area.y);
     const right = Math.min(mapWorldHalfSize, area.x + area.width);
     const bottom = Math.min(mapWorldHalfSize, area.y + area.height);
     if (right <= x || bottom <= y) return;
+
     area = { x, y, width: right - x, height: bottom - y };
     const signature = `${withBodies}:${JSON.stringify(area)}`;
     const pending = this.#discovering.get(signature);
     if (pending) return pending;
+
     const request = (async () => {
       const epoch = this.#epoch;
       let cursor: string | null = null;
       let count = 0;
+
       try {
         do {
           const result: PageResponse = await firstValueFrom(
@@ -760,6 +792,7 @@ export class WorkshopChunksService {
             }),
           );
           if (epoch !== this.#epoch) return;
+
           for (const page of result.items) {
             const { body, ...descriptor } = page;
             const key = pageKey(descriptor);
@@ -770,6 +803,7 @@ export class WorkshopChunksService {
               await this.#importPageBody(key, body, epoch);
             }
           }
+
           count += result.items.length;
           if (count > 1024) throw new Error('Too many pages in the viewport');
           cursor = result.nextCursor;
@@ -799,13 +833,16 @@ export class WorkshopChunksService {
     return request;
   }
 
+  /** Загружает недостающие контейнеры, необходимые для указанных узлов. */
   async #ensureParents(parentIds: string[], overwrite = false) {
     const id = this.#mapId;
     if (id === null) return;
+
     const epoch = this.#epoch;
     for (const parentId of parentIds) {
       if (epoch !== this.#epoch) return;
       if (this.#baselineContainers.has(parentId)) continue;
+
       const path = await firstValueFrom(
         this.#http.get<ContainerRecord[]>(
           `/api/maps/${id}/containers/${encodeURIComponent(parentId)}`,
@@ -813,6 +850,7 @@ export class WorkshopChunksService {
         ),
       );
       if (epoch !== this.#epoch) return;
+
       this.#storage.importSceneContainers(path, overwrite);
       for (const item of path) {
         this.#knownContainers.add(item.id);
@@ -825,6 +863,7 @@ export class WorkshopChunksService {
     }
   }
 
+  /** Планирует загрузку обзорных тайлов для текущей области просмотра. */
   #scheduleViewportTiles(viewport: WorldBounds) {
     if (this.revision === 0) return;
     const level = this.#viewportPreviewLevel(viewport);
@@ -841,9 +880,11 @@ export class WorkshopChunksService {
     }, 120);
   }
 
+  /** Запрашивает недостающие тайлы и ограничивает параллельные обращения. */
   #requestViewportTiles(viewport: WorldBounds) {
     if (this.#tileRequestTimer || !this.#tileRequestSignature) return;
     if (this.revision === 0) return;
+
     const level = this.#viewportPreviewLevel(viewport);
     const size = mapChunkSize * 2 ** level;
     const wanted: { x: number; y: number }[] = [];
@@ -875,6 +916,7 @@ export class WorkshopChunksService {
           continue;
         wanted.push({ x, y });
       }
+
     const packs = new Map<string, { x: number; y: number; mask: number }>();
     for (const { x, y } of wanted) {
       const packX = Math.floor(x / 2) * 2,
@@ -884,6 +926,7 @@ export class WorkshopChunksService {
       const mask = 1 << ((y - packY) * 2 + x - packX);
       packs.set(key, { x: packX, y: packY, mask: (current?.mask ?? 0) | mask });
     }
+
     for (const [key, pack] of packs) {
       if (this.#tilePackPending.size >= 2) break;
       if (this.#tilePackPending.has(key) || this.#tilePackFailed.has(key))
@@ -902,6 +945,7 @@ export class WorkshopChunksService {
     }
   }
 
+  /** Загружает стартовые тайлы превью, включённые в заголовок сцены. */
   async #loadBootstrapTiles(tiles: readonly MapPreviewDescriptor[]) {
     const packs = new Map<
       string,
@@ -931,6 +975,7 @@ export class WorkshopChunksService {
       );
   }
 
+  /** Загружает пакет тайлов и обновляет кэш доступных превью. */
   async #fetchTilePack(
     level: number,
     x: number,
@@ -939,13 +984,16 @@ export class WorkshopChunksService {
   ): Promise<void> {
     const mapId = this.#mapId;
     if (mapId === null || this.revision === 0) return;
+
     const key = tileKey(level, x, y);
     const pending = this.#tilePackPending.get(key);
     if (pending) return pending;
+
     const epoch = this.#epoch,
       revision = this.revision;
     const request = (async () => {
       const decoded: { key: string; tile: TileImage }[] = [];
+
       try {
         const bytes = await firstValueFrom(
           this.#http.get(`/api/maps/${mapId}/tile-packs/${level}/${x}/${y}`, {
@@ -954,13 +1002,16 @@ export class WorkshopChunksService {
           }),
         );
         if (epoch !== this.#epoch || revision !== this.revision) return;
+
         if (bytes.byteLength < 4) throw new Error('Invalid tile pack');
         const view = new DataView(bytes);
         const count = view.getUint32(0, true);
         if (count > 4) throw new Error('Invalid tile pack');
+
         const received = new Set<string>();
         const unavailable = new Set<string>();
         let offset = 4;
+
         for (let index = 0; index < count; index++) {
           if (offset + 16 > bytes.byteLength)
             throw new Error('Invalid tile pack');
@@ -991,6 +1042,7 @@ export class WorkshopChunksService {
             );
             const image = new Image();
             image.src = url;
+
             try {
               await image.decode();
             } catch {
@@ -1007,10 +1059,13 @@ export class WorkshopChunksService {
               },
             });
           }
+
           offset += length;
         }
+
         if (offset !== bytes.byteLength) throw new Error('Invalid tile pack');
         if (epoch !== this.#epoch || revision !== this.revision) return;
+
         for (const item of decoded) {
           if (this.#tiles.has(item.key)) {
             if (item.tile.url) URL.revokeObjectURL(item.tile.url);
@@ -1019,13 +1074,16 @@ export class WorkshopChunksService {
           this.#tiles.set(item.key, item.tile);
           this.#availableTiles.set(item.key, item.tile.version);
         }
+
         for (const tileId of unavailable) this.#tileMissing.add(tileId);
+
         for (let dy = 0; dy < 2; dy++)
           for (let dx = 0; dx < 2; dx++) {
             if (!(mask & (1 << (dy * 2 + dx)))) continue;
             const tileId = tileKey(level, x + dx, y + dy);
             if (!received.has(tileId)) this.#tileMissing.add(tileId);
           }
+
         decoded.length = 0;
         this.#pruneTiles();
         this.changed();
@@ -1037,6 +1095,7 @@ export class WorkshopChunksService {
       } finally {
         for (const item of decoded)
           if (item.tile.url) URL.revokeObjectURL(item.tile.url);
+
         if (epoch === this.#epoch && revision === this.revision) {
           this.#tilePackPending.delete(key);
           this.#requestViewportTiles(this.#coords.worldViewport);
@@ -1047,6 +1106,7 @@ export class WorkshopChunksService {
     return request;
   }
 
+  /** Выбирает уровень тайлов, подходящий текущему масштабу и области. */
   #viewportPreviewLevel(viewport: WorldBounds) {
     const projected = Math.max(this.#coords.zoom, 0.000_001) * mapChunkSize;
     let level = Math.min(
@@ -1066,6 +1126,7 @@ export class WorkshopChunksService {
     return level;
   }
 
+  /** Проверяет, соответствует ли версия тайла открытой сцене. */
   #validPreviewTile(version: number) {
     return (
       this.#header?.previewContentVersion !== 3 ||
@@ -1073,9 +1134,11 @@ export class WorkshopChunksService {
     );
   }
 
+  /** Загружает блок тайлов, содержащий обзорный тайл заданного уровня. */
   async #loadTileBlock(level: number, x: number, y: number) {
     const mapId = this.#mapId;
     if (mapId === null) return;
+
     const blockKey = tileKey(level, x, y);
     const epoch = this.#epoch,
       revision = this.revision;
@@ -1087,12 +1150,14 @@ export class WorkshopChunksService {
           }),
         );
         if (epoch !== this.#epoch || revision !== this.revision) return;
+
         for (const tile of tiles)
           if (this.#validPreviewTile(tile.version))
             this.#availableTiles.set(
               tileKey(tile.level, tile.x, tile.y),
               tile.version,
             );
+
         this.#tileBlocks.add(blockKey);
       } catch {
         if (epoch === this.#epoch && revision === this.revision) {
@@ -1110,6 +1175,7 @@ export class WorkshopChunksService {
     return request;
   }
 
+  /** Загружает один обзорный тайл с защитой от повторных запросов. */
   async #fetchTile(
     level: number,
     x: number,
@@ -1117,13 +1183,16 @@ export class WorkshopChunksService {
     knownVersion?: number,
   ): Promise<TileImage | null> {
     if (this.revision === 0) return null;
+
     const key = tileKey(level, x, y);
     const tileVersion = knownVersion ?? this.#availableTiles.get(key) ?? 0;
     if (!this.#validPreviewTile(tileVersion)) return null;
     if (this.#tiles.has(key)) return this.#tiles.get(key) ?? null;
     if (this.#tileMissing.has(key) || this.#mapId === null) return null;
+
     const pending = this.#tilePending.get(key);
     if (pending) return pending;
+
     const epoch = this.#epoch,
       revision = this.revision;
     const request = (async () => {
@@ -1135,19 +1204,23 @@ export class WorkshopChunksService {
           }),
         );
         if (epoch !== this.#epoch || revision !== this.revision) return null;
+
         const url = URL.createObjectURL(blob);
         const image = new Image();
         image.src = url;
+
         try {
           await image.decode();
         } catch {
           URL.revokeObjectURL(url);
           throw new Error('Invalid preview image');
         }
+
         if (epoch !== this.#epoch || revision !== this.revision) {
           URL.revokeObjectURL(url);
           return null;
         }
+
         const tile: TileImage = {
           image: this.#transparentPreviewBackground(image),
           url,
@@ -1157,6 +1230,7 @@ export class WorkshopChunksService {
         this.#tiles.set(key, tile);
         this.changed();
         this.#pruneTiles();
+
         return tile;
       } catch (error) {
         if (epoch === this.#epoch && revision === this.revision) {
@@ -1178,6 +1252,7 @@ export class WorkshopChunksService {
     return request;
   }
 
+  /** Создаёт прозрачную подложку для тайла без опубликованного изображения. */
   #transparentPreviewBackground(
     image: HTMLImageElement,
   ): HTMLImageElement | HTMLCanvasElement {
@@ -1186,14 +1261,17 @@ export class WorkshopChunksService {
     canvas.height = image.naturalHeight;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return image;
+
     ctx.drawImage(image, 0, 0);
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
     for (let index = 3; index < pixels.data.length; index += 4)
       if (pixels.data[index] < 255) return image;
+
     ctx.fillStyle = canvasColor('--workshop-map-bg-color');
     ctx.fillRect(0, 0, 1, 1);
     const background = ctx.getImageData(0, 0, 1, 1).data;
     let removed = false;
+
     for (let index = 0; index < pixels.data.length; index += 4) {
       if (
         pixels.data[index + 3] !== 255 ||
@@ -1210,6 +1288,7 @@ export class WorkshopChunksService {
     return canvas;
   }
 
+  /** Проверяет наличие тайла в опубликованном превью карты. */
   async #hasSavedTile(level: number, x: number, y: number) {
     if (this.revision === 0) return false;
     const key = tileKey(level, x, y);
@@ -1226,6 +1305,7 @@ export class WorkshopChunksService {
     return this.#availableTiles.has(key);
   }
 
+  /** Удаляет из кэша самые старые тайлы при превышении его лимита. */
   #pruneTiles() {
     if (this.#tiles.size <= this.#maxTiles) return;
     const viewport = this.#coords.worldViewport;
@@ -1238,6 +1318,7 @@ export class WorkshopChunksService {
     }
   }
 
+  /** Собирает сериализованные записи загруженных фигур текущей сцены. */
   #records() {
     const metadata = new Map<
       string,
@@ -1253,10 +1334,13 @@ export class WorkshopChunksService {
           });
         else visit(child);
       });
+
     visit(this.#storage.exportNodes());
+
     return this.#storage.exportShapes().flatMap((shape) => {
       const node = metadata.get(shape.id);
       if (!node) return [];
+
       const bounds = this.#storage.shapes.get(shape.id)?.getBounds();
       return [
         {
@@ -1278,6 +1362,7 @@ export class WorkshopChunksService {
     });
   }
 
+  /** Строит контрольную подпись выбранных фигур для сравнения страниц. */
   #signature(ids: ReadonlySet<string>) {
     const shapes = this.#storage
       .exportShapes(ids)
@@ -1299,6 +1384,7 @@ export class WorkshopChunksService {
     return JSON.stringify({ shapes, nodes });
   }
 
+  /** Строит контрольную подпись сериализованных записей страницы. */
   #recordsSignature(records: readonly SerializedChunkShape[]) {
     const shapes = records
       .map((record) => ({ ...record.shape, selected: false }))
@@ -1315,8 +1401,10 @@ export class WorkshopChunksService {
     return JSON.stringify({ shapes, nodes });
   }
 
+  /** Подготавливает страницы сцены из текущего локального состояния. */
   async #preparePages(initial: boolean) {
     const affectedCells = new Set<string>();
+
     if (!initial) {
       for (const [key, ids] of this.#pageIds)
         if (
@@ -1332,9 +1420,11 @@ export class WorkshopChunksService {
         if (page) affectedCells.add(cellKey(page.cellX, page.cellY));
       }
     }
+
     const sourceById = new Map<string, string>();
     for (const [key, ids] of this.#pageIds)
       for (const id of ids) sourceById.set(id, key);
+
     for (const record of this.#records()) {
       const shape = this.#storage.shapes.get(record.shape.id);
       if (!shape) continue;
@@ -1346,6 +1436,7 @@ export class WorkshopChunksService {
         bounds.y + bounds.height > mapWorldHalfSize
       )
         throw new Error('Объект находится за пределами карты');
+
       const target = cellKey(mapCellOf(bounds.x), mapCellOf(bounds.y));
       const source = sourceById.get(shape.id);
       if (initial || !source || !source.startsWith(`${target}:`)) {
@@ -1354,9 +1445,11 @@ export class WorkshopChunksService {
           affectedCells.add(source.substring(0, source.lastIndexOf(':')));
       }
     }
+
     if (!initial) {
       await this.#ensureCellsGeometry(affectedCells);
     }
+
     const groups = new Map<
       string,
       { records: SerializedChunkShape[]; bounds: WorldBounds }
@@ -1372,6 +1465,7 @@ export class WorkshopChunksService {
       group.bounds = unionBounds(group.bounds, bounds);
       groups.set(cell, group);
     }
+
     const uploads: PageUpload[] = [];
     const affected = new Set<string>();
     const oldBounds = new Map<string, WorldBounds>();
@@ -1380,6 +1474,7 @@ export class WorkshopChunksService {
         affected.add(key);
         oldBounds.set(key, page.bounds);
       }
+
     for (const [cell, group] of groups) {
       const [cellX, cellY] = cell.split(':').map(Number);
       group.records.sort((a, b) => a.shape.id.localeCompare(b.shape.id));
@@ -1409,20 +1504,24 @@ export class WorkshopChunksService {
         batch = [];
         batchLength = 2;
       };
+
       for (const record of group.records) {
         const recordLength = utf8.encode(JSON.stringify(record)).byteLength;
         if (recordLength > 240_000)
           throw new Error('Объект слишком велик для одной страницы карты');
+
         if (
           batch.length >= 500 ||
           batchLength + recordLength + (batch.length ? 1 : 0) > 240_000
         )
           flush();
+
         batchLength += recordLength + (batch.length ? 1 : 0);
         batch.push(record);
       }
       flush();
     }
+
     const replacements = new Set(uploads.map(pageKey));
     for (const key of affected) {
       if (replacements.has(key)) continue;
@@ -1444,9 +1543,11 @@ export class WorkshopChunksService {
     return { uploads, affected, oldBounds };
   }
 
+  /** Вычисляет границы областей, затронутых изменением контейнеров. */
   async #changedContainerBounds(containers: SceneContainerChange[]) {
     const mapId = this.#mapId;
     if (mapId === null || !this.#header) return [];
+
     const bounds: WorldBounds[] = [];
     for (const container of containers) {
       const baseline = this.#baselineContainers.get(container.id);
@@ -1459,17 +1560,21 @@ export class WorkshopChunksService {
           baseline.childIndex === container.childIndex)
       )
         continue;
+
       const coverage = await firstValueFrom(
         this.#http.get<{ bounds: WorldBounds | null }>(
           `/api/maps/${mapId}/containers/${encodeURIComponent(container.id)}/coverage`,
           { params: { revision: this.revision } },
         ),
       );
+
       if (coverage.bounds) bounds.push(coverage.bounds);
     }
+
     return bounds;
   }
 
+  /** Находит тайлы превью, которые нужно перестроить после изменений сцены. */
   #dirtyPreviewKeys(
     uploads: PageUpload[],
     oldBounds: Map<string, WorldBounds>,
@@ -1477,6 +1582,7 @@ export class WorkshopChunksService {
     repairBounds: WorldBounds[] = [],
   ) {
     const leaves = new Set<string>();
+
     const add = (bounds: WorldBounds) => {
       const left = mapCellOf(bounds.x),
         top = mapCellOf(bounds.y);
@@ -1484,6 +1590,7 @@ export class WorkshopChunksService {
       const bottom = Math.ceil((bounds.y + bounds.height) / mapChunkSize) - 1;
       if ((right - left + 1) * (bottom - top + 1) > 4096)
         throw new Error('Слишком большая область изменения');
+
       for (let y = top; y <= bottom; y++)
         for (let x = left; x <= right; x++) {
           leaves.add(tileKey(0, x, y));
@@ -1493,6 +1600,7 @@ export class WorkshopChunksService {
             );
         }
     };
+
     for (const bounds of oldBounds.values()) add(bounds);
     for (const bounds of containerBounds) add(bounds);
     for (const bounds of repairBounds) add(bounds);
@@ -1504,13 +1612,16 @@ export class WorkshopChunksService {
           width: page.maxX - page.minX,
           height: page.maxY - page.minY,
         });
+
     return leaves;
   }
 
+  /** Перерисовывает изменённые обзорные тайлы и собирает их родительские уровни. */
   async #preparePreviewTiles(leaves: Set<string>, rebuildAllPreviews = false) {
     const result: { level: number; x: number; y: number; data: Blob }[] = [];
     const prepared = new Map<string, Blob>();
     let totalBytes = 0;
+
     const dirtyByLevel = [leaves];
     for (let level = 0; level < mapPreviewMaxLevel; level++) {
       const next = new Set<string>();
@@ -1520,6 +1631,7 @@ export class WorkshopChunksService {
       }
       dirtyByLevel.push(next);
     }
+
     if (dirtyByLevel.reduce((count, level) => count + level.size, 0) > 10_000) {
       throw new Error('Слишком много тайлов превью за одно сохранение');
     }
@@ -1538,10 +1650,12 @@ export class WorkshopChunksService {
     canvas.height = 256;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas unavailable');
+
     let processed = 0;
     for (let level = 0; level <= mapPreviewMaxLevel; level++) {
       for (const key of dirtyByLevel[level]) {
         const [, x, y] = key.split(':').map(Number);
+
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, 256, 256);
         if (level === 0) {
@@ -1577,6 +1691,7 @@ export class WorkshopChunksService {
               }
             }
         }
+
         const data = await new Promise<Blob>((resolve, reject) =>
           canvas.toBlob(
             (blob) =>
@@ -1586,11 +1701,13 @@ export class WorkshopChunksService {
             'image/png',
           ),
         );
+
         if (data.size > 350_000)
           throw new Error('PNG превью тайла превысил лимит сохранения');
         totalBytes += data.size;
         if (totalBytes > 128 * 1024 * 1024)
           throw new Error('Превью карты превысило лимит сохранения');
+
         prepared.set(key, data);
         result.push({ level, x, y, data });
         if (++processed % 8 === 0)
@@ -1600,14 +1717,18 @@ export class WorkshopChunksService {
     return result;
   }
 
+  /** Импортирует страницу и игнорирует результат устаревшей загрузки. */
   async #importPageBody(key: string, body: string, epoch: number) {
     if (this.#loaded.has(key) || epoch !== this.#epoch) return;
+
     const data: unknown = JSON.parse(body);
     if (!isMapChunkBody(data)) throw new Error('Invalid page');
+
     await this.#ensureParents([
       ...new Set(data.map((record) => record.parentId)),
     ]);
     if (epoch !== this.#epoch) return;
+
     await this.#storage.importChunk(
       JSON.stringify(
         data.filter(
@@ -1618,15 +1739,18 @@ export class WorkshopChunksService {
       () => epoch === this.#epoch,
     );
     if (epoch !== this.#epoch) return;
+
     const ids = new Set(data.map((record) => record.shape['id'] as string));
     const records = data as unknown as SerializedChunkShape[];
     this.#pageIds.set(key, ids);
     this.#clean.set(key, this.#recordsSignature(records));
     for (const record of records)
       this.#baselineRecords.set(record.shape.id, structuredClone(record));
+
     this.#loaded.add(key);
   }
 
+  /** Загружает геометрию всех частей, необходимых указанным ячейкам. */
   async #ensureCellsGeometry(cells: ReadonlySet<string>) {
     if (this.#mapId === null || !this.#header || !cells.size) return;
     const groups = new Map<
@@ -1661,6 +1785,7 @@ export class WorkshopChunksService {
     }
   }
 
+  /** Дожидается загрузки геометрии, нужной для отрисовки области. */
   async #readyGeometry(bounds: WorldBounds) {
     await Promise.all(
       [...this.#storage.shapes.values()]
@@ -1673,6 +1798,7 @@ export class WorkshopChunksService {
     );
   }
 
+  /** Рисует фигуры загруженных страниц, пересекающие заданные границы. */
   #drawScene(ctx: CanvasRenderingContext2D, bounds: WorldBounds) {
     const visit = (node: GraphNode) => {
       if (!node.visible) return;
@@ -1693,6 +1819,7 @@ export class WorkshopChunksService {
     visit(this.#storage.nodesRoot());
   }
 
+  /** Формирует список изменённых, удалённых и новых контейнеров сцены. */
   #containerChanges() {
     const current = new Set<string>();
     const changes: {
@@ -1706,6 +1833,7 @@ export class WorkshopChunksService {
       childIndex: number;
       deleted?: boolean;
     }[] = [];
+
     const visit = (node: GraphNode, childIndex: number) => {
       if (node instanceof ShapeNode) return;
       current.add(node.id);
@@ -1729,6 +1857,7 @@ export class WorkshopChunksService {
       });
       node.children.forEach((child, index) => visit(child, index));
     };
+
     visit(this.#storage.nodesRoot(), 0);
     for (const id of this.#knownContainers)
       if (!current.has(id))
@@ -1745,6 +1874,7 @@ export class WorkshopChunksService {
     return changes;
   }
 
+  /** Вычисляет итоговые границы карты по загруженным фигурам и контейнерам. */
   #contentBounds() {
     const shapes = [...this.#storage.shapes.values()];
     const local = shapes.length
@@ -1754,6 +1884,7 @@ export class WorkshopChunksService {
     return known ? unionBounds(local, known) : local;
   }
 
+  /** Освобождает страницы вне активной области, сохраняя необходимые данные. */
   #evict(area: WorldBounds) {
     for (const [key, page] of this.#pages) {
       if (this.#loaded.size <= 64) break;
@@ -1763,6 +1894,7 @@ export class WorkshopChunksService {
       if ([...ids].some((id) => this.#storage.shapes.get(id)?.selected))
         continue;
       if (this.#signature(ids) !== this.#clean.get(key)) continue;
+
       this.#storage.releaseChunk(ids);
       for (const id of ids) this.#baselineRecords.delete(id);
       this.#loaded.delete(key);
@@ -1771,12 +1903,16 @@ export class WorkshopChunksService {
     }
   }
 
+  /** Восстанавливает локально подготовленный коммит после перезагрузки страницы. */
   async #restorePendingCommit(mapId: number, revision: number) {
     if (this.#mode.isReadOnly()) return;
+
     const accountId = this.#account.user()?.id;
     if (accountId === undefined) return;
+
     const commit = await this.#commits.pending(accountId, mapId);
     if (!commit) return;
+
     if (
       commit.version !== 1 ||
       commit.mapId !== mapId ||
@@ -1789,8 +1925,10 @@ export class WorkshopChunksService {
       );
       return;
     }
+
     this.#recoveryBaseRevision = commit.expectedRevision;
     this.#preparedCommit = commit;
+
     if (revision === 0) this.#storage.sceneBounds = commit.header.bounds;
     if (this.#storage.nodesRoot().id !== commit.header.rootId)
       this.#storage.importSceneRoot(commit.header.rootId);
@@ -1800,6 +1938,7 @@ export class WorkshopChunksService {
         .map((item) => ({ ...item, parentId: item.parentId ?? null })),
       true,
     );
+
     for (const id of commit.removedIds) this.#storage.deletedShapeIds.add(id);
     await this.#storage.importChunk(
       JSON.stringify(
@@ -1810,19 +1949,24 @@ export class WorkshopChunksService {
       () => true,
       true,
     );
+
     for (const page of commit.pages) this.#dirtyPages.add(pageKey(page));
     this.error.set(
       'В браузере есть незавершённое сохранение. Нажмите «Сохранить», чтобы продолжить его.',
     );
   }
 
+  /** Восстанавливает локальные изменения карты поверх загруженной ревизии. */
   async #restoreDraft(mapId: number, revision: number) {
     if (this.#mode.isReadOnly()) return;
+
     const accountId = this.#account.user()?.id;
     if (accountId === undefined) return;
+
     try {
       const draft = await this.#draftStore.read(accountId, mapId);
       if (!draft || draft.version !== 1) return;
+
       if (
         draft.baseRevision !== revision &&
         draft.baseRevision !== this.#recoveryBaseRevision
@@ -1833,6 +1977,7 @@ export class WorkshopChunksService {
         this.#draftRecoveryError = true;
         return;
       }
+
       if (
         draft.sourceMapId &&
         draft.sourceHeader &&
@@ -1861,6 +2006,7 @@ export class WorkshopChunksService {
         this.#knownContainers.clear();
         this.#baselineContainers.clear();
       }
+
       this.#storage.importSceneContainers(
         draft.containers
           .filter((item) => !item.deleted)
@@ -1870,6 +2016,7 @@ export class WorkshopChunksService {
       for (const item of draft.containers) this.#knownContainers.add(item.id);
       for (const record of draft.records)
         this.#storage.deletedShapeIds.delete(record.shape.id);
+
       for (const id of draft.removedIds) this.#storage.deletedShapeIds.add(id);
       this.#storage.releaseChunk(new Set(draft.removedIds));
       await this.#storage.importChunk(
@@ -1881,6 +2028,7 @@ export class WorkshopChunksService {
         () => true,
         true,
       );
+
       for (const key of draft.changedPages) this.#dirtyPages.add(key);
       if (revision === 0 && !draft.sourceMapId && this.#storage.shapes.size)
         this.#storage.sceneBounds = this.#contentBounds();
@@ -1892,6 +2040,7 @@ export class WorkshopChunksService {
     }
   }
 
+  /** Планирует отложенную запись текущего черновика в локальное хранилище. */
   #saveDraft() {
     if (
       this.#saving ||
@@ -1911,6 +2060,7 @@ export class WorkshopChunksService {
     }, 250);
   }
 
+  /** Записывает локальный черновик и сохраняет информацию для его восстановления. */
   async #writeDraft() {
     const mapId = this.#draftTargetMapId ?? this.#mapId;
     const sourceMapId = mapId !== this.#mapId ? this.#mapId : null;
@@ -1921,6 +2071,7 @@ export class WorkshopChunksService {
     const accountId = this.#account.user()?.id;
     if (mapId === null || accountId === undefined || this.#mode.isReadOnly())
       return;
+
     const current = this.#records();
     const currentIds = new Set(current.map((record) => record.shape.id));
     const stagedRecords = new Map(
@@ -1929,6 +2080,7 @@ export class WorkshopChunksService {
         record,
       ]) ?? [],
     );
+
     const stagedRemoved = new Set(this.#preparedCommit?.removedIds ?? []);
     const records = current.filter((record) => {
       const before = stagedRemoved.has(record.shape.id)
@@ -1949,6 +2101,7 @@ export class WorkshopChunksService {
         !baseline || JSON.stringify(normalized) !== JSON.stringify(baseline)
       );
     });
+
     const removedIds = [
       ...new Set([
         ...this.#storage.deletedShapeIds,
@@ -1957,6 +2110,7 @@ export class WorkshopChunksService {
         ),
       ]),
     ];
+
     const changedPages = new Set(this.#dirtyPages);
     for (const [key, ids] of this.#pageIds)
       if (
@@ -1973,6 +2127,7 @@ export class WorkshopChunksService {
       const bounds = shape.getBounds();
       changedPages.add(`${mapCellOf(bounds.x)}:${mapCellOf(bounds.y)}:0`);
     }
+
     const containers = this.#containerChanges();
     const changedContainers = containers.some(
       (item) =>
@@ -1989,6 +2144,7 @@ export class WorkshopChunksService {
       await this.#draftStore.remove(accountId, mapId);
       return;
     }
+
     await this.#draftStore.write({
       version: 1,
       accountId,

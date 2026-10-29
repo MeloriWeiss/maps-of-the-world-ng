@@ -1,3 +1,3 @@
 export * from './services';
 export * from './interfaces';
-export * from './account-settings.store';
+export * from './stores';

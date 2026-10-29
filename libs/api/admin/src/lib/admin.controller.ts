@@ -24,6 +24,7 @@ import { AdminSystemStatusService } from './admin-system-status.service';
 
 @ApiTags('Admin')
 @Controller('admin')
+/** Обрабатывает HTTP-запросы административной панели и модерации. */
 @UseGuards(JwtAccessGuard, RolesGuard)
 @Roles(UserRole.admin, UserRole.superAdmin)
 export class AdminController {

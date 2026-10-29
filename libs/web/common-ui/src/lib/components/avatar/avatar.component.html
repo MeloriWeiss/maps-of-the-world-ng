@@ -1,0 +1,15 @@
+@if (src(); as url) {
+  @if (failedUrl() !== url) {
+    <img
+      [src]="url"
+      alt=""
+      [attr.loading]="loading()"
+      decoding="async"
+      (error)="failedUrl.set(url)"
+    />
+  } @else {
+    <span aria-hidden="true">{{ initial() }}</span>
+  }
+} @else {
+  <span aria-hidden="true">{{ initial() }}</span>
+}

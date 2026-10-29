@@ -9,6 +9,7 @@ import { Prisma, PrismaMainService } from '@wm/api/database-main';
 import { OBJECT_STORAGE, ObjectStorage } from '@wm/api/shared';
 import { lockSceneCommit } from './scene-commit-lock';
 
+/** Ставит удаление временных бинарных данных сцены в очередь. */
 export async function queueSceneBlobCleanup(
   tx: Prisma.TransactionClient,
   keys: readonly string[],
@@ -26,6 +27,7 @@ export async function queueSceneBlobCleanup(
   });
 }
 
+/** Удаляет устаревшие бинарные данные сцен из хранилища. */
 @Injectable()
 export class SceneBlobCleanupService
   implements OnApplicationBootstrap, OnModuleDestroy

@@ -1,6 +1,7 @@
 import { SeedPrismaClient } from './client';
 import { SEED_PASSWORD } from './users';
 
+/** Печатает итоговые счётчики заполнения базы. */
 export async function printSeedSummary(prisma: SeedPrismaClient) {
   const [
     users,

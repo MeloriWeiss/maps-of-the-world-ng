@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
+/** Предоставляет общую оболочку уведомления с закрытием и временем показа. */
 @Component({
   selector: 'wm-toast-base',
   imports: [],

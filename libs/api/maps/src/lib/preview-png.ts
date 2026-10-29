@@ -55,6 +55,7 @@ function decodeRows(raw: Buffer, pixelBytes: number) {
   return true;
 }
 
+/** Проверяет заголовок и допустимый размер изображения PNG превью. */
 export function isValidPreviewPng(bytes: Buffer) {
   if (
     bytes.length > maxBytes ||

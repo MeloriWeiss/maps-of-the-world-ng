@@ -1,7 +1,12 @@
 import { MapSceneHeaderV4 } from '@wm/shared/workshop';
 
+/** Вид сущности сцены, изменяемой в локальном журнале. */
 export type SceneEntityType = 'part' | 'container';
+
+/** Вид самостоятельной части сцены, сохраняемой локально. */
 export type ScenePartKind = 'page' | 'tile' | 'container';
+
+/** Этап подготовки и публикации локального коммита сцены. */
 export type SceneCommitPhase =
   | 'preparing'
   | 'ready'
@@ -10,6 +15,7 @@ export type SceneCommitPhase =
   | 'acknowledged'
   | 'conflict';
 
+/** Локальное состояние документа и последовательности его сохранения. */
 export interface SceneLocalDocument {
   documentKey: string;
   accountId: number;
@@ -27,12 +33,14 @@ export interface SceneLocalDocument {
   leaseUntil?: number;
 }
 
+/** Идентификатор владельца записи и эпоха его блокировки документа. */
 export interface SceneWriterToken {
   documentKey: string;
   writerId: string;
   epoch: number;
 }
 
+/** Маркер завершённой или ещё записываемой операции журнала. */
 export interface SceneLocalOperation {
   documentKey: string;
   seq: number;
@@ -41,6 +49,7 @@ export interface SceneLocalOperation {
   status: 'writing' | 'complete';
 }
 
+/** Изменение одной части или контейнера сцены, записанное в журнале. */
 export interface SceneLocalMutation {
   documentKey: string;
   seq: number;
@@ -48,22 +57,23 @@ export interface SceneLocalMutation {
   entityId: string;
   objectId?: string;
   instanceId?: string;
-  /** Owner cells at the gesture boundary; pageId is assigned later by the page builder. */
+  /** Ячейки, занятые до и после действия пользователя; идентификатор страницы назначает сборщик страниц. */
   oldCell?: string;
   newCell?: string;
   oldBounds?: readonly [number, number, number, number];
   newBounds?: readonly [number, number, number, number];
   deleted: boolean;
-  /** Exact serialized postimage; omitted for an explicit tombstone. */
+  /** Точное сериализованное состояние после изменения; для записи об удалении поле отсутствует. */
   body?: string;
 }
 
+/** Неизменяемый снимок данных сцены, подготовленный для публикации. */
 export interface SceneLocalCommit {
   version: 2;
   documentKey: string;
   localCommitId: string;
   cutSeq: number;
-  /** Acknowledged journal boundary at the moment this commit was sealed. */
+  /** Подтверждённая граница журнала на момент фиксации коммита. */
   fromSeq: number;
   expectedRevision: number;
   sourceMapId?: number;
@@ -104,6 +114,7 @@ export interface SceneLocalCommit {
   intentReady?: boolean;
 }
 
+/** Вид ресурса, необходимого для построения или публикации сцены. */
 export type SceneDependencyKind =
   | 'page'
   | 'container'
@@ -112,6 +123,7 @@ export type SceneDependencyKind =
   | 'empty'
   | 'preview-plan';
 
+/** Сегмент локально сохранённой зависимости коммита. */
 export interface SceneDependencyRecord {
   documentKey: string;
   localCommitId: string;
@@ -124,6 +136,7 @@ export interface SceneDependencyRecord {
   blob?: Blob;
 }
 
+/** Описание кадра в бинарном пакете частей коммита. */
 export interface SceneBundleFrame {
   documentKey: string;
   localCommitId: string;
@@ -136,6 +149,7 @@ export interface SceneBundleFrame {
   partKey: string;
 }
 
+/** Часть неизменяемых данных, подготовленных для загрузки на сервер. */
 export interface SceneLocalPart {
   documentKey: string;
   localCommitId: string;
@@ -144,9 +158,9 @@ export interface SceneLocalPart {
   ordinal: number;
   byteLength: number;
   digest: string;
-  /** Stored bytes for a page or container batch. */
+  /** Сериализованные данные страницы или группы контейнеров. */
   body?: string;
-  /** PNG binary, never a data URL in IndexedDB. */
+  /** Изображение PNG в бинарном виде, без преобразования в data URL при хранении в IndexedDB. */
   png?: Blob;
   cellX?: number;
   cellY?: number;
@@ -161,8 +175,10 @@ export interface SceneLocalPart {
   deleted?: boolean;
 }
 
+/** Описание части без её сериализованного тела и бинарного изображения. */
 export type SceneLocalPartDescriptor = Omit<SceneLocalPart, 'body' | 'png'>;
 
+/** Локальная промежуточная задача построения частей коммита. */
 export interface SceneLocalWork {
   documentKey: string;
   localCommitId: string;
@@ -189,6 +205,7 @@ export interface SceneLocalWork {
   rank?: number;
 }
 
+/** Подтверждение приёма сервером отдельной части коммита. */
 export interface SceneUploadReceipt {
   documentKey: string;
   localCommitId: string;
@@ -198,11 +215,13 @@ export interface SceneUploadReceipt {
   digest: string;
 }
 
+/** Страница результатов локального запроса к хранилищу IndexedDB. */
 export interface SceneCursorPage<T> {
   items: T[];
   nextKey?: IDBValidKey;
 }
 
+/** Ошибка локального хранилища сцены с машинно-читаемым видом сбоя. */
 export class SceneLocalStorageError extends Error {
   constructor(
     readonly kind: 'quota' | 'writer-lost' | 'conflict' | 'invalid-part',

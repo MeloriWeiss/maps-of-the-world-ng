@@ -1,3 +1,4 @@
+/** Проверяет наличие и корректность обязательных переменных окружения. */
 export const validateEnv = (config: Record<string, unknown>) => {
   const errors: string[] = [];
 

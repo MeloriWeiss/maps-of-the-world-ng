@@ -1,3 +1,4 @@
+/** Настройки cookie и сроков действия авторизационных токенов. */
 export const authConfig = {
   password: {
     minLength: {

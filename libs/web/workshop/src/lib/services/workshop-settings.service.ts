@@ -1,23 +1,11 @@
+import type {
+  WorkshopShapeStyle,
+  WorkshopToolStyle,
+} from '../interfaces/workshop-settings';
 import { Injectable } from '@angular/core';
 import { workshopDefaultSettings, WorkshopTools } from '../consts';
 
-export interface WorkshopShapeStyle {
-  strokeColor: string;
-  fillColor: string;
-  strokeWidth: number;
-  opacity: number;
-  shadowColor: string;
-  shadowBlur: number;
-  shadowOffsetX: number;
-  shadowOffsetY: number;
-}
-
-export interface WorkshopToolStyle {
-  strokeColor: string;
-  fillColor: string;
-  strokeWidth: number;
-}
-
+/** Хранит настройки редактора и стили инструментов Workshop. */
 @Injectable()
 export class WorkshopSettingsService {
   panningMouseButton = workshopDefaultSettings.panningMouseButton;
@@ -71,31 +59,37 @@ export class WorkshopSettingsService {
       fillColor: this.shapeStyle.fillColor,
       strokeWidth: 96,
     },
+
     [WorkshopTools.SELECT]: {
       strokeColor: '#000000',
       fillColor: '#000000',
       strokeWidth: 1,
     },
+
     [WorkshopTools.PENCIL]: {
       strokeColor: '#000000',
       fillColor: '#000000',
       strokeWidth: 2,
     },
+
     [WorkshopTools.ERASER]: {
       strokeColor: '#000000',
       fillColor: '#ffffff',
       strokeWidth: 12,
     },
+
     [WorkshopTools.RECTANGLE]: {
       strokeColor: '#000000',
       fillColor: '#bd4040',
       strokeWidth: 2,
     },
+
     [WorkshopTools.TEXT]: {
       strokeColor: '#000000',
       fillColor: '#ffffff',
       strokeWidth: 1,
     },
+
     [WorkshopTools.TEXTURE]: {
       strokeColor: '#c4a574',
       fillColor: '#c4a574',
@@ -103,6 +97,12 @@ export class WorkshopSettingsService {
     },
   };
 
+  /**
+   * Обновляет сохранённые настройки выбранного инструмента.
+   *
+   * @param tool Инструмент, настройки которого нужно изменить.
+   * @param patch Изменяемые свойства стиля.
+   */
   updateToolStyle(
     tool: WorkshopTools,
     patch: Partial<WorkshopToolStyle>,
@@ -110,6 +110,11 @@ export class WorkshopSettingsService {
     Object.assign(this.toolStyles[tool], patch);
   }
 
+  /**
+   * Применяет сохранённый стиль к активному инструменту и его настройкам.
+   *
+   * @param tool Инструмент, стиль которого нужно применить.
+   */
   applyToolStyle(tool: WorkshopTools): void {
     const style = this.toolStyles[tool];
 

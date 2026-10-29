@@ -27,6 +27,7 @@ import {
 import { MapsService } from './maps.service';
 
 @Controller('maps')
+/** Обрабатывает HTTP-запросы к картам и каталогу публикаций. */
 @ApiTags('maps')
 export class MapsController {
   constructor(private readonly mapsService: MapsService) {}

@@ -10,6 +10,7 @@ import {
   Renderer2,
 } from '@angular/core';
 
+/** Связывает состояние раскрытия блока с доступностью его содержимого. */
 @Directive({
   selector: '[wmCollapsible]',
 })

@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, Length, Matches } from 'class-validator';
 
+/** Проверяет изменяемые поля профиля аккаунта. */
 export class UpdateAccountDto {
   @ApiPropertyOptional({
     example: 'CryptoKnight',

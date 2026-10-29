@@ -33,6 +33,7 @@ import { WorkshopLeftSidebarComponent } from './workshop-left-sidebar/workshop-l
 import { WorkshopRightSidebarComponent } from './workshop-right-sidebar/workshop-right-sidebar.component';
 import { WorkshopHeaderComponent } from './workshop-header/workshop-header.component';
 
+/** Корневая страница редактора: соединяет холст, панели и состояние карты. */
 @Component({
   selector: 'wm-workshop-page',
   imports: [

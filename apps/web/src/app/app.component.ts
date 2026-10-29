@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavigationManagerComponent } from '@wm/web/shared';
 import { ModalHostComponent, ToastHostComponent } from '@wm/web/common-ui';
-import { SiteVisitTrackerService } from './site-visit-tracker.service';
-import { RouterScrollService } from './router-scroll.service';
+import { SiteVisitTrackerService } from '@wm/web/data-access/site-visits';
+import { RouterScrollService } from '@wm/web/shared';
 
+/** Корневой компонент, который размещает маршрутизируемые страницы приложения. */
 @Component({
   selector: 'app-root',
   imports: [

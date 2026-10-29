@@ -6,6 +6,7 @@ const magic = Buffer.from('WMSAVE1\n');
 const seed = Buffer.from('wm-scene-bundle-v1');
 const decoder = new TextDecoder('utf-8', { fatal: true });
 
+/** Заголовок кадра загружаемого пакета сцены. */
 export interface SceneUploadFrame {
   type: 'data';
   kind: 'page' | 'tile';
@@ -97,7 +98,7 @@ function dataFrame(
   );
 }
 
-/** Validates a bounded upload frame by frame before handing each part to staging. */
+/** Проверяет ограниченный по размеру поток кадр за кадром перед передачей частей во временное хранилище. */
 export async function consumeSceneUpload(
   source: AsyncIterable<Buffer>,
   receive: (frame: SceneUploadFrame, payload: Buffer) => Promise<void>,

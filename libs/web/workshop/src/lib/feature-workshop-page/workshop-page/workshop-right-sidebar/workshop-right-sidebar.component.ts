@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { WorkshopObjectsPanelComponent } from './workshop-objects-panel.component';
+import { WorkshopObjectsPanelComponent } from './workshop-objects-panel/workshop-objects-panel.component';
 import { ShapesTypes } from '../../../consts';
 import { Rectangle, Shape } from '../../../shapes';
 import { WorkshopNodesPanelComponent } from './workshop-nodes-panel/workshop-nodes-panel.component';
@@ -18,6 +18,8 @@ import {
   WorkshopSceneGraphStorageService,
   WorkshopShapesService,
 } from '../../../services';
+
+/** Правая панель с настройками слоёв и объектов сцены. */
 @Component({
   selector: 'wm-workshop-right-sidebar',
   imports: [

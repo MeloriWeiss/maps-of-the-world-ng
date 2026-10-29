@@ -9,6 +9,7 @@ import { Rectangle, RectangleShape } from '../../shapes';
 import { Point } from '../../interfaces/point.interface';
 import { ShapesTypes } from '../../consts';
 
+/** Инструмент создания прямоугольников на холсте. */
 export class RectangleTool implements Tool {
   static readonly displayName = 'Прямоугольник';
   #shapesService = inject(WorkshopShapesService);

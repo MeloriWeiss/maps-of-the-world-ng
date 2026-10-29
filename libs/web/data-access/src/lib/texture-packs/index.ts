@@ -1,2 +1,3 @@
 export * from './interfaces';
-export * from './texture-packs.service';
+export * from './services';
+export * from './facades';

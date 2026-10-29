@@ -1,9 +1,12 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
+/** Допустимые значения фильтра видимости материалов. */
 export const adminContentVisibilities = ['visible', 'hidden'] as const;
+/** Допустимые значения фильтра статуса публикации. */
 export const adminContentPublicationStatuses = ['published', 'draft'] as const;
 
+/** Проверяет общие параметры поиска и пагинации списков модерации. */
 export class AdminListQueryDto {
   @IsOptional()
   @IsString()

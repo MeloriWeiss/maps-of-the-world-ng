@@ -9,6 +9,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { PaginationComponent } from '../index';
 import { NgTemplateOutlet } from '@angular/common';
 
+/** Отображает список карточек и его пустое состояние. */
 @Component({
   selector: 'wm-desk-list',
   imports: [ReactiveFormsModule, PaginationComponent, NgTemplateOutlet],

@@ -1,6 +1,6 @@
 import { Directive, input } from '@angular/core';
 
-/** Browser-level protection shared by editors; in-app navigation uses route guards. */
+/** Предупреждает о несохранённых изменениях при закрытии вкладки; внутреннюю навигацию проверяют route guards. */
 @Directive({
   selector: '[wmUnsavedChanges]',
   standalone: true,

@@ -5,4 +5,5 @@ interface ConfirmationModalInputs {
   rejectBtnText: string;
 }
 
+/** Заголовок, сообщение и варианты действия окна подтверждения. */
 export type ConfirmModalInputs = Partial<ConfirmationModalInputs>;

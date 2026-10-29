@@ -8,6 +8,7 @@ import {
   ShapeRenderContext,
 } from '../../rendering/shape-render-context';
 
+/** Реализация фигуры линии для отображения и редактирования на карте. */
 export class LineShape extends BaseShapeShape implements Line {
   type = ShapesTypes.LINE;
 

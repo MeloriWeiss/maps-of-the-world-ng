@@ -1,5 +1,6 @@
 import { ObjectStorage, PutObjectInput } from '@wm/api/shared';
 
+/** Тестовая реализация хранилища объектов для изолированных сценариев. */
 export class FakeObjectStorage implements ObjectStorage {
   readonly objects = new Map<string, Buffer>();
 

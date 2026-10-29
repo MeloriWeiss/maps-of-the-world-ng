@@ -2,6 +2,7 @@ import { mapCellOf } from '@wm/shared/workshop';
 import { Point } from '../../interfaces';
 
 // Adjacent parts share their endpoint so a long gesture still renders as one line.
+/** Разбивает траекторию мазка на части по границам ячеек и ограничению размера. */
 export function splitStrokePoints(points: Point[], maxPoints = 256): Point[][] {
   if (points.length <= 1) return points.length ? [points] : [];
   const parts: Point[][] = [];

@@ -1,6 +1,7 @@
 import { Bounds } from '../interfaces';
 import { NodesTypes } from '../consts';
 
+/** Базовый узел графа сцены с общими данными вложенности и видимости. */
 export abstract class GraphNode {
   readonly id = crypto.randomUUID();
 

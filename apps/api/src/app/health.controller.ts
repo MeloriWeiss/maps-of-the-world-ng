@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Health')
+/** Предоставляет HTTP-проверку доступности API. */
 @Controller('health')
 export class HealthController {
   @Get()

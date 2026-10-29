@@ -1,3 +1,7 @@
+import type {
+  VirtualListItemContext,
+  VisibleItem,
+} from './virtual-list.component.types';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -13,16 +17,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 
-export interface VirtualListItemContext<T> {
-  $implicit: T;
-  index: number;
-}
-
-interface VisibleItem<T> {
-  item: T;
-  index: number;
-}
-
+/** Ограничивает отрисовку списка элементами в видимой области. */
 @Component({
   selector: 'wm-virtual-list',
   imports: [NgTemplateOutlet],

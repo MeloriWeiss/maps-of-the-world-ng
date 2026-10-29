@@ -3,6 +3,7 @@ import { authConfig } from '@wm/shared/auth';
 
 const passwordConfig = authConfig.password;
 
+/** Проверяет пароль по правилам формы регистрации. */
 export const validatePassword: ValidatorFn = (control: AbstractControl) => {
   if (!control.value) {
     return {

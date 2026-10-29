@@ -28,6 +28,7 @@ import {
 import { CurrentAccountStore } from '@wm/web/data-access/profile';
 import { SeoService } from '@wm/web/shared';
 
+/** Страница обсуждения с публикацией, комментариями и действиями пользователя. */
 @Component({
   selector: 'wm-forum-page',
   standalone: true,
